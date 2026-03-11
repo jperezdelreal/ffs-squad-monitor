@@ -29,8 +29,10 @@ export function initSettings(scheduler) {
       const val = parseInt(refreshSelect.value, 10);
       scheduler.setInterval('heartbeat', val);
       scheduler.setInterval('logs', val * 2);
-      scheduler.setInterval('repos', val * 6);
+      scheduler.setInterval('agents', val * 2);
       scheduler.setInterval('timeline', val * 2);
+      scheduler.setInterval('board', val * 6);
+      scheduler.setInterval('pulse', val * 6);
     });
   }
 

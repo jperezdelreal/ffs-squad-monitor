@@ -13,6 +13,22 @@ const REPOS = [
   { id: 'ffs-squad-monitor', emoji: '📊', label: 'Squad Monitor',  github: 'jperezdelreal/ffs-squad-monitor', dir: path.resolve(__dirname) },
 ];
 
+// Squad agent roster — role → emoji mapping
+const SQUAD_AGENTS = {
+  solo:   { emoji: '🏗️', role: 'Lead / Architect',   color: '#58a6ff' },
+  chewie: { emoji: '🔧', role: 'Engine Dev',          color: '#f0883e' },
+  lando:  { emoji: '⚔️', role: 'Gameplay Dev',        color: '#f85149' },
+  wedge:  { emoji: '⚛️', role: 'UI Dev',              color: '#bc8cff' },
+  greedo: { emoji: '🔊', role: 'Sound Designer',      color: '#3fb950' },
+  tarkin: { emoji: '👾', role: 'Enemy/Content Dev',    color: '#d29922' },
+  ackbar: { emoji: '🧪', role: 'QA/Playtester',       color: '#da3633' },
+  yoda:   { emoji: '🎯', role: 'Game Designer',       color: '#56d364' },
+  jango:  { emoji: '⚙️', role: 'Tool Engineer',       color: '#8b949e' },
+  mace:   { emoji: '📊', role: 'Producer',            color: '#e3b341' },
+  scribe: { emoji: '📋', role: 'Session Logger',      color: '#656d76' },
+  ralph:  { emoji: '🔄', role: 'Work Monitor',        color: '#58a6ff' },
+};
+
 function readNowMd(repoDir) {
   const p = path.join(repoDir, '.squad', 'identity', 'now.md');
   try {
@@ -48,67 +64,6 @@ function getLastCommit(repoDir) {
     const msg = trimmed.slice(41); // skip full 40-char SHA + space
     return { sha, message: msg || trimmed };
   } catch { return null; }
-}
-
-// ── GitHub Actions workflow status (cached) ───────────────
-const WORKFLOW_CACHE_TTL = 120_000; // 2 minutes
-let workflowCache = null;
-let workflowCacheTime = 0;
-
-function fetchWorkflowRuns() {
-  // Return cache if fresh
-  if (workflowCache && Date.now() - workflowCacheTime < WORKFLOW_CACHE_TTL) {
-    return workflowCache;
-  }
-
-  const results = [];
-  for (const repo of REPOS) {
-    try {
-      const out = execSync(
-        `gh run list --repo ${repo.github} --limit 8 --json workflowName,status,conclusion,headBranch,updatedAt,databaseId,url`,
-        { timeout: 15000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
-      );
-      const runs = JSON.parse(out);
-
-      // Group by workflow name, keep only the latest run per workflow
-      const byWorkflow = new Map();
-      for (const run of runs) {
-        const name = run.workflowName;
-        if (!byWorkflow.has(name)) {
-          byWorkflow.set(name, {
-            workflow: name,
-            status: run.status,
-            conclusion: run.conclusion,
-            branch: run.headBranch,
-            updatedAt: run.updatedAt,
-            runId: run.databaseId,
-            url: run.url || `https://github.com/${repo.github}/actions`,
-          });
-        }
-      }
-
-      results.push({
-        repo: repo.id,
-        label: repo.label,
-        emoji: repo.emoji,
-        github: repo.github,
-        workflows: [...byWorkflow.values()],
-      });
-    } catch {
-      results.push({
-        repo: repo.id,
-        label: repo.label,
-        emoji: repo.emoji,
-        github: repo.github,
-        workflows: [],
-        error: 'Failed to fetch workflows',
-      });
-    }
-  }
-
-  workflowCache = results;
-  workflowCacheTime = Date.now();
-  return results;
 }
 
 function ffsApiPlugin() {
@@ -390,11 +345,168 @@ function ffsApiPlugin() {
         }
       });
 
-      // GitHub Actions workflow runs (cached)
-      server.middlewares.use('/api/workflows', (req, res) => {
-        const data = fetchWorkflowRuns();
+      // ── Agent roster & status ─────────────────────────────
+      server.middlewares.use('/api/agents', (req, res) => {
+        const agents = Object.entries(SQUAD_AGENTS).map(([id, meta]) => {
+          // Try to read agent's current status from orchestration log or recent logs
+          let status = 'idle';
+          let lastActivity = null;
+          let currentWork = null;
+
+          // Check recent log entries for this agent
+          const today = new Date().toISOString().slice(0, 10);
+          const logFile = path.join(logsDir, `${id}-${today}.jsonl`);
+          try {
+            if (fs.existsSync(logFile)) {
+              const raw = fs.readFileSync(logFile, 'utf-8').replace(/^\uFEFF/, '').trim();
+              if (raw) {
+                const lines = raw.split('\n').filter(l => l.trim());
+                const lastEntry = lines.length > 0 ? JSON.parse(lines[lines.length - 1]) : null;
+                if (lastEntry) {
+                  lastActivity = lastEntry.timestamp;
+                  if (lastEntry.exitCode !== 0) status = 'blocked';
+                  else if (lastEntry.status === 'running') status = 'working';
+                  else status = 'idle';
+                  currentWork = lastEntry.phase || lastEntry.status || null;
+                }
+              }
+            }
+          } catch { /* skip */ }
+
+          return {
+            id,
+            ...meta,
+            status,
+            lastActivity,
+            currentWork,
+          };
+        });
+
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(data));
+        res.end(JSON.stringify(agents));
+      });
+
+      // ── Cross-repo issues ───────────────────────────────────
+      const ISSUE_CACHE_TTL = 30_000;
+      let issueCache = null;
+      let issueCacheTime = 0;
+
+      server.middlewares.use('/api/issues', (req, res) => {
+        try {
+          if (issueCache && Date.now() - issueCacheTime < ISSUE_CACHE_TTL) {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(issueCache));
+            return;
+          }
+
+          const allIssues = [];
+          for (const repo of REPOS) {
+            try {
+              const out = execSync(
+                `gh issue list --repo ${repo.github} --state open --json number,title,labels,assignees,url,createdAt,updatedAt --limit 50`,
+                { timeout: 15000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+              );
+              const issues = JSON.parse(out);
+              for (const issue of issues) {
+                // Derive priority from labels
+                const labels = (issue.labels || []).map(l => l.name || l);
+                let priority = 3;
+                if (labels.some(l => /p0|priority.*0|critical/i.test(l))) priority = 0;
+                else if (labels.some(l => /p1|priority.*1|high/i.test(l))) priority = 1;
+                else if (labels.some(l => /p2|priority.*2|medium/i.test(l))) priority = 2;
+
+                const assignees = (issue.assignees || []).map(a => a.login || a);
+                // Check if there's a linked PR
+                let prStatus = null;
+                try {
+                  const prOut = execSync(
+                    `gh pr list --repo ${repo.github} --search "${issue.number}" --json number,state,title --limit 3`,
+                    { timeout: 8000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+                  );
+                  const prs = JSON.parse(prOut);
+                  const linked = prs.find(pr => pr.title && pr.title.includes(`#${issue.number}`));
+                  if (linked) prStatus = linked.state;
+                } catch { /* skip */ }
+
+                allIssues.push({
+                  repo: repo.id,
+                  repoLabel: repo.label,
+                  repoEmoji: repo.emoji,
+                  number: issue.number,
+                  title: issue.title,
+                  url: issue.url,
+                  priority,
+                  labels,
+                  assignees,
+                  prStatus,
+                  createdAt: issue.createdAt,
+                  updatedAt: issue.updatedAt,
+                });
+              }
+            } catch { /* skip repo */ }
+          }
+
+          // Sort by priority then by updatedAt
+          allIssues.sort((a, b) => a.priority - b.priority || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+
+          issueCache = allIssues;
+          issueCacheTime = Date.now();
+
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(allIssues));
+        } catch {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: 'Failed to fetch issues' }));
+        }
+      });
+
+      // ── Studio pulse (aggregate stats) ─────────────────────
+      server.middlewares.use('/api/pulse', (req, res) => {
+        try {
+          let prsMergedToday = 0;
+          let issuesClosedToday = 0;
+          const today = new Date().toISOString().slice(0, 10);
+
+          for (const repo of REPOS) {
+            try {
+              const prOut = execSync(
+                `gh pr list --repo ${repo.github} --state merged --json mergedAt --limit 20`,
+                { timeout: 10000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+              );
+              const prs = JSON.parse(prOut);
+              prsMergedToday += prs.filter(pr => pr.mergedAt && pr.mergedAt.startsWith(today)).length;
+            } catch { /* skip */ }
+
+            try {
+              const issueOut = execSync(
+                `gh issue list --repo ${repo.github} --state closed --json closedAt --limit 20`,
+                { timeout: 10000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+              );
+              const issues = JSON.parse(issueOut);
+              issuesClosedToday += issues.filter(i => i.closedAt && i.closedAt.startsWith(today)).length;
+            } catch { /* skip */ }
+          }
+
+          // Count active agents from today's logs
+          let activeAgents = 0;
+          try {
+            if (fs.existsSync(logsDir)) {
+              const files = fs.readdirSync(logsDir).filter(f => f.endsWith('.jsonl') && f.includes(today));
+              activeAgents = files.length;
+            }
+          } catch { /* skip */ }
+
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            prsMergedToday,
+            issuesClosedToday,
+            activeAgents,
+            totalAgents: Object.keys(SQUAD_AGENTS).length,
+          }));
+        } catch {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: 'Failed to compute pulse' }));
+        }
       });
 
       // All repos status

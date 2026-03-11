@@ -63,9 +63,25 @@ export async function fetchRepos() {
   }
 }
 
-export async function fetchWorkflows() {
+export async function fetchAgents() {
   try {
-    return await safeFetch('/api/workflows');
+    return await safeFetch('/api/agents');
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchIssues() {
+  try {
+    return await safeFetch('/api/issues');
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchPulse() {
+  try {
+    return await safeFetch('/api/pulse');
   } catch {
     return null;
   }
