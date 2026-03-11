@@ -118,20 +118,137 @@ function ffsApiPlugin() {
         res.end(JSON.stringify(getHeartbeatResponse()));
       });
 
-      // Structured logs from ralph-watch
+      // ── Log helpers ──────────────────────────────────────
+      function listLogFiles() {
+        try {
+          if (!fs.existsSync(logsDir)) return [];
+          return fs.readdirSync(logsDir)
+            .filter(f => f.endsWith('.jsonl'))
+            .map(f => {
+              const match = f.match(/^(.+)-(\d{4}-\d{2}-\d{2})\.jsonl$/);
+              return match ? { file: f, agent: match[1], date: match[2] } : null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.date.localeCompare(a.date));
+        } catch { return []; }
+      }
+
+      function readLogEntries(agent, date) {
+        const filename = `${agent}-${date}.jsonl`;
+        const filePath = path.join(logsDir, filename);
+        try {
+          if (!fs.existsSync(filePath)) return [];
+          const raw = fs.readFileSync(filePath, 'utf-8').replace(/^\uFEFF/, '');
+          if (!raw.trim()) return [];
+          return raw.trim().split('\n').map(line => {
+            try {
+              const entry = JSON.parse(line);
+              // Derive level from exitCode/status
+              entry._agent = agent;
+              entry._level = entry.exitCode === 0 ? 'info' : 'error';
+              if (entry.consecutiveFailures > 0 && entry.exitCode === 0) entry._level = 'warn';
+              return entry;
+            } catch { return null; }
+          }).filter(Boolean);
+        } catch { return []; }
+      }
+
+      // List available log files (for date/agent pickers)
+      server.middlewares.use('/api/logs/files', (req, res) => {
+        const files = listLogFiles();
+        const agents = [...new Set(files.map(f => f.agent))];
+        const dates = [...new Set(files.map(f => f.date))];
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ agents, dates, files }));
+      });
+
+      // SSE endpoint — streams new log entries in real time
+      server.middlewares.use('/api/logs/stream', (req, res) => {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+        res.flushHeaders?.();
+        // Track file sizes so we only send new lines
+        const fileSizes = new Map();
+
+        function scanAndSend() {
+          try {
+            if (!fs.existsSync(logsDir)) return;
+            const files = fs.readdirSync(logsDir).filter(f => f.endsWith('.jsonl'));
+            for (const file of files) {
+              const filePath = path.join(logsDir, file);
+              const match = file.match(/^(.+)-(\d{4}-\d{2}-\d{2})\.jsonl$/);
+              if (!match) continue;
+              const agent = match[1];
+              let stat;
+              try { stat = fs.statSync(filePath); } catch { continue; }
+              const prevSize = fileSizes.get(file) || 0;
+              if (stat.size > prevSize) {
+                // Read only new bytes
+                const fd = fs.openSync(filePath, 'r');
+                const buf = Buffer.alloc(stat.size - prevSize);
+                fs.readSync(fd, buf, 0, buf.length, prevSize);
+                fs.closeSync(fd);
+                const newContent = buf.toString('utf-8').replace(/^\uFEFF/, '');
+                const lines = newContent.trim().split('\n').filter(l => l.trim());
+                for (const line of lines) {
+                  try {
+                    const entry = JSON.parse(line);
+                    entry._agent = agent;
+                    entry._level = entry.exitCode === 0 ? 'info' : 'error';
+                    if (entry.consecutiveFailures > 0 && entry.exitCode === 0) entry._level = 'warn';
+                    res.write(`data: ${JSON.stringify(entry)}\n\n`);
+                  } catch { /* skip malformed lines */ }
+                }
+              }
+              fileSizes.set(file, stat.size);
+            }
+          } catch { /* directory gone or unreadable */ }
+        }
+
+        // Send all existing entries on connect
+        scanAndSend();
+
+        // Watch for new entries
+        let watcher;
+        try {
+          if (fs.existsSync(logsDir)) {
+            watcher = fs.watch(logsDir, { persistent: false }, () => {
+              scanAndSend();
+            });
+            watcher.on('error', () => {});
+          }
+        } catch { /* no watcher */ }
+
+        // Keepalive ping every 15s
+        const keepalive = setInterval(() => {
+          try { res.write(': keepalive\n\n'); } catch { /* closed */ }
+        }, 15000);
+
+        req.on('close', () => {
+          clearInterval(keepalive);
+          if (watcher) watcher.close();
+        });
+      });
+
+      // Structured logs — supports ?date=YYYY-MM-DD&agent=name query params
       server.middlewares.use('/api/logs', (req, res) => {
         try {
-          const today = new Date().toISOString().slice(0, 10);
-          const logFile = path.join(logsDir, `ralph-${today}.jsonl`);
-          if (fs.existsSync(logFile)) {
-            const lines = fs.readFileSync(logFile, 'utf-8').trim().split('\n');
-            const entries = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(entries));
-          } else {
-            res.setHeader('Content-Type', 'application/json');
-            res.end('[]');
+          const url = new URL(req.url, `http://${req.headers.host}`);
+          const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+          const agentFilter = url.searchParams.get('agent');
+
+          const logFiles = listLogFiles().filter(f => f.date === date);
+          let entries = [];
+          for (const f of logFiles) {
+            if (agentFilter && f.agent !== agentFilter) continue;
+            entries = entries.concat(readLogEntries(f.agent, f.date));
           }
+          // Sort by timestamp
+          entries.sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(entries));
         } catch {
           res.statusCode = 500;
           res.end(JSON.stringify({ error: 'Failed to read logs' }));
