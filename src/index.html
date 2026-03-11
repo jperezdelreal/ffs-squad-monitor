@@ -10,11 +10,30 @@
 
   <!-- Top Bar -->
   <header class="topbar">
-    <h1>🖥️ <span class="title-text">FFS Squad Monitor</span><span class="title-short">FFS</span></h1>
-    <div class="topbar-right">
+    <div class="topbar-left">
+      <h1>🖥️ <span class="title-text">FFS Squad Monitor</span></h1>
       <div class="connection-status">
         <span class="dot gray" id="conn-dot"></span>
         <span id="conn-text">Connecting…</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <!-- Studio Pulse — always visible stats -->
+      <div class="pulse-bar" id="pulse-bar">
+        <div class="pulse-stat">
+          <span class="pulse-value" id="pulse-prs">—</span>
+          <span class="pulse-label">PRs merged</span>
+        </div>
+        <div class="pulse-divider"></div>
+        <div class="pulse-stat">
+          <span class="pulse-value" id="pulse-issues">—</span>
+          <span class="pulse-label">Issues closed</span>
+        </div>
+        <div class="pulse-divider"></div>
+        <div class="pulse-stat">
+          <span class="pulse-value" id="pulse-agents">—</span>
+          <span class="pulse-label">Active agents</span>
+        </div>
       </div>
       <button class="settings-btn" id="settings-toggle" aria-label="Settings" aria-expanded="false" title="Refresh settings">⚙</button>
     </div>
@@ -27,40 +46,56 @@
 
   <main class="main">
 
-    <!-- Ralph Status -->
-    <div class="section-title">Ralph Watch</div>
-    <div class="ralph-grid">
-      <div class="card">
-        <h3>Heartbeat</h3>
-        <p id="heartbeat-status" style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.75rem;">
-          <span class="dot gray" id="ralph-dot"></span>
-          <span id="status-text">Waiting for data…</span>
-        </p>
-        <dl id="heartbeat-data"></dl>
+    <!-- Ralph Status — prominent, always visible -->
+    <section class="ralph-hero" id="ralph-hero">
+      <div class="ralph-heartbeat-ring" id="ralph-ring">
+        <div class="ralph-pulse-core" id="ralph-pulse"></div>
       </div>
-      <div class="card">
-        <h3>Round Stats</h3>
-        <p id="round-info">No round data yet</p>
+      <div class="ralph-info">
+        <div class="ralph-status-line">
+          <span class="ralph-status-label" id="ralph-status">Connecting…</span>
+          <span class="ralph-mode-badge" id="ralph-mode"></span>
+        </div>
+        <div class="ralph-metrics">
+          <div class="ralph-metric">
+            <span class="ralph-metric-value" id="ralph-round">—</span>
+            <span class="ralph-metric-label">Round</span>
+          </div>
+          <div class="ralph-metric">
+            <span class="ralph-metric-value" id="ralph-age">—</span>
+            <span class="ralph-metric-label">Heartbeat age</span>
+          </div>
+          <div class="ralph-metric">
+            <span class="ralph-metric-value" id="ralph-duration">—</span>
+            <span class="ralph-metric-label">Last duration</span>
+          </div>
+          <div class="ralph-metric">
+            <span class="ralph-metric-value" id="ralph-interval">—</span>
+            <span class="ralph-metric-label">Interval</span>
+          </div>
+        </div>
+        <div class="ralph-session-stats" id="ralph-session-stats"></div>
+        <div class="ralph-trend" id="ralph-trend"></div>
       </div>
-    </div>
+    </section>
 
-    <!-- Timeline -->
+    <!-- Agent Activity Panel -->
+    <div class="section-title">Squad Activity</div>
+    <section class="agent-grid" id="agent-grid">
+      <div class="empty-state">Loading agents…</div>
+    </section>
+
+    <!-- Round Timeline -->
     <div class="section-title">Round Timeline</div>
     <div class="card" id="timeline">
       <p class="empty-state">No round data yet.</p>
     </div>
 
-    <!-- Repos -->
-    <div class="section-title">Studio Repos</div>
-    <div class="repos-grid" id="repos-grid">
-      <div class="repo-card empty-state">Loading repos…</div>
-    </div>
-
-    <!-- GitHub Actions -->
-    <div class="section-title">GitHub Actions</div>
-    <div class="workflows-grid" id="workflows-grid">
-      <div class="empty-state">Loading workflows…</div>
-    </div>
+    <!-- Cross-Repo Board -->
+    <div class="section-title">Issue Board <span class="board-count" id="board-count"></span></div>
+    <section class="board" id="board">
+      <div class="empty-state">Loading issues…</div>
+    </section>
 
     <!-- Log Viewer -->
     <div class="section-title">Log Viewer <span class="log-count" id="log-count"></span></div>
