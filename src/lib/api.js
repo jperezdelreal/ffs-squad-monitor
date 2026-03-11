@@ -62,3 +62,11 @@ export async function fetchRepos() {
     return null;
   }
 }
+
+export async function fetchWorkflows() {
+  try {
+    return await safeFetch('/api/workflows');
+  } catch {
+    return null;
+  }
+}

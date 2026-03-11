@@ -663,6 +663,115 @@ body {
   font-size: 0.85rem;
 }
 
+/* ── Workflows Grid ─────────────────────────────────────── */
+.workflows-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.wf-repo-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  transition: border-color 0.15s;
+}
+
+.wf-repo-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.wf-actions-link {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--blue);
+  text-decoration: none;
+}
+.wf-actions-link:hover {
+  text-decoration: underline;
+}
+
+.wf-runs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.wf-run {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.1s;
+}
+.wf-run:hover {
+  background: var(--surface-hover);
+}
+
+.wf-badge {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 0.2em 0.55em;
+  border-radius: 10px;
+  text-align: center;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+}
+.wf-badge.wf-success {
+  border-color: var(--green-dim);
+  color: var(--green);
+  background: rgba(63, 185, 80, 0.08);
+}
+.wf-badge.wf-failure {
+  border-color: var(--red-dim);
+  color: var(--red);
+  background: rgba(248, 81, 73, 0.08);
+}
+.wf-badge.wf-in-progress {
+  border-color: var(--yellow);
+  color: var(--yellow);
+  background: rgba(210, 153, 34, 0.08);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.wf-badge.wf-cancelled {
+  color: var(--text-muted);
+}
+.wf-badge.wf-skipped {
+  color: var(--text-muted);
+}
+.wf-badge.wf-unknown {
+  color: var(--text-subtle);
+}
+
+.wf-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-meta {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.wf-empty {
+  font-size: 0.82rem;
+  color: var(--text-subtle);
+  padding: 0.5rem 0;
+}
+
 /* ── Footer ────────────────────────────────────────────── */
 .footer {
   text-align: center;
@@ -692,6 +801,9 @@ body {
     grid-template-columns: 1fr;
   }
   .repos-grid {
+    grid-template-columns: 1fr;
+  }
+  .workflows-grid {
     grid-template-columns: 1fr;
   }
   .timeline-summary {
