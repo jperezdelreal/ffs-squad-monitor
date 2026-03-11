@@ -12,7 +12,7 @@ import { initConnectionStatus } from './components/connection-status.js';
 import { refreshHeartbeat } from './components/heartbeat.js';
 import { refreshLogs, initLogViewer } from './components/log-viewer.js';
 import { refreshRepos } from './components/repos.js';
-import { refreshTimeline } from './components/timeline.js';
+import { refreshTimeline, initTimeline } from './components/timeline.js';
 import { initSettings } from './components/settings.js';
 
 // Default polling intervals (ms)
@@ -32,6 +32,7 @@ scheduler.register('timeline',  refreshTimeline,  TIMELINE_POLL);
 // Init components that need DOM event binding
 initConnectionStatus();
 initLogViewer();
+initTimeline();
 initSettings(scheduler);
 
 // Start polling

@@ -47,6 +47,14 @@ export async function fetchLogs() {
   }
 }
 
+export async function fetchTimeline() {
+  try {
+    return await safeFetch('/api/timeline');
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchRepos() {
   try {
     return await safeFetch('/api/repos');
