@@ -12,6 +12,7 @@ import { initConnectionStatus } from './components/connection-status.js';
 import { refreshHeartbeat } from './components/heartbeat.js';
 import { refreshLogs, initLogViewer } from './components/log-viewer.js';
 import { refreshRepos } from './components/repos.js';
+import { refreshWorkflows } from './components/workflows.js';
 import { refreshTimeline, initTimeline } from './components/timeline.js';
 import { initSettings } from './components/settings.js';
 
@@ -19,6 +20,7 @@ import { initSettings } from './components/settings.js';
 const HEARTBEAT_POLL = 5000;
 const LOG_POLL       = 10000;
 const REPOS_POLL     = 30000;
+const WORKFLOWS_POLL = 60000;
 const TIMELINE_POLL  = 10000;
 
 // Bootstrap
@@ -26,8 +28,9 @@ const scheduler = new Scheduler();
 
 scheduler.register('heartbeat', refreshHeartbeat, HEARTBEAT_POLL);
 scheduler.register('logs',      refreshLogs,      LOG_POLL);
-scheduler.register('repos',     refreshRepos,     REPOS_POLL);
-scheduler.register('timeline',  refreshTimeline,  TIMELINE_POLL);
+scheduler.register('repos',      refreshRepos,      REPOS_POLL);
+scheduler.register('workflows', refreshWorkflows,  WORKFLOWS_POLL);
+scheduler.register('timeline',  refreshTimeline,   TIMELINE_POLL);
 
 // Init components that need DOM event binding
 initConnectionStatus();

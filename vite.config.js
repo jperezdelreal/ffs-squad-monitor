@@ -50,6 +50,67 @@ function getLastCommit(repoDir) {
   } catch { return null; }
 }
 
+// ── GitHub Actions workflow status (cached) ───────────────
+const WORKFLOW_CACHE_TTL = 120_000; // 2 minutes
+let workflowCache = null;
+let workflowCacheTime = 0;
+
+function fetchWorkflowRuns() {
+  // Return cache if fresh
+  if (workflowCache && Date.now() - workflowCacheTime < WORKFLOW_CACHE_TTL) {
+    return workflowCache;
+  }
+
+  const results = [];
+  for (const repo of REPOS) {
+    try {
+      const out = execSync(
+        `gh run list --repo ${repo.github} --limit 8 --json workflowName,status,conclusion,headBranch,updatedAt,databaseId,url`,
+        { timeout: 15000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+      );
+      const runs = JSON.parse(out);
+
+      // Group by workflow name, keep only the latest run per workflow
+      const byWorkflow = new Map();
+      for (const run of runs) {
+        const name = run.workflowName;
+        if (!byWorkflow.has(name)) {
+          byWorkflow.set(name, {
+            workflow: name,
+            status: run.status,
+            conclusion: run.conclusion,
+            branch: run.headBranch,
+            updatedAt: run.updatedAt,
+            runId: run.databaseId,
+            url: run.url || `https://github.com/${repo.github}/actions`,
+          });
+        }
+      }
+
+      results.push({
+        repo: repo.id,
+        label: repo.label,
+        emoji: repo.emoji,
+        github: repo.github,
+        workflows: [...byWorkflow.values()],
+      });
+    } catch {
+      results.push({
+        repo: repo.id,
+        label: repo.label,
+        emoji: repo.emoji,
+        github: repo.github,
+        workflows: [],
+        error: 'Failed to fetch workflows',
+      });
+    }
+  }
+
+  workflowCache = results;
+  workflowCacheTime = Date.now();
+  return results;
+}
+
 function ffsApiPlugin() {
   const ffsRoot = path.resolve(__dirname, '..', 'FirstFrameStudios');
   const heartbeatPath = process.env.FFS_HEARTBEAT_PATH
@@ -279,6 +340,7 @@ function ffsApiPlugin() {
             : 0;
           const maxDuration = durations.length > 0 ? Math.max(...durations) : 0;
 
+          // Read heartbeat for current status
           const hb = getHeartbeatResponse();
 
           res.setHeader('Content-Type', 'application/json');
@@ -326,6 +388,13 @@ function ffsApiPlugin() {
           res.statusCode = 500;
           res.end(JSON.stringify({ error: 'Failed to read logs' }));
         }
+      });
+
+      // GitHub Actions workflow runs (cached)
+      server.middlewares.use('/api/workflows', (req, res) => {
+        const data = fetchWorkflowRuns();
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(data));
       });
 
       // All repos status
