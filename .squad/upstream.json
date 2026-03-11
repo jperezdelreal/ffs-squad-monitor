@@ -1,0 +1,11 @@
+{
+  "upstreams": [
+    {
+      "name": "FirstFrameStudios",
+      "type": "local",
+      "source": "C:\\Users\\joperezd\\GitHub Repos\\FirstFrameStudios",
+      "added_at": "2026-03-11T09:47:42.914Z",
+      "last_synced": null
+    }
+  ]
+}

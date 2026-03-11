@@ -1,0 +1,23 @@
+{
+  "name": "ffs-squad-monitor",
+  "version": "0.1.0",
+  "description": "Real-time monitoring dashboard for First Frame Studios AI squad",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "squad",
+    "monitor",
+    "dashboard",
+    "ai-agents",
+    "first-frame-studios"
+  ],
+  "author": "jperezdelreal",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
