@@ -172,7 +172,11 @@ function ffsApiPlugin() {
         res.setHeader('Connection', 'keep-alive');
         res.setHeader('X-Accel-Buffering', 'no');
         res.flushHeaders?.();
-        // Track file sizes so we only send new lines
+
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const sinceParam = url.searchParams.get('since');
+        const sinceTs = sinceParam || null;
+
         const fileSizes = new Map();
 
         function scanAndSend() {
@@ -183,6 +187,8 @@ function ffsApiPlugin() {
               const filePath = path.join(logsDir, file);
               const match = file.match(/^(.+)-(\d{4}-\d{2}-\d{2})\.jsonl$/);
               if (!match) continue;
+              // Skip files whose date is before ?since= date portion
+              if (sinceTs && match[2] < sinceTs.slice(0, 10)) continue;
               const agent = match[1];
               let stat;
               try { stat = fs.statSync(filePath); } catch { continue; }
@@ -197,12 +203,22 @@ function ffsApiPlugin() {
                 const lines = newContent.trim().split('\n').filter(l => l.trim());
                 for (const line of lines) {
                   const entry = parseLogEntry(line, agent);
-                  if (entry) res.write(`data: ${JSON.stringify(entry)}\n\n`);
+                  if (entry) {
+                    if (sinceTs && entry.timestamp && entry.timestamp < sinceTs) continue;
+                    res.write(`data: ${JSON.stringify(entry)}\n\n`);
+                  }
                 }
               }
               fileSizes.set(file, stat.size);
             }
           } catch { /* directory gone or unreadable */ }
+        }
+
+        // Debounce wrapper for fs.watch events (~150ms)
+        let debounceTimer = null;
+        function debouncedScan() {
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(scanAndSend, 150);
         }
 
         // Send all existing entries on connect
@@ -212,9 +228,7 @@ function ffsApiPlugin() {
         let watcher;
         try {
           if (fs.existsSync(logsDir)) {
-            watcher = fs.watch(logsDir, { persistent: false }, () => {
-              scanAndSend();
-            });
+            watcher = fs.watch(logsDir, { persistent: false }, () => debouncedScan());
             watcher.on('error', () => {});
           }
         } catch { /* no watcher */ }
@@ -226,6 +240,7 @@ function ffsApiPlugin() {
 
         req.on('close', () => {
           clearInterval(keepalive);
+          if (debounceTimer) clearTimeout(debounceTimer);
           if (watcher) watcher.close();
         });
       });
