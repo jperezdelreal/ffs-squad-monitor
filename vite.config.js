@@ -52,22 +52,70 @@ function getLastCommit(repoDir) {
 
 function ffsApiPlugin() {
   const ffsRoot = path.resolve(__dirname, '..', 'FirstFrameStudios');
-  const heartbeatPath = path.join(ffsRoot, 'tools', '.ralph-heartbeat.json');
+  const heartbeatPath = process.env.FFS_HEARTBEAT_PATH
+    || path.join(ffsRoot, 'tools', '.ralph-heartbeat.json');
   const logsDir = path.join(ffsRoot, 'tools', 'logs');
+
+  // Cached heartbeat state — updated via fs.watch
+  let heartbeatCache = null;
+  let heartbeatWatcher = null;
+
+  function readHeartbeatFile() {
+    try {
+      const raw = fs.readFileSync(heartbeatPath, 'utf-8').replace(/^\uFEFF/, '');
+      const data = JSON.parse(raw);
+      heartbeatCache = {
+        status: data.status || 'unknown',
+        round: data.round ?? null,
+        pid: data.pid ?? null,
+        interval: data.interval ?? null,
+        lastStatus: data.lastStatus || null,
+        lastDuration: data.lastDuration ?? null,
+        timestamp: data.timestamp || null,
+        consecutiveFailures: data.consecutiveFailures ?? 0,
+        repos: data.repos || [],
+      };
+    } catch {
+      heartbeatCache = null;
+    }
+  }
+
+  function startWatcher() {
+    if (heartbeatWatcher) return;
+    const dir = path.dirname(heartbeatPath);
+    const basename = path.basename(heartbeatPath);
+    try {
+      // Watch the directory so we catch file creation after deletion
+      heartbeatWatcher = fs.watch(dir, (eventType, filename) => {
+        if (filename === basename) readHeartbeatFile();
+      });
+      heartbeatWatcher.on('error', () => {
+        heartbeatWatcher = null;
+      });
+    } catch {
+      // Directory doesn't exist — fall back to read-on-request
+    }
+  }
+
+  function getHeartbeatResponse() {
+    // If watcher isn't active, try a fresh read
+    if (!heartbeatWatcher) readHeartbeatFile();
+    if (!heartbeatCache) {
+      return { status: 'offline' };
+    }
+    return heartbeatCache;
+  }
 
   return {
     name: 'ffs-api',
     configureServer(server) {
-      // Heartbeat from ralph-watch
+      // Initialize heartbeat cache and file watcher
+      readHeartbeatFile();
+      startWatcher();
+
       server.middlewares.use('/api/heartbeat', (req, res) => {
-        try {
-          const data = fs.readFileSync(heartbeatPath, 'utf-8');
-          res.setHeader('Content-Type', 'application/json');
-          res.end(data);
-        } catch {
-          res.statusCode = 404;
-          res.end(JSON.stringify({ error: 'Heartbeat file not found' }));
-        }
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(getHeartbeatResponse()));
       });
 
       // Structured logs from ralph-watch
