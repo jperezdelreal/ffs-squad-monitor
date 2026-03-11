@@ -28,7 +28,7 @@ function updateHeartbeatUI(hb) {
   const dataEl = document.getElementById('heartbeat-data');
   const roundInfo = document.getElementById('round-info');
 
-  const statusMap = { idle: 'green', running: 'yellow', error: 'red' };
+  const statusMap = { idle: 'green', running: 'yellow', error: 'red', offline: 'gray' };
   dot.className = `dot ${statusMap[hb.status] || 'gray'}`;
   statusText.textContent = hb.status
     ? hb.status.charAt(0).toUpperCase() + hb.status.slice(1)
