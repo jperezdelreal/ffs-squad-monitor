@@ -133,6 +133,16 @@ function ffsApiPlugin() {
         } catch { return []; }
       }
 
+      function parseLogEntry(line, agent) {
+        try {
+          const entry = JSON.parse(line);
+          entry._agent = agent;
+          entry._level = entry.exitCode === 0 ? 'info' : 'error';
+          if (entry.consecutiveFailures > 0 && entry.exitCode === 0) entry._level = 'warn';
+          return entry;
+        } catch { return null; }
+      }
+
       function readLogEntries(agent, date) {
         const filename = `${agent}-${date}.jsonl`;
         const filePath = path.join(logsDir, filename);
@@ -140,16 +150,9 @@ function ffsApiPlugin() {
           if (!fs.existsSync(filePath)) return [];
           const raw = fs.readFileSync(filePath, 'utf-8').replace(/^\uFEFF/, '');
           if (!raw.trim()) return [];
-          return raw.trim().split('\n').map(line => {
-            try {
-              const entry = JSON.parse(line);
-              // Derive level from exitCode/status
-              entry._agent = agent;
-              entry._level = entry.exitCode === 0 ? 'info' : 'error';
-              if (entry.consecutiveFailures > 0 && entry.exitCode === 0) entry._level = 'warn';
-              return entry;
-            } catch { return null; }
-          }).filter(Boolean);
+          return raw.trim().split('\n')
+            .map(line => parseLogEntry(line, agent))
+            .filter(Boolean);
         } catch { return []; }
       }
 
@@ -193,13 +196,8 @@ function ffsApiPlugin() {
                 const newContent = buf.toString('utf-8').replace(/^\uFEFF/, '');
                 const lines = newContent.trim().split('\n').filter(l => l.trim());
                 for (const line of lines) {
-                  try {
-                    const entry = JSON.parse(line);
-                    entry._agent = agent;
-                    entry._level = entry.exitCode === 0 ? 'info' : 'error';
-                    if (entry.consecutiveFailures > 0 && entry.exitCode === 0) entry._level = 'warn';
-                    res.write(`data: ${JSON.stringify(entry)}\n\n`);
-                  } catch { /* skip malformed lines */ }
+                  const entry = parseLogEntry(line, agent);
+                  if (entry) res.write(`data: ${JSON.stringify(entry)}\n\n`);
                 }
               }
               fileSizes.set(file, stat.size);

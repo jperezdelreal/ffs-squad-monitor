@@ -56,16 +56,34 @@
       <div class="repo-card empty-state">Loading repos…</div>
     </div>
 
-    <!-- Activity Log -->
-    <div class="section-title">Activity Log</div>
+    <!-- Log Viewer -->
+    <div class="section-title">Log Viewer <span class="log-count" id="log-count"></span></div>
     <div class="card">
-      <div class="log-toolbar" id="log-toolbar">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="success">✅ Success</button>
-        <button class="filter-btn" data-filter="error">❌ Errors</button>
+      <div class="log-toolbar">
+        <div class="log-filter-group">
+          <label for="log-agent">Agent</label>
+          <select id="log-agent"><option value="">All</option></select>
+        </div>
+        <div class="log-filter-group">
+          <label for="log-level">Level</label>
+          <select id="log-level">
+            <option value="">All</option>
+            <option value="info">Info</option>
+            <option value="warn">Warn</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+        <div class="log-filter-group">
+          <label for="log-date">Date</label>
+          <input type="date" id="log-date" />
+        </div>
+        <div class="log-stream-badge" id="stream-badge">
+          <span class="log-stream-dot"></span>
+          <span id="stream-text">Streaming</span>
+        </div>
       </div>
       <div id="log-entries">
-        <p class="empty-state">Waiting for log data…</p>
+        <p class="log-empty">Connecting to log stream…</p>
       </div>
     </div>
 

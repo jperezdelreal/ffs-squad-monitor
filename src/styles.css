@@ -523,38 +523,75 @@ body {
 /* ── Log Viewer ────────────────────────────────────────── */
 .log-toolbar {
   display: flex;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
   margin-bottom: 0.75rem;
 }
 
-.filter-btn {
+.log-toolbar select,
+.log-toolbar input {
+  font-family: var(--mono);
+  font-size: 0.78rem;
   background: var(--bg);
+  color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  padding: 0.25rem 0.65rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+}
+.log-toolbar select:focus,
+.log-toolbar input:focus {
+  border-color: var(--blue);
+}
+.log-toolbar label {
   font-size: 0.72rem;
-  cursor: pointer;
-  font-family: var(--sans);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.filter-btn:hover {
-  border-color: var(--blue);
-  color: var(--text);
+
+.log-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
-.filter-btn.active {
-  background: var(--surface-alt);
-  border-color: var(--blue);
-  color: var(--blue);
+
+.log-stream-badge {
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  padding: 0.15em 0.5em;
+  border-radius: 10px;
+  border: 1px solid var(--green);
+  color: var(--green);
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.log-stream-badge.disconnected {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.log-stream-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+.log-stream-badge.disconnected .log-stream-dot {
+  background: var(--red);
+  animation: none;
 }
 
 #log-entries {
   font-family: var(--mono);
   font-size: 0.8rem;
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
+  scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
@@ -572,25 +609,50 @@ body {
 .log-entry {
   padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
+  display: grid;
+  grid-template-columns: 80px 48px 65px 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
   transition: background 0.1s;
 }
 .log-entry:hover {
   background: var(--surface-hover);
 }
-.log-entry.log-error {
-  color: var(--red);
-}
 
 .log-time {
   color: var(--text-subtle);
 }
-.log-duration {
-  color: var(--text-subtle);
+
+.log-level {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  text-align: center;
 }
-.log-metrics {
+.log-level.info  { color: var(--green); background: rgba(63, 185, 80, 0.1); }
+.log-level.warn  { color: var(--yellow); background: rgba(210, 153, 34, 0.1); }
+.log-level.error { color: var(--red); background: rgba(248, 81, 73, 0.1); }
+
+.log-agent {
   color: var(--blue);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
+}
+.log-message {
+  color: var(--text);
+}
+
+.log-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.log-count {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
 }
 
 /* ── Empty States ──────────────────────────────────────── */
