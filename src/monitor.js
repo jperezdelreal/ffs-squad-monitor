@@ -1,71 +1,141 @@
 /**
- * FFS Squad Monitor — Sprint 0
+ * FFS Squad Monitor — Multi-repo dashboard
  *
- * Reads heartbeat data and updates the dashboard.
- * In dev mode, uses a mock heartbeat. In production,
- * a backend endpoint will serve live data from ralph-watch.ps1.
+ * Polls:
+ *   /api/heartbeat — ralph-watch status (every 5s)
+ *   /api/logs      — ralph-watch activity log (every 10s)
+ *   /api/repos     — all studio repos status (every 30s)
  */
 
-const HEARTBEAT_POLL_INTERVAL = 5000; // ms
-const HEARTBEAT_API = '/api/heartbeat';
+const HEARTBEAT_POLL = 5000;
+const LOG_POLL = 10000;
+const REPOS_POLL = 30000;
 
-// Mock heartbeat for Sprint 0 (no backend yet)
-function getMockHeartbeat() {
-  return {
-    timestamp: new Date().toISOString(),
-    status: 'idle',
-    round: 1,
-    pid: 0,
-    interval: 15,
-    lastStatus: 'OK',
-    lastDuration: 0.2,
-  };
+let connected = false;
+
+function setConnected(ok) {
+  connected = ok;
+  const dot = document.getElementById('conn-dot');
+  const text = document.getElementById('conn-text');
+  dot.className = ok ? 'dot green' : 'dot red';
+  text.textContent = ok ? 'Connected' : 'Disconnected';
 }
 
-function updateHeartbeatUI(heartbeat) {
-  const dot = document.querySelector('.status-dot');
+// ── Heartbeat ────────────────────────────────────────────
+function updateHeartbeatUI(hb) {
+  const dot = document.getElementById('ralph-dot');
   const statusText = document.getElementById('status-text');
   const dataEl = document.getElementById('heartbeat-data');
   const roundInfo = document.getElementById('round-info');
 
-  // Update status indicator
-  dot.className = `status-dot ${heartbeat.status || 'unknown'}`;
-  statusText.textContent = heartbeat.status
-    ? heartbeat.status.charAt(0).toUpperCase() + heartbeat.status.slice(1)
+  const statusMap = { idle: 'green', running: 'yellow', error: 'red' };
+  dot.className = `dot ${statusMap[hb.status] || 'gray'}`;
+  statusText.textContent = hb.status
+    ? hb.status.charAt(0).toUpperCase() + hb.status.slice(1)
     : 'Unknown';
 
-  // Update heartbeat details
+  const repos = hb.repos ? hb.repos.join(', ') : 'N/A';
   dataEl.innerHTML = `
-    <dt>Timestamp</dt><dd>${heartbeat.timestamp || '—'}</dd>
-    <dt>Round</dt><dd>${heartbeat.round ?? '—'}</dd>
-    <dt>PID</dt><dd>${heartbeat.pid ?? '—'}</dd>
-    <dt>Interval</dt><dd>${heartbeat.interval ? heartbeat.interval + ' min' : '—'}</dd>
-    <dt>Last Status</dt><dd>${heartbeat.lastStatus || '—'}</dd>
-    <dt>Duration</dt><dd>${heartbeat.lastDuration ? heartbeat.lastDuration + 's' : '—'}</dd>
+    <dt>Timestamp</dt><dd>${hb.timestamp || '\u2014'}</dd>
+    <dt>Round</dt><dd>${hb.round ?? '\u2014'}</dd>
+    <dt>PID</dt><dd>${hb.pid ?? '\u2014'}</dd>
+    <dt>Interval</dt><dd>${hb.interval ? hb.interval + ' min' : '\u2014'}</dd>
+    <dt>Status</dt><dd>${hb.lastStatus || '\u2014'}</dd>
+    <dt>Duration</dt><dd>${hb.lastDuration ? hb.lastDuration + 's' : '\u2014'}</dd>
+    <dt>Failures</dt><dd>${hb.consecutiveFailures ?? 0}</dd>
+    <dt>Repos</dt><dd>${repos}</dd>
   `;
 
-  // Update round info
-  roundInfo.textContent = `Round ${heartbeat.round ?? '?'} · Last run: ${heartbeat.lastStatus || 'N/A'} (${heartbeat.lastDuration ?? '?'}s)`;
+  roundInfo.textContent = `Round ${hb.round ?? '?'} · Last run: ${hb.lastStatus || 'N/A'} (${hb.lastDuration ?? '?'}s)`;
 }
 
-async function fetchHeartbeat() {
-  try {
-    const response = await fetch(HEARTBEAT_API);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
-  } catch {
-    // Backend not available yet — use mock data in Sprint 0
-    return getMockHeartbeat();
+// ── Logs ─────────────────────────────────────────────────
+function updateLogUI(entries) {
+  const el = document.getElementById('log-entries');
+  if (!entries || entries.length === 0) {
+    el.innerHTML = '<p style="color:var(--text-muted)">No log entries yet today.</p>';
+    return;
   }
+  el.innerHTML = entries.slice(-50).reverse().map(e => {
+    const time = e.timestamp ? new Date(e.timestamp).toLocaleTimeString() : '?';
+    const icon = e.exitCode === 0 ? '✅' : '❌';
+    const metrics = e.metrics ? ` [issues=${e.metrics.issuesClosed||0} prs=${e.metrics.prsMerged||0}]` : '';
+    return `<div class="log-entry">${icon} ${time} Round ${e.round||'?'} (${e.duration||'?'}s)${metrics}</div>`;
+  }).join('');
 }
 
+// ── Repos ────────────────────────────────────────────────
+function updateReposUI(repos) {
+  const grid = document.getElementById('repos-grid');
+  if (!repos || repos.length === 0) {
+    grid.innerHTML = '<div class="repo-card" style="color:var(--text-muted);text-align:center;padding:3rem;">No repo data available</div>';
+    return;
+  }
+
+  grid.innerHTML = repos.map(r => {
+    const focus = r.focus || 'No focus set';
+    const issues = r.openIssues !== null ? r.openIssues : '—';
+    const commit = r.lastCommit ? r.lastCommit.message : '—';
+    const sha = r.lastCommit ? r.lastCommit.sha : '';
+    const squadBadge = r.hasSquad ? '<span class="badge squad">squad</span>' : '';
+
+    return `
+      <div class="repo-card">
+        <div class="repo-header">
+          <span class="repo-emoji">${r.emoji}</span>
+          <span class="repo-name">${r.label}</span>
+          ${squadBadge}
+        </div>
+        <div class="repo-focus">${escapeHtml(focus)}</div>
+        <div class="repo-meta">
+          <span class="label">Issues</span> ${issues} open<br>
+          <span class="label">Commit</span> <code>${sha}</code> ${escapeHtml(commit)}
+        </div>
+        <a class="repo-link" href="https://github.com/${r.github}" target="_blank" rel="noopener">
+          github.com/${r.github} ↗
+        </a>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── Polling ──────────────────────────────────────────────
 async function pollHeartbeat() {
-  const heartbeat = await fetchHeartbeat();
-  updateHeartbeatUI(heartbeat);
+  try {
+    const res = await fetch('/api/heartbeat');
+    if (res.ok) {
+      updateHeartbeatUI(await res.json());
+      setConnected(true);
+    }
+  } catch { setConnected(false); }
 }
 
-// Start polling
-pollHeartbeat();
-setInterval(pollHeartbeat, HEARTBEAT_POLL_INTERVAL);
+async function pollLogs() {
+  try {
+    const res = await fetch('/api/logs');
+    if (res.ok) updateLogUI(await res.json());
+  } catch { /* silent */ }
+}
 
-console.log('[FFS Monitor] Dashboard initialized — polling every', HEARTBEAT_POLL_INTERVAL / 1000, 'seconds');
+async function pollRepos() {
+  try {
+    const res = await fetch('/api/repos');
+    if (res.ok) updateReposUI(await res.json());
+  } catch { /* silent */ }
+}
+
+// Start all polling loops
+pollHeartbeat();
+pollLogs();
+pollRepos();
+setInterval(pollHeartbeat, HEARTBEAT_POLL);
+setInterval(pollLogs, LOG_POLL);
+setInterval(pollRepos, REPOS_POLL);
+
+console.log('[FFS Monitor] Dashboard online — polling heartbeat, logs, repos');

@@ -8,75 +8,227 @@
     :root {
       --bg: #0d1117;
       --surface: #161b22;
+      --surface-hover: #1c2128;
       --border: #30363d;
       --text: #e6edf3;
       --text-muted: #8b949e;
       --green: #3fb950;
       --yellow: #d29922;
       --red: #f85149;
+      --blue: #58a6ff;
+      --mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
       color: var(--text);
-      padding: 2rem;
+      min-height: 100vh;
     }
-    h1 { margin-bottom: 0.5rem; }
-    .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .main { padding: 1.5rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
+
+    /* Section titles */
+    .section-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    /* Cards */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
+      padding: 1.25rem;
     }
-    .card h2 { font-size: 1rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .status-dot {
+    .card h3 {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Status dot */
+    .dot {
       display: inline-block;
-      width: 10px; height: 10px;
+      width: 9px; height: 9px;
       border-radius: 50%;
-      margin-right: 0.5rem;
+      flex-shrink: 0;
     }
-    .status-dot.idle { background: var(--green); }
-    .status-dot.running { background: var(--yellow); animation: pulse 1.5s infinite; }
-    .status-dot.error { background: var(--red); }
-    .status-dot.unknown { background: var(--text-muted); }
+    .dot.green  { background: var(--green); }
+    .dot.yellow { background: var(--yellow); animation: pulse 1.5s infinite; }
+    .dot.red    { background: var(--red); }
+    .dot.gray   { background: var(--text-muted); }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    #heartbeat-data { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.9rem; }
-    #heartbeat-data dt { color: var(--text-muted); float: left; width: 120px; }
-    #heartbeat-data dd { margin-bottom: 0.25rem; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
-    #log-entries { font-family: monospace; font-size: 0.85rem; max-height: 300px; overflow-y: auto; }
-    .log-entry { padding: 0.25rem 0; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+
+    /* Ralph row */
+    .ralph-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    #heartbeat-data { font-family: var(--mono); font-size: 0.85rem; }
+    #heartbeat-data dt { color: var(--text-muted); float: left; width: 110px; clear: left; }
+    #heartbeat-data dd { margin-bottom: 0.2rem; }
+    #round-info { color: var(--text-muted); font-family: var(--mono); font-size: 0.85rem; }
+
+    /* Repos grid */
+    .repos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .repo-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: border-color 0.15s;
+    }
+    .repo-card:hover { border-color: var(--blue); }
+    .repo-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .repo-emoji { font-size: 1.3rem; }
+    .repo-name { font-weight: 600; font-size: 0.95rem; }
+    .repo-meta {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .repo-meta .label { color: var(--text-muted); display: inline-block; width: 70px; }
+    .repo-focus {
+      font-size: 0.82rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .repo-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--blue);
+      text-decoration: none;
+    }
+    .repo-link:hover { text-decoration: underline; }
+    .badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.15em 0.5em;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .badge.squad { border-color: var(--green); color: var(--green); }
+
+    /* Activity log */
+    #log-entries {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .topbar { padding: 0.75rem 1rem; }
+      .main { padding: 1rem; }
+      .ralph-grid { grid-template-columns: 1fr; }
+      .repos-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <h1>🖥️ FFS Squad Monitor</h1>
-  <p class="subtitle">Real-time dashboard for First Frame Studios AI squad</p>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Heartbeat</h2>
-      <p id="heartbeat-status">
-        <span class="status-dot unknown"></span>
-        <span id="status-text">Waiting for data...</span>
-      </p>
-      <dl id="heartbeat-data"></dl>
-    </div>
-
-    <div class="card">
-      <h2>Round Stats</h2>
-      <p id="round-info" style="color: var(--text-muted);">No round data yet</p>
+  <div class="topbar">
+    <h1>🖥️ FFS Squad Monitor</h1>
+    <div class="connection-status">
+      <span class="dot gray" id="conn-dot"></span>
+      <span id="conn-text">Connecting…</span>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Activity Log</h2>
-    <div id="log-entries">
-      <p style="color: var(--text-muted);">No log entries yet. Connect to FFS to start monitoring.</p>
+  <div class="main">
+
+    <!-- Ralph Status -->
+    <div class="section-title">Ralph Watch</div>
+    <div class="ralph-grid">
+      <div class="card">
+        <h3>Heartbeat</h3>
+        <p id="heartbeat-status" style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.75rem;">
+          <span class="dot gray" id="ralph-dot"></span>
+          <span id="status-text">Waiting for data…</span>
+        </p>
+        <dl id="heartbeat-data"></dl>
+      </div>
+      <div class="card">
+        <h3>Round Stats</h3>
+        <p id="round-info">No round data yet</p>
+      </div>
     </div>
+
+    <!-- Repos -->
+    <div class="section-title">Studio Repos</div>
+    <div class="repos-grid" id="repos-grid">
+      <div class="repo-card" style="color:var(--text-muted);text-align:center;padding:3rem;">Loading repos…</div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="section-title">Activity Log</div>
+    <div class="card">
+      <div id="log-entries">
+        <p style="color: var(--text-muted);">Waiting for log data…</p>
+      </div>
+    </div>
+
   </div>
 
   <script type="module" src="./monitor.js"></script>
