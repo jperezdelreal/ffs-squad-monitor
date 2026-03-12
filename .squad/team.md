@@ -26,3 +26,9 @@
 - **Stack:** Vanilla JS, Vite, CSS, component-based architecture, custom polling scheduler
 - **Created:** 2026-03-11
 - **Universe:** Alien (1979)
+
+## Issue Source
+
+- **Repository:** jperezdelreal/ffs-squad-monitor
+- **Connected:** 2026-03-12
+- **Scope:** Squad Monitor features (dashboard UI, heartbeat reader, log viewer, timeline)
