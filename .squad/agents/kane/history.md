@@ -7,6 +7,16 @@
 
 ## Learnings
 
+### Testing Infrastructure (Issue #22 - 2026-03-12)
+- **Vitest Configuration:** Established test infrastructure using Vitest 4.1.0 with happy-dom environment for DOM testing
+- **Coverage Targets:** Achieved 97.61% coverage on src/lib/ modules (util, scheduler, api) - exceeding 80% requirement
+- **Test Organization:** Created __tests__ subdirectories next to source files (e.g., src/lib/__tests__/)
+- **Edge Case Focus:** Prioritized testing edge cases like null/undefined handling, boundary conditions, timer cleanup, and error scenarios
+- **Module State Management:** API module maintains internal state (connection status, listeners) that persists across tests - used module reset strategy (vi.resetModules) where needed
+- **CI Integration:** Added GitHub Actions workflow (.github/workflows/test.yml) for automated testing on PRs and main pushes
+- **Test Scripts:** npm test (run once), npm run test:watch (watch mode), npm run test:coverage (coverage report)
+- **Coverage Exclusions:** Exclude test files and coverage directory from git (.gitignore)
+
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
 ### 2026-03-12: Issue #19 - Synced squad-triage.yml with Hub content-aware triage fix
