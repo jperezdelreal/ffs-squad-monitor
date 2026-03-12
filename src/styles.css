@@ -591,6 +591,12 @@ body {
   font-family: var(--mono);
 }
 
+.agent-timestamp {
+  font-size: 0.6rem;
+  color: var(--text-dim, #484f58);
+  font-family: var(--mono);
+}
+
 /* ══════════════════════════════════════════════════════════
    TIMELINE — Swim lanes
    ══════════════════════════════════════════════════════════ */
