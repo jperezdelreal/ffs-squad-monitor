@@ -17,12 +17,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
 // API routes
 app.get('/api/heartbeat', heartbeatRoute);
 app.get('/api/logs/files', logsFilesRoute);
@@ -37,6 +31,12 @@ app.get('/api/repos', reposRoute);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Error handling middleware (must be after all routes)
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // Start server
