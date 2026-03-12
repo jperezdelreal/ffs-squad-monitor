@@ -13,7 +13,7 @@ This is a **read-only observer** — it doesn't control agents, just displays th
 - **CSS** — custom styling (no framework)
 - **Vite plugin middleware** — custom API endpoints for backend data
 - **`gh` CLI** — GitHub API integration for fetching squad data
-- **Default branch:** `master` (NOT `main`)
+- **Default branch:** `main`
 
 ## File Structure
 
@@ -98,7 +98,7 @@ Tracks scheduler rounds:
 2. Lead assigns to member via `squad:{agent}` label (ripley, dallas, lambert, kane)
 3. Agent self-assigns and creates branch: `squad/{issue-number}-{slug}`
 4. Agent opens PR with "Closes #{issue-number}" in body
-5. PR reviewed and merged to `master` → issue auto-closes
+5. PR reviewed and merged to `main` → issue auto-closes
 
 ### Team
 
@@ -119,7 +119,7 @@ Tracks scheduler rounds:
 - Must include "Closes #{issue-number}" in body
 - Must pass review by Lead or designated reviewer
 - Code must follow existing patterns (modular components, minimal deps)
-- Target branch: `master`
+- Target branch: `main`
 
 ### Labels
 - `squad` — triage inbox
