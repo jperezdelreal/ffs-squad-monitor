@@ -20,8 +20,11 @@ function renderAgents(agents) {
 
   grid.innerHTML = agents.map(agent => {
     const statusClass = getStatusClass(agent.status);
-    const activity = agent.lastActivity ? timeAgo(agent.lastActivity) : 'No activity';
-    const work = agent.currentWork ? escapeHtml(agent.currentWork) : activity;
+    const activity = agent.lastActivity ? timeAgo(agent.lastActivity) : '';
+    const work = agent.currentWork ? escapeHtml(agent.currentWork) : 'No activity';
+    const activityLine = activity && agent.currentWork
+      ? `<div class="agent-activity">${work}</div><div class="agent-timestamp">${activity}</div>`
+      : `<div class="agent-activity">${agent.currentWork ? work : (activity || 'No activity')}</div>`;
 
     return `
       <div class="agent-card status-${statusClass}" title="${escapeHtml(agent.role)}">
@@ -32,7 +35,7 @@ function renderAgents(agents) {
             <span class="agent-status-dot ${statusClass}"></span>
           </div>
           <div class="agent-role">${escapeHtml(agent.role)}</div>
-          <div class="agent-activity">${work}</div>
+          ${activityLine}
         </div>
       </div>
     `;

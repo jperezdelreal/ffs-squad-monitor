@@ -36,9 +36,12 @@ function renderRalphHero(hb, timeline) {
   const statusText = hb.status ? hb.status.charAt(0).toUpperCase() + hb.status.slice(1) : 'Unknown';
   statusLabel.textContent = `Ralph — ${statusText}`;
 
-  // Mode badge (determine from time of day)
-  const hour = new Date().getHours();
-  const isNight = hour < 7 || hour >= 22;
+  // Mode badge (prefer real data from heartbeat, fallback to time of day)
+  const mode = hb.mode || (function() {
+    const hour = new Date().getHours();
+    return (hour < 7 || hour >= 22) ? 'night' : 'day';
+  })();
+  const isNight = mode === 'night';
   modeBadge.textContent = isNight ? '🌙 Night' : '☀️ Day';
   modeBadge.style.borderColor = isNight ? 'var(--purple)' : 'var(--yellow)';
   modeBadge.style.color = isNight ? 'var(--purple)' : 'var(--yellow)';

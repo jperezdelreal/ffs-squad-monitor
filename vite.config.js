@@ -71,6 +71,7 @@ function ffsApiPlugin() {
   const heartbeatPath = process.env.FFS_HEARTBEAT_PATH
     || path.join(ffsRoot, 'tools', '.ralph-heartbeat.json');
   const logsDir = path.join(ffsRoot, 'tools', 'logs');
+  const orchestrationLogDir = path.join(ffsRoot, '.squad', 'orchestration-log');
 
   // Cached heartbeat state — updated via fs.watch
   let heartbeatCache = null;
@@ -89,6 +90,7 @@ function ffsApiPlugin() {
         lastDuration: data.lastDuration ?? null,
         timestamp: data.timestamp || null,
         consecutiveFailures: data.consecutiveFailures ?? 0,
+        mode: data.mode || null,
         repos: data.repos || [],
       };
     } catch {
@@ -265,8 +267,17 @@ function ffsApiPlugin() {
       server.middlewares.use('/api/timeline', (req, res) => {
         try {
           const url = new URL(req.url, `http://${req.headers.host}`);
-          const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
-          const logFiles = listLogFiles().filter(f => f.date === date);
+          let date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+          let logFiles = listLogFiles().filter(f => f.date === date);
+
+          // Fallback: if no logs for requested date, use the latest available date
+          if (logFiles.length === 0 && !url.searchParams.get('date')) {
+            const allFiles = listLogFiles();
+            if (allFiles.length > 0) {
+              date = allFiles[0].date; // Already sorted newest first
+              logFiles = allFiles.filter(f => f.date === date);
+            }
+          }
           let entries = [];
           for (const f of logFiles) {
             entries = entries.concat(readLogEntries(f.agent, f.date));
@@ -326,10 +337,18 @@ function ffsApiPlugin() {
       server.middlewares.use('/api/logs', (req, res) => {
         try {
           const url = new URL(req.url, `http://${req.headers.host}`);
-          const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+          let date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
           const agentFilter = url.searchParams.get('agent');
 
-          const logFiles = listLogFiles().filter(f => f.date === date);
+          let logFiles = listLogFiles().filter(f => f.date === date);
+          // Fallback: if no logs for today, use latest available date
+          if (logFiles.length === 0 && !url.searchParams.get('date')) {
+            const allFiles = listLogFiles();
+            if (allFiles.length > 0) {
+              date = allFiles[0].date;
+              logFiles = allFiles.filter(f => f.date === date);
+            }
+          }
           let entries = [];
           for (const f of logFiles) {
             if (agentFilter && f.agent !== agentFilter) continue;
@@ -346,14 +365,74 @@ function ffsApiPlugin() {
       });
 
       // ── Agent roster & status ─────────────────────────────
+      // Parse orchestration-log files: "2026-03-11T15-33-03Z-solo.md" → { agent: "solo", timestamp: "2026-03-11T15:33:03Z" }
+      function getOrchestrationActivity() {
+        const activity = new Map();
+        try {
+          if (!fs.existsSync(orchestrationLogDir)) return activity;
+          const files = fs.readdirSync(orchestrationLogDir)
+            .filter(f => f.endsWith('.md'))
+            .sort();
+          for (const file of files) {
+            // Match patterns like "2026-03-11T15-33-03Z-solo.md" or "2026-03-09T1024Z-wedge.md"
+            const match = file.match(/^(\d{4}-\d{2}-\d{2}T[\d-]+Z)-(.+)\.md$/);
+            if (!match) continue;
+            const rawTs = match[1];
+            const agentRaw = match[2].toLowerCase();
+            // Normalize timestamp: "2026-03-11T15-33-03Z" → "2026-03-11T15:33:03Z"
+            const ts = rawTs.replace(/T(\d{2})-(\d{2})-(\d{2})Z/, 'T$1:$2:$3Z')
+              .replace(/T(\d{2})-(\d{2})-(\d{2})-(\d{2})Z/, 'T$1:$2:$3Z')
+              .replace(/T(\d{4})Z/, (m, hhmm) => `T${hhmm.slice(0,2)}:${hhmm.slice(2)}:00Z`);
+            // Extract agent name (strip compound suffixes like "jango-build-pipeline" → "jango")
+            const knownAgents = Object.keys(SQUAD_AGENTS);
+            const agent = knownAgents.find(a => agentRaw === a || agentRaw.startsWith(a + '-'));
+            if (!agent) continue;
+            // Read first meaningful line as task summary
+            let task = null;
+            try {
+              const content = fs.readFileSync(path.join(orchestrationLogDir, file), 'utf-8');
+              // Look for Task: line or Agent routed line
+              const taskMatch = content.match(/\*\*Task:\*\*\s*(.+)/);
+              const agentMatch = content.match(/\*\*Task[^*]*:\*\*\s*(.+)/i)
+                || content.match(/^#+\s*Orchestration Log\s*[—–-]+\s*(.+)/m);
+              if (taskMatch) task = taskMatch[1].trim().slice(0, 120);
+              else if (agentMatch) task = agentMatch[1].trim().slice(0, 120);
+              else {
+                // Fallback: first non-header, non-empty line
+                const lines = content.split('\n').filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('---'));
+                task = lines[0]?.replace(/\*+/g, '').trim().slice(0, 120) || null;
+              }
+            } catch { /* skip */ }
+
+            // Keep latest entry per agent
+            const existing = activity.get(agent);
+            if (!existing || ts > existing.timestamp) {
+              activity.set(agent, { timestamp: ts, task, file });
+            }
+          }
+        } catch { /* skip */ }
+        return activity;
+      }
+
       server.middlewares.use('/api/agents', (req, res) => {
+        const orchestration = getOrchestrationActivity();
+
         const agents = Object.entries(SQUAD_AGENTS).map(([id, meta]) => {
-          // Try to read agent's current status from orchestration log or recent logs
           let status = 'idle';
           let lastActivity = null;
           let currentWork = null;
 
-          // Check recent log entries for this agent
+          // 1. Check orchestration-log for agent activity
+          const orch = orchestration.get(id);
+          if (orch) {
+            lastActivity = orch.timestamp;
+            currentWork = orch.task;
+            // If activity was within the last 2 hours, mark as working
+            const ageMs = Date.now() - new Date(orch.timestamp).getTime();
+            if (ageMs < 2 * 60 * 60 * 1000) status = 'working';
+          }
+
+          // 2. Also check JSONL logs (ralph's rounds reference agents)
           const today = new Date().toISOString().slice(0, 10);
           const logFile = path.join(logsDir, `${id}-${today}.jsonl`);
           try {
@@ -363,11 +442,13 @@ function ffsApiPlugin() {
                 const lines = raw.split('\n').filter(l => l.trim());
                 const lastEntry = lines.length > 0 ? JSON.parse(lines[lines.length - 1]) : null;
                 if (lastEntry) {
-                  lastActivity = lastEntry.timestamp;
+                  // Use JSONL data if more recent than orchestration-log
+                  if (!lastActivity || (lastEntry.timestamp && lastEntry.timestamp > lastActivity)) {
+                    lastActivity = lastEntry.timestamp;
+                    currentWork = lastEntry.phase || lastEntry.status || currentWork;
+                  }
                   if (lastEntry.exitCode !== 0) status = 'blocked';
                   else if (lastEntry.status === 'running') status = 'working';
-                  else status = 'idle';
-                  currentWork = lastEntry.phase || lastEntry.status || null;
                 }
               }
             }
