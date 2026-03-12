@@ -7,4 +7,17 @@
 
 ## Learnings
 
-<!-- Append new learnings below. Each entry is something lasting about the project. -->
+### Backend Architecture (2026-03-12)
+
+- **Modular Server Structure:** Extracted 26KB vite.config.js API middleware into dedicated `server/` directory with Express
+- **Key Paths:**
+  - `server/index.js` — Express app entry point (port 3001)
+  - `server/config.js` — Centralized configuration (heartbeat path, logs dir, repos, agents)
+  - `server/api/` — Modular route handlers: heartbeat, logs, timeline, board, pulse, workflows, repos
+- **Patterns:**
+  - SSE streaming for real-time log updates (`/api/logs/stream`)
+  - File watching for heartbeat changes (fs.watch with debounce)
+  - Issue caching with 30s TTL
+  - Environment-based configuration (FFS_ROOT, FFS_HEARTBEAT_PATH, PORT)
+- **Vite Integration:** Dev server proxies `/api` to standalone backend on port 3001
+- **Dependencies:** Express 5.2.1, cors 2.8.6
