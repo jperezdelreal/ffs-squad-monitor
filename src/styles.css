@@ -302,6 +302,36 @@ body {
   border-radius: 1px;
 }
 
+/* Timeline filter dropdown */
+.timeline-filter {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.timeline-filter label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+.timeline-filter select {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.35rem;
+  outline: none;
+  cursor: pointer;
+}
+.timeline-filter select:focus {
+  border-color: var(--blue);
+}
+
 /* ── Cards ─────────────────────────────────────────────── */
 .card {
   background: var(--surface);

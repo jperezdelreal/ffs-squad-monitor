@@ -6,11 +6,28 @@
 import { fetchTimeline } from '../lib/api.js';
 import { formatDuration, escapeHtml } from '../lib/util.js';
 
+const STORAGE_KEY = 'ffs-timeline-limit';
+const LIMIT_OPTIONS = [10, 20, 30, 50, 'All'];
+const DEFAULT_LIMIT = 10;
+
 let expandedRoundId = null;
+let cachedData = null;
+
+function getLimit() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === 'All') return 'All';
+  const n = parseInt(stored, 10);
+  return LIMIT_OPTIONS.includes(n) ? n : DEFAULT_LIMIT;
+}
+
+function setLimit(value) {
+  localStorage.setItem(STORAGE_KEY, value);
+}
 
 export async function refreshTimeline() {
   const data = await fetchTimeline();
   if (!data) return;
+  cachedData = data;
   renderTimeline(data);
 }
 
@@ -18,6 +35,15 @@ export function initTimeline() {
   const container = document.getElementById('timeline');
   if (!container) return;
   container.addEventListener('click', handleTimelineClick);
+
+  const select = document.getElementById('timeline-limit');
+  if (select) {
+    select.value = String(getLimit());
+    select.addEventListener('change', () => {
+      setLimit(select.value);
+      if (cachedData) renderTimeline(cachedData);
+    });
+  }
 }
 
 function handleTimelineClick(e) {
@@ -48,7 +74,22 @@ function renderTimeline(data) {
     return;
   }
 
-  const { rounds, agents, summary } = data;
+  const limit = getLimit();
+  const allRounds = data.rounds;
+  const rounds = limit === 'All' ? allRounds : allRounds.slice(-limit);
+  const agents = [...new Set(rounds.map(r => r.agent))];
+
+  // Recompute summary for visible rounds
+  const summary = {
+    total: rounds.length,
+    success: rounds.filter(r => r.outcome === 'success').length,
+    error: rounds.filter(r => r.outcome !== 'success').length,
+    avgDuration: rounds.length > 0
+      ? rounds.reduce((s, r) => s + r.duration, 0) / rounds.length
+      : 0,
+    maxDuration: rounds.reduce((m, r) => Math.max(m, r.duration), 0) || 1,
+  };
+
   const maxDur = summary.maxDuration || 1;
 
   // Group rounds by agent for swim lanes
