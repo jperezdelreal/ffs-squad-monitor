@@ -26,10 +26,30 @@ function setLimit(value) {
 
 export async function refreshTimeline() {
   const data = await fetchTimeline();
+  if (data?.error) {
+    renderTimelineError();
+    return;
+  }
   if (!data) return;
   cachedData = data;
   renderTimeline(data);
 }
+
+function renderTimelineError() {
+  const container = document.getElementById('timeline');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">Could not load timeline data</div>
+      <button class="retry-btn" onclick="window.__retryTimeline()">Retry</button>
+    </div>
+  `;
+}
+
+window.__retryTimeline = () => {
+  refreshTimeline();
+};
 
 export function initTimeline() {
   const container = document.getElementById('timeline');

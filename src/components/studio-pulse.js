@@ -6,8 +6,22 @@ import { fetchPulse } from '../lib/api.js';
 
 export async function refreshPulse() {
   const data = await fetchPulse();
+  if (data?.error) {
+    renderPulseError();
+    return;
+  }
   if (!data) return;
   renderPulse(data);
+}
+
+function renderPulseError() {
+  const prsEl = document.getElementById('pulse-prs');
+  const issuesEl = document.getElementById('pulse-issues');
+  const agentsEl = document.getElementById('pulse-agents');
+  
+  if (prsEl) prsEl.textContent = '—';
+  if (issuesEl) issuesEl.textContent = '—';
+  if (agentsEl) agentsEl.textContent = '—';
 }
 
 function renderPulse(data) {
