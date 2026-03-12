@@ -86,7 +86,19 @@
     </section>
 
     <!-- Round Timeline -->
-    <div class="section-title">Round Timeline</div>
+    <div class="section-title">
+      Round Timeline
+      <span class="timeline-filter">
+        <label for="timeline-limit">Show last</label>
+        <select id="timeline-limit">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+          <option value="50">50</option>
+          <option value="All">All</option>
+        </select>
+      </span>
+    </div>
     <div class="card" id="timeline">
       <p class="empty-state">No round data yet.</p>
     </div>
