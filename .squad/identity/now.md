@@ -1,9 +1,10 @@
 ---
-updated_at: 2026-03-11T09:47:34.296Z
-focus_area: Initial setup
+updated_at: 2026-03-12T11:53:15Z
+focus_area: Team setup complete
 active_issues: []
 ---
 
 # What We're Focused On
 
-Getting started. Updated by coordinator at session start.
+Team hired and ready. Ripley (Lead), Dallas (Frontend), Lambert (Backend), Kane (Tester), Scribe, Ralph.
+Real-time monitoring dashboard for First Frame Studios' AI squad operations — Vanilla JS + Vite.

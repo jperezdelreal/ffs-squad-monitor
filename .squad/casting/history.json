@@ -1,0 +1,23 @@
+{
+  "universe_usage_history": [
+    {
+      "universe": "Alien",
+      "assigned_at": "2026-03-12T11:53:15Z",
+      "repo": "ffs-squad-monitor",
+      "agent_count": 4
+    }
+  ],
+  "assignment_cast_snapshots": {
+    "assignment-001": {
+      "assignment_id": "assignment-001",
+      "universe": "Alien",
+      "timestamp": "2026-03-12T11:53:15Z",
+      "agents": {
+        "ripley": "Lead",
+        "dallas": "Frontend Dev",
+        "lambert": "Backend Dev",
+        "kane": "Tester"
+      }
+    }
+  }
+}

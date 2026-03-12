@@ -6,13 +6,12 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
-| Async issue work (bugs, tests, small features) | @copilot 🤖 | Well-defined tasks matching capability profile |
+| UI components, layout, CSS, DOM | Dallas | Build dashboard panels, style components, responsive design |
+| Vite config, middleware, APIs, data layer | Lambert | Polling scheduler, API endpoints, data pipelines, build config |
+| Architecture, scope, decisions | Ripley | System design, component boundaries, what to build next |
+| Code review | Ripley | Review PRs, check quality, suggest improvements |
+| Testing | Kane | Write tests, find edge cases, verify fixes, quality gates |
+| Scope & priorities | Ripley | What to build next, trade-offs, decisions |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Issue Routing
