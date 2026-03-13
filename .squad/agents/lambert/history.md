@@ -116,3 +116,17 @@ Routed all React component GitHub API calls through Express backend:
 4. **Label format adaptation** — Backend returns labels as string arrays; updated PipelineVisualizer to match strings directly (`l === label`) instead of objects (`l.name === label`).
 
 **Key Pattern:** When moving API calls from frontend to backend, adapt the component to the backend's existing response shape rather than reshaping the backend to match the old frontend format. This keeps the backend API clean and consistent.
+
+### 2026-03-14 — Issue #80 Agent Productivity Metrics API (PR #97)
+
+Implemented `GET /api/metrics/agents` endpoint that computes per-agent productivity from real GitHub data:
+
+1. **`server/lib/agent-metrics.js`** — Core computation module. Fetches issues (via `squad:{agent}` labels) and PRs across all squad repos. Computes: issuesAssigned, issuesClosed, prsOpened, prsMerged, avgCycleTimeHours (median), currentStreak (consecutive close days), blockedTimeHours. Uses 5-min in-memory cache to reduce GitHub API load.
+
+2. **PR-to-agent linking** — Three strategies: squad label on PR → "Closes #N" body reference → branch name `squad/{number}-slug`. Covers all linking patterns used by the squad.
+
+3. **Historical snapshots** — Integrated with snapshot-service.js at 15-min intervals using `agent-productivity` channel. Historical data returned alongside live computation when date range specified.
+
+4. **Query params** — `?from=&to=` for date filtering, `?agent=dallas` for single-agent view. Rate limit errors properly forwarded via `handleGitHubError`.
+
+**Key Pattern:** For expensive GitHub API aggregations, use multi-tier caching: in-memory cache for immediate repeats (5 min), SQLite snapshots for historical trends (15 min). Derive repo list from agent config rather than hardcoding — stays in sync automatically.
