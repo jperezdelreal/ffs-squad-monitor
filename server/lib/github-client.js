@@ -1,4 +1,5 @@
 import { config } from '../config.js'
+import { logger } from './logger.js'
 
 const GITHUB_API = 'https://api.github.com'
 const RATE_LIMIT_WARNING_THRESHOLD = 100
@@ -27,9 +28,11 @@ function parseRateLimitHeaders(headers) {
 
   if (rateLimit.remaining !== null && rateLimit.remaining < RATE_LIMIT_WARNING_THRESHOLD) {
     const resetDate = rateLimit.reset ? new Date(rateLimit.reset * 1000).toISOString() : 'unknown'
-    console.warn(
-      `⚠️  GitHub API rate limit low: ${rateLimit.remaining}/${rateLimit.limit} remaining. Resets at ${resetDate}`
-    )
+    logger.warn('GitHub API rate limit low', {
+      remaining: rateLimit.remaining,
+      limit: rateLimit.limit,
+      resetsAt: resetDate,
+    })
   }
 }
 
