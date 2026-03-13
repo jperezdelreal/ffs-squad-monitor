@@ -27,11 +27,14 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
+    <div className="flex h-screen bg-[#0a0e14] overflow-hidden">
+      {/* Subtle gradient background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5 pointer-events-none" />
+      
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         <Header lastUpdate={lastUpdate} isConnected={isConnected} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 space-y-6">
           {renderView()}
         </main>
       </div>

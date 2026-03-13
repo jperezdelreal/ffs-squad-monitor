@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { fetchAllRepoIssues, REPOS } from '../services/github';
 
 const STAGES = [
-  { id: 'proposal', name: 'Proposal', emoji: '💡' },
-  { id: 'gdd', name: 'GDD', emoji: '📋' },
-  { id: 'issues', name: 'Issues', emoji: '🎯' },
-  { id: 'code', name: 'Code', emoji: '💻' },
-  { id: 'build', name: 'Build', emoji: '🔨' },
-  { id: 'deploy', name: 'Deploy', emoji: '🚀' },
+  { id: 'proposal', name: 'Proposal', emoji: '💡', color: 'from-yellow-500 to-amber-600' },
+  { id: 'gdd', name: 'GDD', emoji: '📋', color: 'from-blue-500 to-cyan-600' },
+  { id: 'issues', name: 'Issues', emoji: '🎯', color: 'from-purple-500 to-pink-600' },
+  { id: 'code', name: 'Code', emoji: '💻', color: 'from-green-500 to-emerald-600' },
+  { id: 'build', name: 'Build', emoji: '🔨', color: 'from-orange-500 to-red-600' },
+  { id: 'deploy', name: 'Deploy', emoji: '🚀', color: 'from-cyan-500 to-blue-600' },
 ];
 
 export function PipelineVisualizer() {
   const [pipelineData, setPipelineData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export function PipelineVisualizer() {
 
   const loadPipelineData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const repoIssues = await fetchAllRepoIssues();
       const data = {};
@@ -40,6 +42,7 @@ export function PipelineVisualizer() {
       setPipelineData(data);
     } catch (error) {
       console.error('Failed to load pipeline data:', error);
+      setError('Failed to fetch pipeline data');
     } finally {
       setLoading(false);
     }
@@ -85,137 +88,192 @@ export function PipelineVisualizer() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-gray-600',
-      'in-progress': 'bg-yellow-600',
-      complete: 'bg-green-600',
-      blocked: 'bg-red-600',
+      pending: 'from-gray-600 to-gray-700',
+      'in-progress': 'from-amber-500 to-yellow-600',
+      complete: 'from-emerald-500 to-green-600',
+      blocked: 'from-red-500 to-rose-600',
     };
     return colors[status] || colors.pending;
   };
 
   const getStatusIcon = (status) => {
     const icons = {
-      pending: '⏳',
-      'in-progress': '🔄',
+      pending: '⏸️',
+      'in-progress': '⚡',
       complete: '✅',
-      blocked: '⛔',
+      blocked: '🚫',
     };
     return icons[status] || icons.pending;
   };
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg border border-gray-700 p-8">
-        <div className="text-center text-gray-400">
-          Loading pipeline data...
+      <div className="space-y-4">
+        <div className="glass rounded-xl p-6 animate-pulse">
+          <div className="h-8 bg-white/5 rounded w-1/4 mb-6" />
+          <div className="grid grid-cols-7 gap-3">
+            {[...Array(42)].map((_, i) => (
+              <div key={i} className="h-24 bg-white/5 rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Pipeline Status</h2>
+  if (error) {
+    return (
+      <div className="glass rounded-xl border border-red-500/20 p-8">
+        <div className="text-center">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-white mb-2">Connection Error</h3>
+          <p className="text-gray-400 text-sm mb-4">{error}</p>
           <button
             onClick={loadPipelineData}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm"
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
           >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const repoCount = Object.keys(pipelineData).length;
+
+  return (
+    <div className="space-y-4 animate-fade-in">
+      {/* Header */}
+      <div className="glass rounded-xl p-6 border border-white/10">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">Pipeline Status</h2>
+            <p className="text-sm text-gray-400">{repoCount} repositories tracked</p>
+          </div>
+          <button
+            onClick={loadPipelineData}
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
             Refresh
           </button>
         </div>
-        <div className="mt-2 flex gap-4 text-xs">
+        <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-gray-600 rounded"></span>
+            <div className="w-3 h-3 bg-gradient-to-br from-gray-600 to-gray-700 rounded" />
             <span className="text-gray-400">Pending</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-yellow-600 rounded"></span>
+            <div className="w-3 h-3 bg-gradient-to-br from-amber-500 to-yellow-600 rounded" />
             <span className="text-gray-400">In Progress</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-green-600 rounded"></span>
+            <div className="w-3 h-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded" />
             <span className="text-gray-400">Complete</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-red-600 rounded"></span>
+            <div className="w-3 h-3 bg-gradient-to-br from-red-500 to-rose-600 rounded" />
             <span className="text-gray-400">Blocked</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-700">
-              <th className="text-left p-3 text-sm font-medium text-gray-400 sticky left-0 bg-gray-800">
-                Repository
-              </th>
-              {STAGES.map(stage => (
-                <th key={stage.id} className="text-center p-3 text-sm font-medium text-gray-400 min-w-[120px]">
-                  <div>{stage.emoji}</div>
-                  <div>{stage.name}</div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(pipelineData).map(([repo, stages]) => (
-              <tr key={repo} className="border-b border-gray-700 hover:bg-gray-750">
-                <td className="p-3 text-sm font-medium text-white sticky left-0 bg-gray-800">
-                  {repo}
-                </td>
-                {STAGES.map(stage => {
-                  const stageData = stages[stage.id];
-                  return (
-                    <td
-                      key={stage.id}
-                      className="p-2 cursor-pointer"
-                      onClick={() => setSelectedCell({ repo, stage: stage.name, data: stageData })}
-                    >
-                      <div
-                        className={`${getStatusColor(stageData.status)} rounded p-2 text-center transition-all hover:opacity-80`}
-                      >
-                        <div className="text-lg">{getStatusIcon(stageData.status)}</div>
-                        {stageData.count > 0 && (
-                          <div className="text-xs text-white mt-1">
-                            {stageData.count} issue{stageData.count !== 1 ? 's' : ''}
-                          </div>
-                        )}
+      {/* Pipeline Grid */}
+      {repoCount === 0 ? (
+        <div className="glass rounded-xl p-12 border border-white/10">
+          <div className="text-center">
+            <div className="text-6xl mb-4">🔄</div>
+            <h3 className="text-lg font-semibold text-white mb-2">No Pipeline Data</h3>
+            <p className="text-gray-400 text-sm">Pipeline stages will appear here once configured</p>
+          </div>
+        </div>
+      ) : (
+        <div className="glass rounded-xl border border-white/10 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/5">
+                  <th className="text-left p-4 text-sm font-semibold text-gray-300 sticky left-0 bg-[#151920]/95 backdrop-blur-sm z-10">
+                    Repository
+                  </th>
+                  {STAGES.map(stage => (
+                    <th key={stage.id} className="text-center p-4 text-sm font-semibold text-gray-300 min-w-[140px]">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-2xl">{stage.emoji}</span>
+                        <span>{stage.name}</span>
                       </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(pipelineData).map(([repo, stages], rowIndex) => (
+                  <tr 
+                    key={repo} 
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors animate-slide-up"
+                    style={{ animationDelay: `${rowIndex * 0.05}s` }}
+                  >
+                    <td className="p-4 text-sm font-semibold text-white sticky left-0 bg-[#151920]/95 backdrop-blur-sm border-r border-white/5">
+                      {repo}
                     </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    {STAGES.map(stage => {
+                      const stageData = stages[stage.id];
+                      return (
+                        <td
+                          key={stage.id}
+                          className="p-3"
+                        >
+                          <div
+                            onClick={() => setSelectedCell({ repo, stage: stage.name, data: stageData })}
+                            className={`bg-gradient-to-br ${getStatusColor(stageData.status)} rounded-lg p-3 text-center cursor-pointer transition-all hover:scale-105 hover:shadow-lg relative group`}
+                          >
+                            <div className="text-2xl mb-1">{getStatusIcon(stageData.status)}</div>
+                            {stageData.count > 0 && (
+                              <div className="text-xs font-mono font-bold text-white">
+                                {stageData.count} issue{stageData.count !== 1 ? 's' : ''}
+                              </div>
+                            )}
+                            {stageData.count === 0 && (
+                              <div className="text-xs font-mono text-white/60">-</div>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
+      {/* Modal */}
       {selectedCell && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
           onClick={() => setSelectedCell(null)}
         >
           <div
-            className="bg-gray-800 rounded-lg border border-gray-700 max-w-2xl w-full p-6"
+            className="glass rounded-xl border border-white/20 max-w-2xl w-full p-6 animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-white">
-                {selectedCell.repo} - {selectedCell.stage}
+                {selectedCell.repo} • {selectedCell.stage}
               </h3>
               <button
                 onClick={() => setSelectedCell(null)}
-                className="text-gray-400 hover:text-white text-2xl"
+                className="text-gray-400 hover:text-white text-2xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
               >
                 ×
               </button>
             </div>
 
             <div className="mb-4">
-              <div className={`inline-flex items-center gap-2 ${getStatusColor(selectedCell.data.status)} text-white px-3 py-1 rounded`}>
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${getStatusColor(selectedCell.data.status)} text-white font-medium`}>
                 <span>{getStatusIcon(selectedCell.data.status)}</span>
                 <span className="capitalize">{selectedCell.data.status.replace('-', ' ')}</span>
               </div>
@@ -223,19 +281,19 @@ export function PipelineVisualizer() {
 
             {selectedCell.data.issues.length > 0 ? (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-400 mb-2">Issues:</h4>
+                <h4 className="text-sm font-semibold text-gray-300 mb-3">Related Issues:</h4>
                 {selectedCell.data.issues.map(issue => (
                   <a
                     key={issue.number}
                     href={issue.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block p-3 bg-gray-700 hover:bg-gray-600 rounded border border-gray-600 transition-colors"
+                    className="block p-3 glass hover:border-cyan-500/30 rounded-lg border border-white/10 transition-all hover:shadow-lg hover:shadow-cyan-500/10"
                   >
-                    <div className="flex items-start gap-2">
-                      <span className="text-sm font-medium text-blue-400">#{issue.number}</span>
+                    <div className="flex items-start gap-3">
+                      <span className="text-sm font-mono font-semibold text-cyan-400">#{issue.number}</span>
                       <span className="text-sm text-white flex-1">{issue.title}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded ${issue.state === 'open' ? 'bg-green-600' : 'bg-purple-600'}`}>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${issue.state === 'open' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-purple-500/20 text-purple-400'}`}>
                         {issue.state}
                       </span>
                     </div>
@@ -243,7 +301,9 @@ export function PipelineVisualizer() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">No issues found for this stage</p>
+              <div className="text-center py-8">
+                <p className="text-gray-400 text-sm">No issues found for this stage</p>
+              </div>
             )}
           </div>
         </div>
