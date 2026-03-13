@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
@@ -637,11 +638,12 @@ function ffsApiPlugin() {
 }
 
 export default defineConfig({
-  root: 'src',
+  base: '/ffs-squad-monitor/',
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     emptyOutDir: true,
   },
+  plugins: [react()],
   server: {
     proxy: {
       '/api': {
