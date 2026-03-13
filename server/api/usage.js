@@ -1,5 +1,6 @@
 import { REPOS } from '../config.js'
 import { githubFetch, handleGitHubError } from '../lib/github-client.js'
+import { logger } from '../lib/logger.js'
 
 const CACHE_TTL = 30_000
 let usageCache = null
@@ -32,7 +33,7 @@ async function aggregateWorkflowUsage() {
       }
     } catch (err) {
       // Skip individual repo failures
-      console.warn(`⚠️  Failed to fetch workflow runs for ${repo.github}:`, err.message)
+      logger.warn('Failed to fetch workflow runs', { repo: repo.github, error: err.message })
     }
 
     totalRunsCount += repoRuns

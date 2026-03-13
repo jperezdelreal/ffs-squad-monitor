@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { config } from './config.js';
 import { getRateLimitStatus } from './lib/github-client.js';
+import { logger, requestLogger } from './lib/logger.js';
 
 // Import route handlers
 import heartbeatRoute from './api/heartbeat.js';
@@ -20,6 +21,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 // API routes
 app.get('/api/heartbeat', heartbeatRoute);
@@ -55,41 +57,38 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware (must be after all routes)
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
+  logger.error('Unhandled server error', {
+    error: err.message,
+    stack: err.stack,
+    path: req.originalUrl || req.url,
+    method: req.method,
+  });
   res.status(500).json({ error: 'Internal server error' });
 });
 
 // Start server
 const PORT = config.port;
 app.listen(PORT, () => {
-  console.log(`🔧 FFS Squad Monitor API Server`);
-  console.log(`   Port: ${PORT}`);
-  console.log(`   Heartbeat: ${config.heartbeatPath}`);
-  console.log(`   Logs: ${config.logsDir}`);
-  console.log(`   GitHub Auth: ${config.githubToken ? '✅ Token configured' : '⚠️  No token (unauthenticated, 60 req/hr limit)'}`);
-  console.log(`\n   Endpoints:`);
-  console.log(`   - GET /api/heartbeat`);
-  console.log(`   - GET /api/logs/files`);
-  console.log(`   - GET /api/logs/stream`);
-  console.log(`   - GET /api/logs`);
-  console.log(`   - GET /api/timeline`);
-  console.log(`   - GET /api/issues`);
-  console.log(`   - GET /api/pulse`);
-  console.log(`   - GET /api/agents`);
-  console.log(`   - GET /api/repos`);
-  console.log(`   - GET /api/config`);
-  console.log(`   - GET /api/events`);
-  console.log(`   - GET /api/usage`);
-  console.log(`   - GET /health\n`);
+  logger.info('Server started', {
+    port: PORT,
+    heartbeat: config.heartbeatPath,
+    logsDir: config.logsDir,
+    githubAuth: !!config.githubToken,
+    endpoints: [
+      '/api/heartbeat', '/api/logs/files', '/api/logs/stream', '/api/logs',
+      '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
+      '/api/repos', '/api/config', '/api/events', '/api/usage', '/health',
+    ],
+  });
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('Shutdown signal received', { signal: 'SIGTERM' });
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('\nSIGINT received, shutting down gracefully...');
+  logger.info('Shutdown signal received', { signal: 'SIGINT' });
   process.exit(0);
 });
