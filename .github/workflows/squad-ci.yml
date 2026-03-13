@@ -2,10 +2,10 @@ name: Squad CI
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
     types: [opened, synchronize, reopened]
   push:
-    branches: [master]
+    branches: [main]
 
 permissions:
   contents: read
