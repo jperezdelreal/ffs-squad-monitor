@@ -51,6 +51,23 @@ function getOrchestrationActivity() {
   return activity;
 }
 
+/**
+ * @openapi
+ * /api/agents:
+ *   get:
+ *     summary: Get squad agent statuses
+ *     description: Returns all squad agents with their current status (idle, working, blocked), last activity timestamp, and current work description. Sources data from orchestration logs and JSONL logs.
+ *     tags: [Agents]
+ *     responses:
+ *       200:
+ *         description: Array of agent status objects
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Agent'
+ */
 export default function workflowsRoute(req, res) {
   const orchestration = getOrchestrationActivity();
 

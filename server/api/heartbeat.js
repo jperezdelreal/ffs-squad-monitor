@@ -64,6 +64,21 @@ export function getHeartbeatResponse() {
 readHeartbeatFile();
 startWatcher();
 
+/**
+ * @openapi
+ * /api/heartbeat:
+ *   get:
+ *     summary: Get current heartbeat status
+ *     description: Returns the latest Ralph scheduler heartbeat data, read from the `.ralph-heartbeat.json` file. Updated in real-time via file watcher.
+ *     tags: [Heartbeat]
+ *     responses:
+ *       200:
+ *         description: Current heartbeat data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Heartbeat'
+ */
 export default function heartbeatRoute(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(getHeartbeatResponse()));

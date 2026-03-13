@@ -46,6 +46,29 @@ function getLastCommit(repoDir) {
   } catch { return null; }
 }
 
+/**
+ * @openapi
+ * /api/repos:
+ *   get:
+ *     summary: Get monitored repositories
+ *     description: Returns status info for each monitored repo including squad presence, current focus from now.md, open issue count, and latest commit.
+ *     tags: [Repos]
+ *     responses:
+ *       200:
+ *         description: Array of repository status objects
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Repo'
+ *       500:
+ *         description: Failed to fetch repos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export default async function reposRoute(req, res) {
   try {
     const results = [];

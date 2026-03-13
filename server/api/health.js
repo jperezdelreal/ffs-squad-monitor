@@ -36,6 +36,21 @@ function checkHeartbeatFile() {
   }
 }
 
+/**
+ * @openapi
+ * /api/health:
+ *   get:
+ *     summary: Detailed health check
+ *     description: Returns comprehensive health status including GitHub API reachability, heartbeat file accessibility, rate limit info, metrics DB stats, and SSE connection count.
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Health check response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthCheck'
+ */
 export default async function healthRoute(req, res) {
   const rl = getRateLimitStatus()
   const heartbeatFile = checkHeartbeatFile()

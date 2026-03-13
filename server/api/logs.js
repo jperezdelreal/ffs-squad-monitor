@@ -39,6 +39,48 @@ export function readLogEntries(agent, date) {
   } catch { return []; }
 }
 
+/**
+ * @openapi
+ * /api/logs/files:
+ *   get:
+ *     summary: List available log files
+ *     description: Returns lists of available agents, dates, and log files for use in date/agent pickers.
+ *     tags: [Logs]
+ *     responses:
+ *       200:
+ *         description: Available log files metadata
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 agents:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: [ralph, solo, moe]
+ *                 dates:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     format: date
+ *                   example: ['2026-03-13', '2026-03-12']
+ *                 files:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       file:
+ *                         type: string
+ *                         example: ralph-2026-03-13.jsonl
+ *                       agent:
+ *                         type: string
+ *                         example: ralph
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                         example: '2026-03-13'
+ */
 // List available log files (for date/agent pickers)
 export function logsFilesRoute(req, res) {
   const files = listLogFiles();
@@ -48,6 +90,31 @@ export function logsFilesRoute(req, res) {
   res.end(JSON.stringify({ agents, dates, files }));
 }
 
+/**
+ * @openapi
+ * /api/logs/stream:
+ *   get:
+ *     summary: Stream log entries in real-time
+ *     description: |
+ *       SSE endpoint that streams new log entries as they are written. Watches the logs directory for file changes.
+ *       Sends all existing entries on connect, then new entries as they appear. Keepalive every 15 seconds.
+ *     tags: [Logs]
+ *     parameters:
+ *       - in: query
+ *         name: since
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Only stream entries newer than this timestamp
+ *     responses:
+ *       200:
+ *         description: SSE stream of log entries
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *               description: Each data event contains a JSON LogEntry object
+ */
 // SSE endpoint — streams new log entries in real time
 export function logsStreamRoute(req, res) {
   res.setHeader('Content-Type', 'text/event-stream');
@@ -128,6 +195,43 @@ export function logsStreamRoute(req, res) {
   });
 }
 
+/**
+ * @openapi
+ * /api/logs:
+ *   get:
+ *     summary: Get structured log entries
+ *     description: Returns parsed JSONL log entries for a given date and optional agent filter. Falls back to latest available date if no logs exist for today.
+ *     tags: [Logs]
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: '2026-03-13'
+ *         description: Date in YYYY-MM-DD format. Defaults to today.
+ *       - in: query
+ *         name: agent
+ *         schema:
+ *           type: string
+ *           example: ralph
+ *         description: Filter by agent name
+ *     responses:
+ *       200:
+ *         description: Array of log entries sorted by timestamp
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/LogEntry'
+ *       500:
+ *         description: Failed to read logs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // Structured logs — supports ?date=YYYY-MM-DD&agent=name query params
 export default function logsRoute(req, res) {
   try {
