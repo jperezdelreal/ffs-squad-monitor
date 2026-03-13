@@ -84,7 +84,7 @@ describe('PipelineVisualizer', () => {
     await waitFor(() => {
       expect(screen.getByText('Connection Error')).toBeInTheDocument()
     })
-    expect(screen.getByText('Failed to fetch pipeline data')).toBeInTheDocument()
+    expect(screen.getByText('Failed to fetch issues data')).toBeInTheDocument()
   })
 
   it('shows error on non-ok response', async () => {

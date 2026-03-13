@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useStore } from '../store/store';
 import { getConfigSync } from '../services/config';
 
 function getRepoColor(repoName) {
@@ -9,33 +10,15 @@ function getRepoColor(repoName) {
 }
 
 export function ActivityFeed() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { events, eventsLoading: loading, eventsError: error, fetchEvents } = useStore();
   const [filters, setFilters] = useState({
     repo: 'all',
     type: 'all',
   });
 
   useEffect(() => {
-    loadEvents();
+    fetchEvents();
   }, []);
-
-  const loadEvents = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/events');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error('Failed to load events:', error);
-      setError('Failed to fetch activity data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getEventIcon = (type) => {
     const icons = {
@@ -124,7 +107,7 @@ export function ActivityFeed() {
           <h3 className="text-lg font-semibold text-white mb-2">Connection Error</h3>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
           <button
-            onClick={loadEvents}
+            onClick={fetchEvents}
             className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
           >
             Retry
@@ -168,7 +151,7 @@ export function ActivityFeed() {
           </div>
 
           <button
-            onClick={loadEvents}
+            onClick={fetchEvents}
             className="ml-auto px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,86 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { fetchConfig } from '../services/config';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useStore } from '../store/store';
 
 export function TeamBoard() {
-  const [agents, setAgents] = useState([]);
-  const [workload, setWorkload] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    agents, agentsLoading, agentsError,
+    issuesLoading, issuesError,
+    fetchIssues, fetchAgents,
+  } = useStore();
+
+  const loading = issuesLoading || agentsLoading;
+  const error = issuesError || agentsError;
 
   useEffect(() => {
-    loadTeamData();
+    const load = async () => {
+      await fetchIssues();
+      await fetchAgents();
+    };
+    load();
   }, []);
 
   const loadTeamData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [issuesResponse, config] = await Promise.all([
-        fetch('/api/issues'),
-        fetchConfig(),
-      ]);
-
-      if (!issuesResponse.ok) throw new Error(`HTTP ${issuesResponse.status}`);
-      const issues = await issuesResponse.json();
-
-      const agentEntries = Object.entries(config.agents).map(([id, meta]) => ({
-        id,
-        name: id.charAt(0).toUpperCase() + id.slice(1),
-        emoji: meta.emoji,
-        role: meta.role,
-        status: 'idle',
-        currentTask: null,
-      }));
-
-      const agentMap = new Map();
-
-      issues.forEach(issue => {
-        if (issue.state === 'open') {
-          issue.labels?.forEach(label => {
-            // Labels are strings from /api/issues
-            const match = label.match(/^squad:(.+)$/);
-            if (match) {
-              const agentId = match[1].toLowerCase();
-              if (!agentMap.has(agentId)) {
-                agentMap.set(agentId, []);
-              }
-              agentMap.get(agentId).push({
-                number: issue.number,
-                title: issue.title,
-                repo: issue.repoLabel || issue.repo,
-                url: issue.url,
-              });
-            }
-          });
-        }
-      });
-
-      const updatedAgents = agentEntries.map(agent => {
-        const tasks = agentMap.get(agent.id) || [];
-        return {
-          ...agent,
-          status: tasks.length > 0 ? 'active' : 'idle',
-          currentTask: tasks.length > 0 ? tasks[0] : null,
-          taskCount: tasks.length,
-        };
-      });
-
-      setAgents(updatedAgents);
-
-      const workloadData = updatedAgents.map(agent => ({
-        agent: agent.id,
-        count: agent.taskCount || 0,
-        label: agent.name,
-      }));
-      setWorkload(workloadData);
-    } catch (error) {
-      console.error('Failed to load team data:', error);
-      setError('Failed to fetch team data');
-      setWorkload([]);
-    } finally {
-      setLoading(false);
-    }
+    await fetchIssues();
+    await fetchAgents();
   };
+
+  const workload = useMemo(() =>
+    agents.map(agent => ({
+      agent: agent.id,
+      count: agent.taskCount || 0,
+      label: agent.name,
+    })),
+    [agents]
+  );
 
   const maxWorkload = Math.max(...workload.map(w => w.count), 1);
 

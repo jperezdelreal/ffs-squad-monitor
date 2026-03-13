@@ -1,30 +1,19 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { CostTracker } from '../CostTracker'
 
-vi.mock('../../services/mockData', () => ({
-  getCostHistory: vi.fn(() => {
-    const days = []
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date()
-      date.setDate(date.getDate() - i)
-      days.push({
-        date: date.toISOString().split('T')[0],
-        actual: 0,
-        budget: 500 / 30,
-      })
-    }
-    return days
-  }),
-  getCIMinutesUsage: vi.fn(() => ({
-    used: 420,
-    total: 2000,
-    percentage: 21,
-  })),
-}))
-
-import { getCIMinutesUsage } from '../../services/mockData'
+const mockUsage = {
+  totalMinutesUsed: 420,
+  includedMinutes: 2000,
+  percentage: 21,
+  source: 'billing',
+  totalRuns: 45,
+  repos: [
+    { repo: 'ffs-squad-monitor', label: 'Monitor', emoji: '📊', durationMinutes: 200, runs: 20 },
+    { repo: 'FirstFrameStudios', label: 'Hub', emoji: '🎬', durationMinutes: 220, runs: 25 },
+  ],
+}
 
 describe('CostTracker', () => {
   beforeEach(() => {
@@ -36,57 +25,82 @@ describe('CostTracker', () => {
   })
 
   it('shows loading state initially', () => {
+    global.fetch = vi.fn(() => new Promise(() => {}))
     const { container } = render(<CostTracker />)
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
   })
 
-  it('renders the hero card with current spend after loading', async () => {
+  it('renders usage data after successful fetch', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    )
+
     render(<CostTracker />)
     await waitFor(() => {
-      expect(screen.getByText('CURRENT MONTHLY SPEND')).toBeInTheDocument()
+      expect(screen.getByText('GITHUB ACTIONS USAGE')).toBeInTheDocument()
+    })
+    expect(screen.getByText('420')).toBeInTheDocument()
+    expect(screen.getByText(/\/ 2000/)).toBeInTheDocument()
+  })
+
+  it('shows error state on fetch failure', async () => {
+    global.fetch = vi.fn(() => Promise.reject(new Error('Network error')))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    render(<CostTracker />)
+    await waitFor(() => {
+      expect(screen.getByText('Cost data not available')).toBeInTheDocument()
     })
   })
 
-  it('displays Azure savings', async () => {
-    render(<CostTracker />)
-    await waitFor(() => {
-      expect(screen.getByText('vs. Azure ACI')).toBeInTheDocument()
-    })
-    expect(screen.getByText(/€120/)).toBeInTheDocument()
-  })
+  it('shows error on non-ok response', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: false, status: 500 })
+    )
+    vi.spyOn(console, 'error').mockImplementation(() => {})
 
-  it('displays AWS savings', async () => {
     render(<CostTracker />)
     await waitFor(() => {
-      expect(screen.getByText('vs. AWS Lambda')).toBeInTheDocument()
-    })
-    expect(screen.getByText(/€200/)).toBeInTheDocument()
-  })
-
-  it('displays total savings badge', async () => {
-    render(<CostTracker />)
-    await waitFor(() => {
-      expect(screen.getByText(/€320\/mo Total Savings/)).toBeInTheDocument()
+      expect(screen.getByText('Cost data not available')).toBeInTheDocument()
     })
   })
 
-  it('renders budget chart section', async () => {
+  it('retries on error when Retry button is clicked', async () => {
+    let callCount = 0
+    global.fetch = vi.fn(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.reject(new Error('fail'))
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
     render(<CostTracker />)
     await waitFor(() => {
-      expect(screen.getByText('Budget vs Actual (Last 30 Days)')).toBeInTheDocument()
+      expect(screen.getByText('Cost data not available')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('🔄 Retry'))
+    await waitFor(() => {
+      expect(screen.getByText('GITHUB ACTIONS USAGE')).toBeInTheDocument()
     })
   })
 
-  it('renders resource usage section with CI minutes', async () => {
-    render(<CostTracker />)
-    await waitFor(() => {
-      expect(screen.getByText('Resource Usage')).toBeInTheDocument()
-    })
-    expect(screen.getByText('GitHub Actions Minutes')).toBeInTheDocument()
-    expect(screen.getByText('420 / 2000 min')).toBeInTheDocument()
-  })
+  it('shows percentage and remaining minutes', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    )
 
-  it('shows CI usage percentage and remaining', async () => {
     render(<CostTracker />)
     await waitFor(() => {
       expect(screen.getByText(/21% used/)).toBeInTheDocument()
@@ -95,6 +109,13 @@ describe('CostTracker', () => {
   })
 
   it('renders resource cards for storage, bandwidth, compute', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    )
+
     render(<CostTracker />)
     await waitFor(() => {
       expect(screen.getByText('Storage')).toBeInTheDocument()
@@ -103,10 +124,17 @@ describe('CostTracker', () => {
     expect(screen.getByText('Compute')).toBeInTheDocument()
   })
 
-  it('renders success banner', async () => {
+  it('shows success banner when usage is below 80%', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    )
+
     render(<CostTracker />)
     await waitFor(() => {
-      expect(screen.getByText('100% Cost Optimization')).toBeInTheDocument()
+      expect(screen.getByText('Running on GitHub Free Tier')).toBeInTheDocument()
     })
     expect(screen.getByText('Free Hosting')).toBeInTheDocument()
     expect(screen.getByText('Free CI/CD')).toBeInTheDocument()
@@ -114,6 +142,13 @@ describe('CostTracker', () => {
   })
 
   it('does not show approaching-limit warning when usage is low', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    )
+
     render(<CostTracker />)
     await waitFor(() => {
       expect(screen.getByText('Resource Usage')).toBeInTheDocument()
@@ -122,11 +157,18 @@ describe('CostTracker', () => {
   })
 
   it('shows approaching-limit warning when usage exceeds 80%', async () => {
-    getCIMinutesUsage.mockReturnValue({
-      used: 1700,
-      total: 2000,
+    const highUsage = {
+      ...mockUsage,
+      totalMinutesUsed: 1700,
       percentage: 85,
-    })
+    }
+
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(highUsage),
+      })
+    )
 
     render(<CostTracker />)
     await waitFor(() => {
@@ -135,18 +177,33 @@ describe('CostTracker', () => {
     expect(screen.getByText(/85% of your GitHub Actions minutes/)).toBeInTheDocument()
   })
 
-  it('shows the free tier message', async () => {
+  it('renders per-repo breakdown', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    )
+
     render(<CostTracker />)
     await waitFor(() => {
-      expect(screen.getByText(/100% Free Tier/)).toBeInTheDocument()
+      expect(screen.getByText('Usage by Repository')).toBeInTheDocument()
     })
+    expect(screen.getByText('Monitor')).toBeInTheDocument()
+    expect(screen.getByText('Hub')).toBeInTheDocument()
   })
 
-  it('renders budget chart legend', async () => {
+  it('shows data source info', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockUsage),
+      })
+    )
+
     render(<CostTracker />)
     await waitFor(() => {
-      expect(screen.getByText(/Budget \(€500\/mo\)/)).toBeInTheDocument()
+      expect(screen.getByText(/GitHub Billing API/)).toBeInTheDocument()
     })
-    expect(screen.getByText(/Actual \(€0\)/)).toBeInTheDocument()
   })
 })

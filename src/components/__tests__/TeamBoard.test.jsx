@@ -2,12 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TeamBoard } from '../TeamBoard'
-
-vi.mock('../../services/config', () => ({
-  fetchConfig: vi.fn(),
-}))
-
-import { fetchConfig } from '../../services/config'
+import { clearConfigCache } from '../../services/config'
 
 const mockConfig = {
   agents: {
@@ -53,37 +48,45 @@ const mockIssues = [
   },
 ]
 
+function mockFetchSuccess() {
+  global.fetch = vi.fn((url) => {
+    if (typeof url === 'string' && url.includes('/api/config')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockConfig),
+      })
+    }
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(mockIssues),
+    })
+  })
+}
+
 describe('TeamBoard', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    fetchConfig.mockResolvedValue(mockConfig)
+    clearConfigCache()
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
+    clearConfigCache()
   })
 
   it('shows loading state initially', () => {
     global.fetch = vi.fn(() => new Promise(() => {}))
-    fetchConfig.mockReturnValue(new Promise(() => {}))
     const { container } = render(<TeamBoard />)
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
   })
 
   it('renders team board with all agent names', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText('Team Board')).toBeInTheDocument()
     })
-    // Names appear in both card and workload chart, use getAllByText
     expect(screen.getAllByText('Ripley').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Dallas').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Lambert').length).toBeGreaterThanOrEqual(1)
@@ -91,13 +94,7 @@ describe('TeamBoard', () => {
   })
 
   it('shows agent roles', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText('Lead')).toBeInTheDocument()
@@ -108,13 +105,7 @@ describe('TeamBoard', () => {
   })
 
   it('assigns tasks to correct agents from issue labels', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText('#48')).toBeInTheDocument()
@@ -123,29 +114,20 @@ describe('TeamBoard', () => {
   })
 
   it('shows idle state for agents with no active tasks', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText('Team Board')).toBeInTheDocument()
     })
-    const idleTexts = screen.getAllByText(/Idle • No active tasks/)
-    expect(idleTexts.length).toBeGreaterThanOrEqual(1)
+    // Wait for agents to load (they have loading: true initially)
+    await waitFor(() => {
+      const idleTexts = screen.getAllByText(/Idle • No active tasks/)
+      expect(idleTexts.length).toBeGreaterThanOrEqual(1)
+    })
   })
 
   it('shows active agent count in header', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText(/of 4 agents active/)).toBeInTheDocument()
@@ -157,30 +139,29 @@ describe('TeamBoard', () => {
 
     render(<TeamBoard />)
     await waitFor(() => {
-      expect(screen.getByText(/Failed to fetch team data/)).toBeInTheDocument()
+      expect(screen.getByText(/Failed to fetch/)).toBeInTheDocument()
     })
-    expect(screen.getByText('Showing cached data')).toBeInTheDocument()
   })
 
   it('shows error on HTTP error response', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({ ok: false, status: 500 })
-    )
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.includes('/api/config')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockConfig),
+        })
+      }
+      return Promise.resolve({ ok: false, status: 500 })
+    })
 
     render(<TeamBoard />)
     await waitFor(() => {
-      expect(screen.getByText(/Failed to fetch team data/)).toBeInTheDocument()
+      expect(screen.getByText(/Failed to fetch/)).toBeInTheDocument()
     })
   })
 
   it('renders workload distribution chart', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText('Workload Distribution')).toBeInTheDocument()
@@ -188,32 +169,26 @@ describe('TeamBoard', () => {
   })
 
   it('renders refresh button and reloads on click', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText('Team Board')).toBeInTheDocument()
     })
+    // Wait for initial load to complete
+    await waitFor(() => {
+      expect(screen.getAllByText('Ripley').length).toBeGreaterThanOrEqual(1)
+    })
 
     fireEvent.click(screen.getByText('Refresh'))
+    // Initial mount: 1 fetch (issues) + 1 fetch (config)
+    // Refresh: 1 fetch (issues) + 1 fetch (config, from cache)
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(2)
+      expect(global.fetch).toHaveBeenCalledTimes(3)
     })
   })
 
   it('shows queue count for agents with multiple tasks', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockIssues),
-      })
-    )
-
+    mockFetchSuccess()
     render(<TeamBoard />)
     await waitFor(() => {
       expect(screen.getByText('+1')).toBeInTheDocument()
