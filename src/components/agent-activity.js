@@ -7,9 +7,29 @@ import { timeAgo, escapeHtml } from '../lib/util.js';
 
 export async function refreshAgents() {
   const agents = await fetchAgents();
+  if (agents?.error) {
+    renderAgentsError();
+    return;
+  }
   if (!agents) return;
   renderAgents(agents);
 }
+
+function renderAgentsError() {
+  const grid = document.getElementById('agent-grid');
+  if (!grid) return;
+  grid.innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">Could not load agent data</div>
+      <button class="retry-btn" onclick="window.__retryAgents()">Retry</button>
+    </div>
+  `;
+}
+
+window.__retryAgents = () => {
+  refreshAgents();
+};
 
 function renderAgents(agents) {
   const grid = document.getElementById('agent-grid');

@@ -7,9 +7,29 @@ import { escapeHtml } from '../lib/util.js';
 
 export async function refreshBoard() {
   const issues = await fetchIssues();
+  if (issues?.error) {
+    renderBoardError();
+    return;
+  }
   if (!issues) return;
   renderBoard(issues);
 }
+
+function renderBoardError() {
+  const container = document.getElementById('board');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">Could not load issues</div>
+      <button class="retry-btn" onclick="window.__retryBoard()">Retry</button>
+    </div>
+  `;
+}
+
+window.__retryBoard = () => {
+  refreshBoard();
+};
 
 function renderBoard(issues) {
   const container = document.getElementById('board');

@@ -194,3 +194,23 @@ This PR establishes the pattern for future testing:
 Cannot use `gh pr review --approve` when authenticated as PR author. Posted approval as comment instead with explicit "✅ RIPLEY REVIEW: APPROVED" verdict.
 
 **Merge Recommendation:** Ready to merge immediately. All acceptance criteria met, tests pass, coverage exceeds requirements, CI properly configured.
+### 2026-03-13: PR #27 Re-Review — Error Handling Patterns
+
+**Key Files:**
+- `src/lib/api.js` - Centralized API client with connection tracking
+- `src/lib/error-boundary.js` - Global error handler with rate limiting
+- `src/components/log-viewer.js` - SSE streaming with exponential backoff
+- `src/components/studio-pulse.js` - Component error UI pattern
+
+**Patterns Established:**
+- **AbortController Memory Safety:** Always create explicit controller, clear timeout in both success/error paths
+- **Error Count Reset:** Time-based reset window (60s) prevents false positives from accumulated errors
+- **Exponential Backoff:** Use `Math.pow(2, attempts)` for proper exponential growth (not `attempts + 1`)
+- **XSS Prevention:** Use `textContent` (not `innerHTML`) for user-controlled error messages
+- **Global Retry Functions:** Expose `window.__retryX()` handlers for manual recovery UX
+- **unhandledrejection:** Always call `event.preventDefault()` before handling to prevent duplicate logging
+
+**Architecture Notes:**
+- All components follow consistent error UI pattern: error icon + message + retry button
+- API layer uses Map-based per-endpoint status tracking to compute global connection state
+- Error boundary wraps component refreshes via `wrapComponentRefresh()` helper
