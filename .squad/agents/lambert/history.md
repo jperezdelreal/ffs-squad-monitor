@@ -105,3 +105,14 @@ Added GitHub token authentication to all backend API calls:
 5. **Unchanged:** `workflows.js` doesn't call GitHub API (reads local files). Git operations in `repos.js` still use `git -C` execSync (not GitHub API).
 
 **Key Pattern:** All GitHub API calls go through `server/lib/github-client.js` — centralized auth, rate limit tracking, and error handling. Token never reaches frontend.
+
+### 2026-03-13 — Issue #36 Route React Through Backend (PR #65)
+
+Routed all React component GitHub API calls through Express backend:
+
+1. **New `/api/events` endpoint** (`server/api/events.js`) — aggregates events across all REPOS using `githubFetch()`, 30s cache, same pattern as board.js.
+2. **Updated `/api/issues`** — Added `?state=all` query param support (PipelineVisualizer needs open+closed), added `state` and `repoGithub` fields to response. Only caches default (open) queries.
+3. **Frontend rewired** — ActivityFeed, PipelineVisualizer, TeamBoard, and CostTracker no longer import `src/services/github.js`. All GitHub data flows through `/api/*` endpoints.
+4. **Label format adaptation** — Backend returns labels as string arrays; updated PipelineVisualizer to match strings directly (`l === label`) instead of objects (`l.name === label`).
+
+**Key Pattern:** When moving API calls from frontend to backend, adapt the component to the backend's existing response shape rather than reshaping the backend to match the old frontend format. This keeps the backend API clean and consistent.
