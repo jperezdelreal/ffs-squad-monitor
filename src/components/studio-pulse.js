@@ -15,13 +15,16 @@ export async function refreshPulse() {
 }
 
 function renderPulseError() {
-  const prsEl = document.getElementById('pulse-prs');
-  const issuesEl = document.getElementById('pulse-issues');
-  const agentsEl = document.getElementById('pulse-agents');
+  const container = document.getElementById('pulse-bar');
+  if (!container) return;
   
-  if (prsEl) prsEl.innerHTML = '— <button class="retry-btn" onclick="window.__retryPulse()">Retry</button>';
-  if (issuesEl) issuesEl.textContent = '—';
-  if (agentsEl) agentsEl.textContent = '—';
+  container.innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">Could not load studio pulse</div>
+      <button class="retry-btn" onclick="window.__retryPulse()">Retry</button>
+    </div>
+  `;
 }
 
 // Expose retry function globally
