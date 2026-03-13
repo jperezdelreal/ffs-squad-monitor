@@ -2,6 +2,36 @@
 
 ## Active Decisions
 
+### GitHub Self-Approval Limitation (2026-03-13)
+**Author:** Ripley (Lead)  
+**Context:** PR #26, #29, #30 review — GitHub API constraints  
+**Status:** Documented
+
+GitHub API prevents users from approving their own PRs, even when authenticated as a repository member. When acting as Lead reviewer, attempted to formally approve PRs #26, #29, and #30 using `gh pr review --approve`, but received error: "Review Can not approve your own pull request (addPullRequestReview)".
+
+**Impact:** Squad Lead cannot formally approve PRs when operating under the same GitHub account (jperezdelreal).
+
+**Workaround:** Continue thorough code reviews as Lead, document review outcomes in PR comments with clear verdicts, and have the repository owner manually approve PRs after Lead review is complete. This does not compromise code quality — reviews remain rigorous.
+
+**Related PRs:** #26 (Sprint Planning), #29 (Unit tests), #30 (Sync triage)
+
+---
+
+### Error Handling Standards (2026-03-13)
+**Author:** Ripley (Lead)  
+**Context:** PR #27 review — Error handling and offline resilience  
+**Status:** Approved
+
+Establish standard error handling patterns for all dashboard components:
+
+1. **Memory-Safe Timeouts** — Always create explicit `AbortController` and clear timeouts in both success and error paths
+2. **Error Count Rate Limiting** — Use time-based reset windows to prevent false positives
+3. **Exponential Backoff** — Use `Math.min(1000 * Math.pow(2, attempts), maxDelay)`, not linear delays
+4. **XSS Prevention in Error Messages** — Always use `textContent` for user-controlled content, never `innerHTML`
+5. **Promise Rejection Handling** — Prevent duplicate logging with `preventDefault()` as first call
+6. **Component Error UI Pattern** — Standard error state structure with icon, message, and retry button
+
+These patterns prevent memory leaks, false positives, XSS vulnerabilities, duplicate logging, and inconsistent error UX.
 ### Error Handling Architecture Review (PR #27)
 
 **Date:** 2026-03-12  
