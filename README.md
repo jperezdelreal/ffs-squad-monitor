@@ -22,7 +22,7 @@ The FFS repo (`FirstFrameStudios`) runs an autonomous agent loop via `ralph-watc
 ## Tech Stack
 
 - **Vite** — fast dev server and build tool
-- **Vanilla JS** — minimal dependencies, easy to learn and extend
+- **React** — component-based UI with hooks and Tailwind CSS
 - **Node.js** — for the heartbeat file watcher and log tailer backend
 
 ## Getting Started
