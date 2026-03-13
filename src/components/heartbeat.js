@@ -13,8 +13,38 @@ export async function refreshHeartbeat() {
     fetchHeartbeat(),
     fetchTimeline(),
   ]);
+  
+  if (hb?.error || timeline?.error) {
+    renderError();
+    return;
+  }
+  
   if (hb) renderRalphHero(hb, timeline);
 }
+
+function renderError() {
+  const container = document.getElementById('ralph-hero');
+  if (!container) return;
+  
+  const ring = document.getElementById('ralph-ring');
+  const info = container.querySelector('.ralph-info');
+  
+  if (ring) ring.className = 'ralph-heartbeat-ring offline';
+  
+  if (info) {
+    info.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <div class="error-message">Could not load heartbeat</div>
+        <button class="retry-btn" onclick="window.__retryHeartbeat()">Retry</button>
+      </div>
+    `;
+  }
+}
+
+window.__retryHeartbeat = () => {
+  refreshHeartbeat();
+};
 
 function renderRalphHero(hb, timeline) {
   const ring = document.getElementById('ralph-ring');

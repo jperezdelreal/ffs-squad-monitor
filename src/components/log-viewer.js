@@ -11,6 +11,9 @@ const logState = {
   dateFilter: '',
   autoScroll: true,
   eventSource: null,
+  reconnectAttempts: 0,
+  reconnectTimer: null,
+  maxReconnectAttempts: 10,
 };
 
 /** Called by scheduler — SSE handles real-time updates so this is a no-op. */
@@ -91,14 +94,37 @@ function addLogEntry(entry) {
   renderLogs();
 }
 
-// ── SSE Stream ───────────────────────────────────────────
+// ── SSE Stream with Exponential Backoff ──────────────────
 
-function setStreamBadge(ok) {
+function getReconnectDelay() {
+  // Exponential backoff: 1s, 2s, 4s, 8s, 16s, max 30s
+  const delay = Math.min(1000 * Math.pow(2, logState.reconnectAttempts), 30000);
+  return delay;
+}
+
+function setStreamBadge(status) {
   const badge = document.getElementById('stream-badge');
   const text = document.getElementById('stream-text');
   if (!badge || !text) return;
-  badge.className = ok ? 'log-stream-badge' : 'log-stream-badge disconnected';
-  text.textContent = ok ? 'Streaming' : 'Disconnected';
+  
+  switch (status) {
+    case 'connected':
+      badge.className = 'log-stream-badge';
+      text.textContent = 'Streaming';
+      break;
+    case 'reconnecting':
+      badge.className = 'log-stream-badge reconnecting';
+      text.textContent = `Reconnecting${logState.reconnectAttempts > 0 ? ` (${logState.reconnectAttempts})` : ''}...`;
+      break;
+    case 'error':
+      badge.className = 'log-stream-badge disconnected';
+      text.textContent = 'Disconnected';
+      break;
+    case 'failed':
+      badge.className = 'log-stream-badge failed';
+      text.innerHTML = 'Connection failed <button class="retry-btn" onclick="window.__retryLogStream()">Retry</button>';
+      break;
+  }
 }
 
 function connectLogStream() {
@@ -106,27 +132,56 @@ function connectLogStream() {
     logState.eventSource.close();
   }
 
+  // Clear any pending reconnect timer
+  if (logState.reconnectTimer) {
+    clearTimeout(logState.reconnectTimer);
+    logState.reconnectTimer = null;
+  }
+
   const es = new EventSource('/api/logs/stream');
   logState.eventSource = es;
 
-  es.onopen = () => setStreamBadge(true);
+  es.onopen = () => {
+    setStreamBadge('connected');
+    logState.reconnectAttempts = 0;
+    console.log('[LogViewer] SSE connected');
+  };
 
   es.onmessage = (event) => {
     try {
       const entry = JSON.parse(event.data);
       addLogEntry(entry);
-    } catch { /* skip malformed */ }
+    } catch (err) {
+      console.warn('[LogViewer] Failed to parse log entry:', err);
+    }
   };
 
   es.onerror = () => {
-    setStreamBadge(false);
-    setTimeout(() => {
-      if (es.readyState === EventSource.CLOSED) {
-        connectLogStream();
-      }
-    }, 5000);
+    console.error('[LogViewer] SSE connection error');
+    es.close();
+    
+    if (logState.reconnectAttempts >= logState.maxReconnectAttempts) {
+      setStreamBadge('failed');
+      console.error('[LogViewer] Max reconnection attempts reached. Giving up.');
+      return;
+    }
+    
+    const delay = getReconnectDelay();
+    logState.reconnectAttempts++;
+    setStreamBadge('reconnecting');
+    
+    console.log(`[LogViewer] Reconnecting in ${delay}ms (attempt ${logState.reconnectAttempts})...`);
+    logState.reconnectTimer = setTimeout(() => {
+      connectLogStream();
+    }, delay);
   };
 }
+
+// Expose retry function globally
+window.__retryLogStream = () => {
+  logState.reconnectAttempts = 0;
+  connectLogStream();
+};
 
 // ── Filters & Auto-scroll ────────────────────────────────
 

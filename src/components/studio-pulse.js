@@ -6,9 +6,31 @@ import { fetchPulse } from '../lib/api.js';
 
 export async function refreshPulse() {
   const data = await fetchPulse();
+  if (data?.error) {
+    renderPulseError();
+    return;
+  }
   if (!data) return;
   renderPulse(data);
 }
+
+function renderPulseError() {
+  const container = document.getElementById('pulse-bar');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">Could not load studio pulse</div>
+      <button class="retry-btn" onclick="window.__retryPulse()">Retry</button>
+    </div>
+  `;
+}
+
+// Expose retry function globally
+window.__retryPulse = () => {
+  refreshPulse();
+};
 
 function renderPulse(data) {
   const prsEl = document.getElementById('pulse-prs');
