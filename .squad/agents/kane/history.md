@@ -46,3 +46,19 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `.github/workflows/squad-triage.yml` (lines 202-217)
 
 **PR:** #27 (branch: squad/23-error-handling)
+
+### 2026-03-13: Issue #38 — Fix CI blockers (test expectations + branch targeting)
+
+**What was fixed:**
+- All api.test.js error tests expected `null` but API returns `{error: true, message}` after PR #27's error handling changes (Decision #4a/#5)
+- `toHaveBeenCalledWith('/api/...')` assertions failed because `safeFetch` now passes `{ signal: AbortSignal }` via AbortController
+- Tests imported `isConnected()` which doesn't exist — API exports `getConnectionState()` with 3-tier state model (operational/degraded/offline)
+- `squad-ci.yml` targeted `master` instead of `main`
+
+**Key insight:** When API behavior changes (null → error objects, bare fetch → AbortController), ALL test assertions touching that surface must be updated — not just the obvious ones. Found 9 additional failures beyond the 4 originally reported.
+
+**Files modified:**
+- `src/lib/__tests__/api.test.js` — 10 test expectations updated
+- `.github/workflows/squad-ci.yml` — branch targeting master → main
+
+**PR:** #58 (branch: squad/38-fix-ci-blockers)
