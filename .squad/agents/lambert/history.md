@@ -23,3 +23,21 @@
 - **Dependencies:** Express 5.2.1, cors 2.8.6
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+
+### 2026-03-12 — PR #27 Code Review Fixes
+
+Fixed 4 critical issues from Ripley's review of error handling implementation:
+
+1. **Studio Pulse Retry UI**: Added retry button to pulse component error state matching the pattern used in log-viewer and other components. User recovery path is now consistent.
+
+2. **Error Boundary Count Reset**: Implemented time-based reset mechanism (60s window) to prevent errorCount from accumulating indefinitely. If system has been stable for >1 minute, count resets to 0. This prevents false-positive critical overlays from historical transient errors.
+
+3. **Exponential Backoff Timing**: Fixed off-by-one error in log-viewer reconnection. Calculation now happens BEFORE incrementing counter, so first retry correctly uses 1000ms delay instead of 2000ms.
+
+4. **Fetch Memory Safety**: Replaced `AbortSignal.timeout()` with explicit AbortController pattern. Ensures proper cleanup via `clearTimeout()` and prevents potential memory leaks from implicit controller retention.
+
+5. **XSS Prevention**: Refactored error notification to use `textContent` instead of `innerHTML` for error messages, preventing potential XSS if error messages contain user-controlled data.
+
+6. **Promise Rejection Handling**: Added `event.preventDefault()` to unhandledrejection handler to properly suppress browser's default console warnings.
+
+**Key Pattern**: Exponential backoff must calculate delay BEFORE incrementing attempt counter to avoid off-by-one errors. Error count state should have time-based reset mechanisms to prevent accumulation from transient issues.
