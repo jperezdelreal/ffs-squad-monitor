@@ -27,3 +27,33 @@ export function timeAgo(dateStr) {
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
 }
+
+/** Download data as a file. */
+export function downloadAsFile(data, filename, mimeType) {
+  const blob = new Blob([data], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/** Convert array of objects to CSV string. */
+export function jsonToCSV(data) {
+  if (!data || data.length === 0) return '';
+  const headers = Object.keys(data[0]);
+  const rows = data.map(obj => 
+    headers.map(h => {
+      const val = obj[h];
+      if (val == null) return '';
+      const str = String(val);
+      return str.includes(',') || str.includes('"') || str.includes('\n') 
+        ? `"${str.replace(/"/g, '""')}"` 
+        : str;
+    }).join(',')
+  );
+  return [headers.join(','), ...rows].join('\n');
+}

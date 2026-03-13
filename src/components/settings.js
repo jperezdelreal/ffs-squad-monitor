@@ -10,14 +10,17 @@ const PRESETS = [
   { label: '1m', value: 60000 },
 ];
 
+let settingsPanel = null;
+let settingsBtn = null;
+
 /** @param {import('../lib/scheduler.js').Scheduler} scheduler */
 export function initSettings(scheduler) {
-  const btn = document.getElementById('settings-toggle');
-  const panel = document.getElementById('settings-panel');
+  settingsBtn = document.getElementById('settings-toggle');
+  settingsPanel = document.getElementById('settings-panel');
   const refreshSelect = document.getElementById('refresh-interval');
   const pauseBtn = document.getElementById('pause-btn');
 
-  if (!btn || !panel) return;
+  if (!settingsBtn || !settingsPanel) return;
 
   // Populate refresh presets
   if (refreshSelect) {
@@ -37,16 +40,16 @@ export function initSettings(scheduler) {
   }
 
   // Toggle panel
-  btn.addEventListener('click', () => {
-    panel.classList.toggle('open');
-    btn.setAttribute('aria-expanded', panel.classList.contains('open'));
+  settingsBtn.addEventListener('click', () => {
+    settingsPanel.classList.toggle('open');
+    settingsBtn.setAttribute('aria-expanded', settingsPanel.classList.contains('open'));
   });
 
   // Close on outside click
   document.addEventListener('click', (e) => {
-    if (!panel.contains(e.target) && !btn.contains(e.target)) {
-      panel.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
+    if (!settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
+      settingsPanel.classList.remove('open');
+      settingsBtn.setAttribute('aria-expanded', 'false');
     }
   });
 
@@ -65,5 +68,12 @@ export function initSettings(scheduler) {
         pauseBtn.classList.remove('paused');
       }
     });
+  }
+}
+
+export function openSettings() {
+  if (settingsPanel && settingsBtn) {
+    settingsPanel.classList.add('open');
+    settingsBtn.setAttribute('aria-expanded', 'true');
   }
 }

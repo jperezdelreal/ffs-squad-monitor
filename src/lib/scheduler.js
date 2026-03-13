@@ -58,6 +58,13 @@ export class Scheduler {
     return this.#tasks.get(id)?.interval ?? null;
   }
 
+  /** Refresh all tasks immediately (without waiting for next interval). */
+  refreshAll() {
+    for (const task of this.#tasks.values()) {
+      task.fn();
+    }
+  }
+
   #startTask(id, task) {
     task.fn();
     task.timerId = setInterval(task.fn, task.interval);

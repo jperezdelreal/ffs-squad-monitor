@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FFS Squad Monitor</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -130,6 +131,9 @@
           <label for="log-date">Date</label>
           <input type="date" id="log-date" />
         </div>
+        <button class="log-action-btn" id="log-clear-filters" title="Clear all filters">🗑️ Clear</button>
+        <button class="log-action-btn" id="log-export-json" title="Export logs as JSON">📥 JSON</button>
+        <button class="log-action-btn" id="log-export-csv" title="Export logs as CSV">📊 CSV</button>
         <div class="log-stream-badge" id="stream-badge">
           <span class="log-stream-dot"></span>
           <span id="stream-text">Streaming</span>
@@ -141,6 +145,46 @@
     </div>
 
   </main>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div id="shortcuts-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⌨️ Keyboard Shortcuts</h2>
+        <button class="modal-close" id="modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-list">
+          <div class="shortcut-item">
+            <kbd>r</kbd>
+            <span>Refresh all data</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>s</kbd>
+            <span>Open settings panel</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>l</kbd>
+            <span>Focus log filter</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>?</kbd>
+            <span>Show this help</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>Esc</kbd>
+            <span>Close modal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading...</div>
+  </div>
 
   <footer class="footer">
     <a href="https://github.com/jperezdelreal/ffs-squad-monitor" target="_blank" rel="noopener">ffs-squad-monitor</a> · First Frame Studios
