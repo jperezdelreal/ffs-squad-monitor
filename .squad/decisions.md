@@ -268,6 +268,28 @@ All backend GitHub API calls now go through `server/lib/github-client.js` instea
 
 ---
 
+### 12. Route React Components Through Express Backend
+**Agent:** Lambert (Backend Dev)  
+**Status:** COMPLETED (PR #65 merged)  
+**Date:** 2026-03-13  
+**Issue:** #36
+
+All GitHub data now flows through Express backend instead of direct browser calls:
+
+- `/api/events` — new endpoint, aggregated repo events with 30s cache
+- `/api/issues?state=all` — updated board.js to support state query param
+- Frontend components fetch from `/api/*` instead of calling GitHub directly
+
+**Rationale:**
+- Auth centralization — Backend has token; browser had 60 req/hr limit
+- Rate limit protection — Single point of tracking and warning
+- Cache benefits — 30s server-side cache prevents redundant calls
+- Security — Token never reaches frontend
+
+**Impact:** Frontend benefits from authenticated rate limits (5000 req/hr), CORS complexity eliminated.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
