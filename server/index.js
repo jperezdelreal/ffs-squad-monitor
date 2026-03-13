@@ -3,6 +3,8 @@ import cors from 'cors';
 import { config } from './config.js';
 import { getRateLimitStatus } from './lib/github-client.js';
 import { logger, requestLogger } from './lib/logger.js';
+import { startSnapshotService, stopSnapshotService } from './lib/snapshot-service.js';
+import { closeDb, getDbStats } from './lib/metrics-db.js';
 
 // Import route handlers
 import heartbeatRoute from './api/heartbeat.js';
@@ -16,6 +18,7 @@ import configRoute from './api/config.js';
 import eventsRoute from './api/events.js';
 import usageRoute from './api/usage.js';
 import healthRoute from './api/health.js';
+import { metricsRoute, metricsSummaryRoute, metricsAgentsRoute, metricsStatsRoute } from './api/metrics.js';
 
 const app = express();
 
@@ -38,10 +41,18 @@ app.get('/api/config', configRoute);
 app.get('/api/events', eventsRoute);
 app.get('/api/usage', usageRoute);
 app.get('/api/health', healthRoute);
+app.get('/api/metrics', metricsRoute);
+app.get('/api/metrics/summary', metricsSummaryRoute);
+app.get('/api/metrics/agents', metricsAgentsRoute);
+app.get('/api/metrics/stats', metricsStatsRoute);
 
 // Health check with rate limit status
 app.get('/health', (req, res) => {
   const rl = getRateLimitStatus();
+  let dbStats = null;
+  try {
+    dbStats = getDbStats();
+  } catch { /* db may not be initialized */ }
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -54,6 +65,7 @@ app.get('/health', (req, res) => {
         lastChecked: rl.lastChecked,
       },
     },
+    metricsDb: dbStats,
   });
 });
 
@@ -79,18 +91,23 @@ app.listen(PORT, () => {
     endpoints: [
       '/api/heartbeat', '/api/logs/files', '/api/logs/stream', '/api/logs',
       '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
-      '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/health', '/health',
+      '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/health',
+      '/api/metrics', '/api/metrics/summary', '/api/metrics/agents', '/api/metrics/stats',
+      '/health',
     ],
   });
+
+  // Start metrics snapshot service
+  startSnapshotService();
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('Shutdown signal received', { signal: 'SIGTERM' });
+function shutdown(signal) {
+  logger.info('Shutdown signal received', { signal });
+  stopSnapshotService();
+  closeDb();
   process.exit(0);
-});
+}
 
-process.on('SIGINT', () => {
-  logger.info('Shutdown signal received', { signal: 'SIGINT' });
-  process.exit(0);
-});
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
