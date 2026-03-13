@@ -106,3 +106,37 @@ Reviewed three PRs (#30, #29, #27) covering workflow automation, testing infrast
 **Documentation:**
 - README.md updated with testing section including all three npm commands
 - Clear instructions for running tests locally and in watch mode
+
+### 2026-03-12: PR #27 Review - Error Handling & Offline Resilience (Issue #23)
+
+**Review Outcome:** CHANGES REQUESTED - 4 critical issues identified requiring fixes before merge
+
+**Critical Issues Found:**
+1. **studio-pulse.js missing retry UI** - Only component without error recovery path (just shows dashes)
+2. **error-boundary.js errorCount never resets** - Dashboard becomes permanently degraded after 10 transient errors
+3. **log-viewer.js exponential backoff off-by-one** - First retry uses 2000ms instead of 1000ms due to premature increment
+4. **api.js AbortSignal.timeout memory leak** - Implicit controllers may not GC properly in long-running sessions
+
+**Architecture Strengths:**
+- 3-state connection tracking (operational/degraded/offline) with per-endpoint status Map
+- Error boundary pattern catches uncaught errors + unhandled promise rejections
+- Consistent error UI pattern across 6/7 components with retry buttons
+- SSE exponential backoff mathematically correct (1s, 2s, 4s, 8s, max 30s)
+- safeFetch() wrapper with 10s timeout, error logging, status tracking
+- All components return {error: true, message} for better context
+
+**Code Quality Patterns:**
+- Global window.__retryX() functions provide user recovery paths
+- Consistent error state CSS (.error-state, .retry-btn, notifications, critical overlay)
+- Proper cleanup of EventSource and reconnect timers
+- Console logging with timestamps and context for debugging
+
+**Key Learning:** Error handling infrastructure requires attention to reset/cleanup mechanisms. Incrementing error counters and reconnect attempts need proper reset logic to prevent permanent degradation. Memory management is critical for long-running dashboard sessions.
+
+**File Paths:**
+- `src/lib/api.js` - Connection state tracking, safeFetch wrapper
+- `src/lib/error-boundary.js` - Global error handler with critical overlay
+- `src/components/connection-status.js` - 3-state UI indicator
+- `src/components/log-viewer.js` - SSE with exponential backoff
+- `src/components/*.js` - Error states with retry buttons
+- `src/styles.css` - Error UI styles
