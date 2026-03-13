@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { fetchConfig } from '../services/config';
-import { getAgentWorkload } from '../services/mockData';
 
 export function TeamBoard() {
   const [agents, setAgents] = useState([]);
@@ -77,7 +76,7 @@ export function TeamBoard() {
     } catch (error) {
       console.error('Failed to load team data:', error);
       setError('Failed to fetch team data');
-      setWorkload(getAgentWorkload());
+      setWorkload([]);
     } finally {
       setLoading(false);
     }

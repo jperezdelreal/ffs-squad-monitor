@@ -7,14 +7,7 @@ vi.mock('../../services/config', () => ({
   fetchConfig: vi.fn(),
 }))
 
-vi.mock('../../services/mockData', () => ({
-  getAgentWorkload: vi.fn(() => [
-    { agent: 'ripley', count: 0, label: 'Ripley' },
-  ]),
-}))
-
 import { fetchConfig } from '../../services/config'
-import { getAgentWorkload } from '../../services/mockData'
 
 const mockConfig = {
   agents: {
@@ -159,7 +152,7 @@ describe('TeamBoard', () => {
     })
   })
 
-  it('shows error state and falls back to mock workload data', async () => {
+  it('shows error state on fetch failure', async () => {
     global.fetch = vi.fn(() => Promise.reject(new Error('Network error')))
 
     render(<TeamBoard />)
@@ -167,7 +160,6 @@ describe('TeamBoard', () => {
       expect(screen.getByText(/Failed to fetch team data/)).toBeInTheDocument()
     })
     expect(screen.getByText('Showing cached data')).toBeInTheDocument()
-    expect(getAgentWorkload).toHaveBeenCalled()
   })
 
   it('shows error on HTTP error response', async () => {
