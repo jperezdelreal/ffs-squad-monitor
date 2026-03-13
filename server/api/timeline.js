@@ -1,6 +1,35 @@
 import { listLogFiles, readLogEntries } from './logs.js';
 import { getHeartbeatResponse } from './heartbeat.js';
 
+/**
+ * @openapi
+ * /api/timeline:
+ *   get:
+ *     summary: Get daily round timeline
+ *     description: Returns structured log rounds for a given date, plus summary statistics and current heartbeat state. Falls back to latest available date if no logs exist for today.
+ *     tags: [Timeline]
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: '2026-03-13'
+ *         description: Date in YYYY-MM-DD format. Defaults to today.
+ *     responses:
+ *       200:
+ *         description: Timeline data for the requested date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Timeline'
+ *       500:
+ *         description: Failed to build timeline
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export default function timelineRoute(req, res) {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);

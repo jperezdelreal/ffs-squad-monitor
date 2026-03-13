@@ -2,6 +2,27 @@ import fs from 'fs';
 import { config, REPOS, SQUAD_AGENTS } from '../config.js';
 import { githubFetch, handleGitHubError } from '../lib/github-client.js';
 
+/**
+ * @openapi
+ * /api/pulse:
+ *   get:
+ *     summary: Get daily activity pulse
+ *     description: Returns today's activity counts — PRs merged, issues closed, active agents, and total agent roster size.
+ *     tags: [Pulse]
+ *     responses:
+ *       200:
+ *         description: Daily pulse data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pulse'
+ *       500:
+ *         description: Failed to compute pulse
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export default async function pulseRoute(req, res) {
   try {
     let prsMergedToday = 0;

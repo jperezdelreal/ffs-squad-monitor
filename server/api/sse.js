@@ -5,6 +5,49 @@ const log = logger.child({ component: 'sse' })
 
 let connectionCounter = 0
 
+/**
+ * @openapi
+ * /api/sse:
+ *   get:
+ *     summary: SSE event stream
+ *     description: |
+ *       Server-Sent Events endpoint for real-time updates. Subscribe to one or more channels.
+ *       Sends keepalive comments every 15 seconds. Supports `Last-Event-ID` header for reconnection.
+ *     tags: [SSE]
+ *     parameters:
+ *       - in: query
+ *         name: channels
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 'heartbeat,events'
+ *         description: Comma-separated list of channels to subscribe to
+ *     responses:
+ *       200:
+ *         description: SSE event stream
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *               description: Server-Sent Events stream with event types matching subscribed channels
+ *       400:
+ *         description: No valid channels specified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 'No valid channels specified'
+ *                 available:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 usage:
+ *                   type: string
+ *                   example: '/api/sse?channels=heartbeat,events'
+ */
 export default function sseRoute(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`)
   const channelsParam = url.searchParams.get('channels') || ''

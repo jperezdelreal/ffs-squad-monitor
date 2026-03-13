@@ -5,6 +5,43 @@ const ISSUE_CACHE_TTL = config.issueCacheTTL;
 let issueCache = null;
 let issueCacheTime = 0;
 
+/**
+ * @openapi
+ * /api/issues:
+ *   get:
+ *     summary: Get issues across all repos
+ *     description: Fetches GitHub issues from all monitored repositories, sorted by priority then update time. Includes linked PR status. Default (open) queries are cached for 30 seconds.
+ *     tags: [Issues]
+ *     parameters:
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *           enum: [open, closed, all]
+ *           default: open
+ *         description: Filter issues by state
+ *     responses:
+ *       200:
+ *         description: Array of issues across all repos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Issue'
+ *       500:
+ *         description: Failed to fetch issues
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       503:
+ *         description: GitHub API rate limit exceeded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export default async function boardRoute(req, res) {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);

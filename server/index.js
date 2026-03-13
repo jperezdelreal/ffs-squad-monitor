@@ -6,6 +6,7 @@ import { eventBus } from './lib/event-bus.js';
 import { logger, requestLogger } from './lib/logger.js';
 import { startSnapshotService, stopSnapshotService } from './lib/snapshot-service.js';
 import { closeDb, getDbStats } from './lib/metrics-db.js';
+import { setupSwagger } from './lib/swagger.js';
 
 // Import route handlers
 import heartbeatRoute from './api/heartbeat.js';
@@ -29,6 +30,9 @@ app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
 
+// Swagger UI at /api/docs
+setupSwagger(app);
+
 // API routes
 app.get('/api/heartbeat', heartbeatRoute);
 app.get('/api/logs/files', logsFilesRoute);
@@ -49,6 +53,21 @@ app.get('/api/metrics/agents', metricsAgentsRoute);
 app.get('/api/metrics/stats', metricsStatsRoute);
 app.get('/api/sse', sseRoute);
 
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     summary: Simple health check
+ *     description: Quick health endpoint returning server status, GitHub auth state, rate limit info, and metrics DB stats. Lighter than /api/health — no external calls.
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Server health status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SimpleHealth'
+ */
 // Health check with rate limit status
 app.get('/health', (req, res) => {
   const rl = getRateLimitStatus();
@@ -59,6 +78,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
+    docsUrl: '/api/docs',
     github: {
       authenticated: !!config.githubToken,
       rateLimit: {
@@ -97,7 +117,7 @@ app.listen(PORT, () => {
       '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
       '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/health',
       '/api/metrics', '/api/metrics/summary', '/api/metrics/agents', '/api/metrics/stats',
-      '/api/sse', '/health',
+      '/api/sse', '/api/docs', '/health',
     ],
   });
 

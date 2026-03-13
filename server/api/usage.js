@@ -101,6 +101,27 @@ async function fetchUsageData() {
   }
 }
 
+/**
+ * @openapi
+ * /api/usage:
+ *   get:
+ *     summary: Get GitHub Actions usage
+ *     description: Returns CI/CD usage data. Tries org billing API first, falls back to aggregating workflow run durations across repos. Cached for 30 seconds.
+ *     tags: [Usage]
+ *     responses:
+ *       200:
+ *         description: Usage data (billing or aggregated workflow runs)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usage'
+ *       500:
+ *         description: Failed to fetch usage data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export default async function usageRoute(req, res) {
   try {
     if (usageCache && Date.now() - usageCacheTime < CACHE_TTL) {
