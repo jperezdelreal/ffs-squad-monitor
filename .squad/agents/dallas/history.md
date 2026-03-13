@@ -28,3 +28,20 @@
 - `src/lib/error-boundary.js` - Global error handler
 - `src/components/*.js` - All components have error states
 - `src/styles.css` - Added `.error-state`, `.retry-btn`, notification styles
+
+### PR #27 Review Fixes (2026-03-13)
+
+**Code review learnings:**
+- Error count reset mechanism prevents permanent dashboard lockup after transient errors
+- Explicit AbortController with cleanup in both success/error paths prevents memory leaks
+- Exponential backoff must calculate delay BEFORE incrementing attempt counter for correct timing
+- All components need consistent error UI patterns (error icon + message + retry button)
+
+**Security improvements:**
+- Always use `textContent` instead of `innerHTML` for user-controlled error messages (XSS prevention)
+- Add `event.preventDefault()` on unhandledrejection to suppress console warnings while handling
+
+**Memory management patterns:**
+- Use explicit AbortController + setTimeout instead of AbortSignal.timeout() for better GC
+- Always clear timeouts in both success and error paths
+- Clean up event sources and timers on reconnection attempts
