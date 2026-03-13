@@ -2,109 +2,13 @@
 
 ## Active Decisions
 
-### 1. Backend API Extraction Architecture (Ripley - P0)
-
-**Date:** 2026-03-12  
-**Status:** Approved with blocking fix required  
-**Context:** PR #28 — Extract Backend API to Dedicated Server Module  
-**Issue:** #21
-
-**Decision:** APPROVE backend extraction with one fix required.
-
-**Architecture:**
-```
-server/
-├── index.js          # Express app entry, route registration, port 3001
-├── config.js         # Centralized config
-└── api/
-    ├── heartbeat.js  # Ralph heartbeat status
-    ├── logs.js       # JSONL log access + SSE streaming
-    ├── timeline.js   # Round-by-round timeline view
-    ├── board.js      # Cross-repo issue board (30s cache)
-    ├── pulse.js      # Studio pulse metrics
-    ├── repos.js      # Repository status
-    └── workflows.js  # Agent roster and activity
-```
-
-**Critical Issue (BLOCKING):** Error handling middleware registered BEFORE routes in `server/index.js:14-18`. Express requires error handlers AFTER all routes. Must move error handler to end of middleware chain before `app.listen()`.
-
-**Rationale:**
-- Reduces 26KB monolithic vite.config.js to modular handlers
-- Enables independent backend deployment
-- Improves testability and performance
-- Maintains heartbeat file watching and SSE streaming patterns
-
-**Acceptance Criteria Status:**
-- ✅ server/ directory with modular structure
-- ✅ Vite proxy configuration
-- ✅ server/config.js for configuration
-- ✅ package.json "server" script
-- ✅ README updated with dual-server instructions
-- ✅ All tests passing
-- ⚠️ Error handler placement needs fix
-
----
-
-### 2. Test Infrastructure Decision (Kane - P1)
-
-**Date:** 2026-03-12  
-**Status:** Approved  
-**Context:** Issue #22  
-**PR:** #29
-
-**Decision:** Selected Vitest as testing framework with 80%+ coverage requirement.
-
-**Configuration:**
-- **Test Framework:** Vitest 4.1.0
-- **Environment:** happy-dom (lightweight DOM implementation)
-- **Coverage Provider:** v8
-- **Coverage Thresholds:** 80% for lines, branches, functions, statements
-
-**Rationale:**
-1. Vitest over Jest: Better Vite integration, faster execution, native ESM support
-2. happy-dom over jsdom: Lighter weight, faster, sufficient for DOM needs
-3. v8 coverage: Native, accurate, performant reporting
-
-**Implementation:**
-- Test files in `src/lib/__tests__/` directory
-- Configuration in `vitest.config.js`
-- CI workflow in `.github/workflows/test.yml`
-
-**Results:**
-- 50 tests written across 3 modules
-- 97.61% coverage achieved (exceeding 80% target)
-- All tests pass consistently
-
----
-
-### 3. Vitest Configuration: passWithNoTests Option (Lambert - P1)
-
-**Date:** 2026-03-12  
-**Status:** Implemented  
-**Context:** PR #28 (backend extraction) + PR #29 (unit tests)
-
-**Decision:** Added `test: { passWithNoTests: true }` to vite.config.js instead of package.json flags.
-
-**Rationale:**
-1. Configuration belongs in config file, not CLI flags
-2. Vitest convention (reads from vite.config.js by default)
-3. Keeps package.json scripts simple and consistent
-4. Allows incremental development—backend and tests can land separately
-
-**Impact:**
-- CI passes on branches without test files
-- Test command behavior remains consistent across all npm test variants
-- No breaking changes to existing test files
-
----
-
-### 4. PR Review Patterns & Standards (Ripley Lead - P1)
+### 1. PR Review Patterns & Standards (Ripley Lead - P1)
 
 **Date:** 2026-03-12  
 **Status:** Established  
 **Context:** PRs #27, #29, #30 — First formal review session
 
-**Decision 4a: Error Handling Pattern (PR #27)**
+**Decision 1a: Error Handling Pattern (PR #27)**
 
 Pattern adopted across codebase:
 - API functions return `{error: true, message}` instead of `null` on failure
@@ -118,7 +22,7 @@ Rationale:
 - User-facing recovery without page reload
 - Distinguishes total failure vs. partial degradation
 
-**Decision 4b: Test Coverage Standards (PR #29)**
+**Decision 1b: Test Coverage Standards (PR #29)**
 
 Baseline established:
 - Minimum 80% coverage enforced via vitest.config.js thresholds
@@ -132,7 +36,7 @@ Rationale:
 - Co-located tests improve discoverability
 - CI enforcement prevents coverage decay
 
-**Decision 4c: Content-Aware Triage Heuristic (PR #30)**
+**Decision 1c: Content-Aware Triage Heuristic (PR #30)**
 
 Quality indicators for go:ready label:
 - Issue body ≥100 characters
@@ -175,7 +79,7 @@ Rationale:
 - Better DX: Console logs make debugging easier
 - Resilience: Dashboard stays functional if backend is down
 - Consistency: Error handling pattern across all components
-### GitHub Self-Approval Limitation (2026-03-13)
+### 2. GitHub Self-Approval Limitation (2026-03-13)
 **Author:** Ripley (Lead)  
 **Context:** PR #26, #29, #30 review — GitHub API constraints  
 **Status:** Documented
@@ -205,7 +109,7 @@ Establish standard error handling patterns for all dashboard components:
 6. **Component Error UI Pattern** — Standard error state structure with icon, message, and retry button
 
 These patterns prevent memory leaks, false positives, XSS vulnerabilities, duplicate logging, and inconsistent error UX.
-### Package-lock.json Merge Strategy
+### 4. Package-lock.json Merge Strategy
 
 **Date:** 2026-03-13  
 **Agent:** Lambert (Backend Dev)  
@@ -230,7 +134,7 @@ git add package-lock.json
 
 ---
 
-### Error Handling Architecture Review (PR #27)
+### 5. Error Handling Architecture Review (PR #27)
 
 **Date:** 2026-03-12  
 **Author:** Ripley (Lead)  
@@ -248,7 +152,7 @@ git add package-lock.json
 
 ---
 
-### Testing Infrastructure for ffs-squad-monitor (PR #29)
+### 6. Testing Infrastructure for ffs-squad-monitor (PR #29)
 
 **Date:** 2026-03-12  
 **Status:** Approved  
@@ -288,7 +192,7 @@ These patterns prevent memory leaks, false positives, XSS vulnerabilities, dupli
 
 ---
 
-### 2026-03-13T20:12Z: Cross-repo communication rule
+### 7. Cross-repo communication rule
 **By:** Coordinator  
 **Tier:** T0  
 **Status:** ✅ ACTIVE
@@ -299,7 +203,7 @@ No repo may make direct git commits to another repo's branch. ALL cross-repo com
 
 ---
 
-### 2026-03-13T19:58Z: Ralph Refueling Behavior
+### 8. Ralph Refueling Behavior
 **By:** Coordinator  
 **Tier:** T1  
 **Status:** ✅ ACTIVE
@@ -313,7 +217,7 @@ When Ralph detects an empty board (no open issues with squad labels, no open PRs
 
 ---
 
-### 2026-03-13 (Issue #35): Legacy Vanilla JS Architecture Removed
+### 9. Legacy Vanilla JS Architecture Removed
 **Agent:** Dallas (Frontend Dev)  
 **Status:** COMPLETED (PR #61 merged)
 
@@ -328,7 +232,7 @@ Removed all legacy vanilla JS files. The active frontend is now exclusively Reac
 
 ---
 
-### 2026-03-13 (Issue #37): Config Centralization Architecture
+### 10. Config Centralization Architecture
 **Agent:** Lambert (Backend Dev)  
 **Status:** COMPLETED (PR #60 merged)
 
@@ -344,7 +248,7 @@ Removed all legacy vanilla JS files. The active frontend is now exclusively Reac
 
 ---
 
-### 2026-03-13 (Issue #39): GitHub Token Auth Architecture
+### 11. GitHub Token Auth Architecture
 **Agent:** Lambert (Backend Dev)  
 **Status:** COMPLETED (PR #62 merged)
 
