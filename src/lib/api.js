@@ -1,12 +1,18 @@
 /**
  * API client for FFS Squad Monitor.
- * Centralizes all fetch calls with error handling and connection tracking.
+ * Centralizes all fetch calls with error handling, connection tracking,
+ * request deduplication, and response caching.
  */
+
+import { createRequestCache } from './request-cache.js'
 
 const listeners = new Set();
 const endpointStatus = new Map();
 
 let _connectionState = 'unknown'; // 'operational' | 'degraded' | 'offline' | 'unknown'
+
+// Shared request cache — deduplicates concurrent calls and caches responses
+export const requestCache = createRequestCache({ defaultTTL: 30_000 })
 
 export function getConnectionState() {
   return _connectionState;
@@ -54,35 +60,38 @@ function logError(endpoint, error) {
   });
 }
 
-async function safeFetch(url, options = {}) {
-  // Explicit AbortController for memory safety
+function rawFetch(url, options = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
-  
-  try {
-    const res = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-    
+
+  return fetch(url, {
+    ...options,
+    signal: controller.signal,
+  }).then(res => {
     clearTimeout(timeoutId);
-    
     if (!res.ok) {
       const error = new Error(`HTTP ${res.status}`);
       error.status = res.status;
       throw error;
     }
-    
     endpointStatus.set(url, true);
     updateConnectionState();
-    return await res.json();
-  } catch (error) {
+    return res.json();
+  }).catch(error => {
     clearTimeout(timeoutId);
     endpointStatus.set(url, false);
     updateConnectionState();
     logError(url, error);
     throw error;
-  }
+  });
+}
+
+async function safeFetch(url, options = {}) {
+  return requestCache.dedupedFetch(
+    url,
+    () => rawFetch(url, options),
+    { ttl: options.cacheTTL, noCache: options.noCache },
+  );
 }
 
 export async function fetchHeartbeat() {
@@ -136,6 +145,14 @@ export async function fetchIssues() {
 export async function fetchPulse() {
   try {
     return await safeFetch('/api/pulse');
+  } catch (error) {
+    return { error: true, message: error.message };
+  }
+}
+
+export async function fetchHealth() {
+  try {
+    return await safeFetch('/api/health', { cacheTTL: 10_000 });
   } catch (error) {
     return { error: true, message: error.message };
   }

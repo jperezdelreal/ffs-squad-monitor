@@ -1,5 +1,6 @@
 import React from 'react';
 import { HealthBadge } from './HealthBadge';
+import { DependencyHealth } from './DependencyHealth';
 
 export function Header({ lastUpdate, isConnected, healthScore, healthLevel, healthBreakdown }) {
   const getTimeSince = () => {
@@ -22,6 +23,7 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
         </div>
         <div className="flex items-center gap-6">
           <HealthBadge score={healthScore} level={healthLevel} breakdown={healthBreakdown} />
+          <DependencyHealth />
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
             <div className="relative">
               <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`} />
