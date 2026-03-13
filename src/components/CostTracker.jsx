@@ -1,29 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useStore } from '../store/store';
 
 export function CostTracker() {
-  const [usage, setUsage] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { usage, usageLoading: loading, usageError: error, fetchUsage } = useStore();
 
   useEffect(() => {
-    loadUsage();
+    fetchUsage();
   }, []);
-
-  const loadUsage = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/usage');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      setUsage(data);
-    } catch (err) {
-      console.error('Failed to load usage data:', err);
-      setError('Cost data not available');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -50,7 +33,7 @@ export function CostTracker() {
             Unable to fetch GitHub Actions usage data. This may be due to missing permissions or network issues.
           </p>
           <button
-            onClick={loadUsage}
+            onClick={fetchUsage}
             className="px-4 py-2 bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors text-sm font-medium"
           >
             🔄 Retry
