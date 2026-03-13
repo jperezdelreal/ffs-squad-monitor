@@ -3,6 +3,7 @@ import { config } from '../config.js'
 import { getRateLimitStatus, githubFetch } from '../lib/github-client.js'
 import { getHeartbeatResponse } from './heartbeat.js'
 import { getDbStats } from '../lib/metrics-db.js'
+import { eventBus } from '../lib/event-bus.js'
 import { logger } from '../lib/logger.js'
 
 let lastGithubCheck = null
@@ -76,6 +77,7 @@ export default async function healthRoute(req, res) {
         try { return getDbStats() } catch { return null }
       })(),
     },
+    sse: eventBus.getConnectionInfo(),
   })
 }
 

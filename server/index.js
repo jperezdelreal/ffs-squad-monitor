@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { config } from './config.js';
 import { getRateLimitStatus } from './lib/github-client.js';
+import { eventBus } from './lib/event-bus.js';
 import { logger, requestLogger } from './lib/logger.js';
 import { startSnapshotService, stopSnapshotService } from './lib/snapshot-service.js';
 import { closeDb, getDbStats } from './lib/metrics-db.js';
@@ -19,6 +20,7 @@ import eventsRoute from './api/events.js';
 import usageRoute from './api/usage.js';
 import healthRoute from './api/health.js';
 import { metricsRoute, metricsSummaryRoute, metricsAgentsRoute, metricsStatsRoute } from './api/metrics.js';
+import sseRoute from './api/sse.js';
 
 const app = express();
 
@@ -45,6 +47,7 @@ app.get('/api/metrics', metricsRoute);
 app.get('/api/metrics/summary', metricsSummaryRoute);
 app.get('/api/metrics/agents', metricsAgentsRoute);
 app.get('/api/metrics/stats', metricsStatsRoute);
+app.get('/api/sse', sseRoute);
 
 // Health check with rate limit status
 app.get('/health', (req, res) => {
@@ -66,6 +69,7 @@ app.get('/health', (req, res) => {
       },
     },
     metricsDb: dbStats,
+    sse: eventBus.getConnectionInfo(),
   });
 });
 
@@ -93,7 +97,7 @@ app.listen(PORT, () => {
       '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
       '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/health',
       '/api/metrics', '/api/metrics/summary', '/api/metrics/agents', '/api/metrics/stats',
-      '/health',
+      '/api/sse', '/health',
     ],
   });
 

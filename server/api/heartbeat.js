@@ -1,12 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
+import { eventBus } from '../lib/event-bus.js';
 
 // Cached heartbeat state — updated via fs.watch
 let heartbeatCache = null;
 let heartbeatWatcher = null;
 
 function readHeartbeatFile() {
+  const prevCache = heartbeatCache;
   try {
     const raw = fs.readFileSync(config.heartbeatPath, 'utf-8').replace(/^\uFEFF/, '');
     const data = JSON.parse(raw);
@@ -24,6 +26,11 @@ function readHeartbeatFile() {
     };
   } catch {
     heartbeatCache = null;
+  }
+
+  // Publish to event bus when heartbeat data changes
+  if (heartbeatCache && JSON.stringify(heartbeatCache) !== JSON.stringify(prevCache)) {
+    eventBus.publish('heartbeat', 'heartbeat:update', heartbeatCache);
   }
 }
 
