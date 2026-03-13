@@ -41,3 +41,15 @@ Fixed 4 critical issues from Ripley's review of error handling implementation:
 6. **Promise Rejection Handling**: Added `event.preventDefault()` to unhandledrejection handler to properly suppress browser's default console warnings.
 
 **Key Pattern**: Exponential backoff must calculate delay BEFORE incrementing attempt counter to avoid off-by-one errors. Error count state should have time-based reset mechanisms to prevent accumulation from transient issues.
+
+### 2026-03-13 — PR #28 Merge Conflict Resolution
+
+Resolved merge conflicts between squad/21-extract-backend-api and main branch:
+
+- **Context**: PR #28 already had the error handler middleware fix committed (8702c76), but branch had become stale with conflicts against main
+- **Resolution**: Successfully merged origin/main into feature branch with auto-merge of .squad/ files (history.md and decisions.md)
+- **Verification**: Confirmed error handler middleware remains correctly positioned AFTER all route registrations in server/index.js (lines 36-40)
+- **Build Status**: npm run build passed successfully after merge resolution
+- **Pattern**: For merge conflicts in .squad/ files, git's auto-merge typically handles them correctly since they're append-only logs
+
+**Key Learning**: Always verify critical fixes (like middleware ordering) remain intact after conflict resolution, even when git auto-merges successfully.
