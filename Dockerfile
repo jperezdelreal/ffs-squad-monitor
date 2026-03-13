@@ -1,45 +1,40 @@
 # Multi-stage Dockerfile for FFS Squad Monitor
 
-# Stage 1: Build
-FROM node:18-alpine AS builder
+# Stage 1: Build frontend
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies (devDependencies needed for vite build)
+RUN npm ci && npm cache clean --force
 
-# Copy source files
 COPY . .
 
-# Build the frontend
 RUN npm run build
 
 # Stage 2: Production
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy built artifacts and package files
+# Copy built frontend, server code, and package files
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server ./server
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/vite.config.js ./
 
-# Install only production dependencies (including vite for preview)
-RUN npm ci --only=production && npm cache clean --force
+# Install production dependencies only (express, cors, etc.)
+RUN npm ci --omit=dev && npm cache clean --force
 
-# Expose port
 EXPOSE 3000
 
-# Set environment to production
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Health check
+# Health check against Express server
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); })"
+  CMD node -e "const http = require('http'); http.get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"
 
-# Run the preview server
-CMD ["npm", "run", "preview", "--", "--port", "3000", "--host", "0.0.0.0"]
+# Run the Express backend server (serves API; frontend served via reverse proxy or static host)
+CMD ["node", "server/index.js"]

@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   build:
@@ -25,3 +26,69 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Check bundle size
+        run: node scripts/check-bundle-size.js
+
+      - name: Upload bundle report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-report
+          path: bundle-report.json
+
+      - name: Comment bundle size on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const report = JSON.parse(fs.readFileSync('bundle-report.json', 'utf-8'))
+            const fmt = (b) => b < 1024 ? `${b} B` : `${(b / 1024).toFixed(1)} KB`
+            const icon = report.status === 'ok' ? '✅' : report.status === 'warning' ? '⚠️' : '❌'
+
+            let body = `## ${icon} Bundle Size Report\n\n`
+            body += `| Category | Size | Budget | Status |\n`
+            body += `|----------|------|--------|--------|\n`
+            body += `| JS | ${fmt(report.totals.js)} | ${report.budgets.totalJS.error} KB | ${report.totals.js / 1024 <= report.budgets.totalJS.error ? '✅' : '❌'} |\n`
+            body += `| CSS | ${fmt(report.totals.css)} | ${report.budgets.totalCSS.error} KB | ${report.totals.css / 1024 <= report.budgets.totalCSS.error ? '✅' : '❌'} |\n`
+            body += `| **Total** | **${fmt(report.totals.total)}** | **${report.budgets.total.error} KB** | ${report.totals.total / 1024 <= report.budgets.total.error ? '✅' : '❌'} |\n`
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const existing = comments.find(c => c.body.includes('Bundle Size Report'))
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              })
+            }
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ffs-squad-monitor:ci .
+
+      - name: Verify container starts
+        run: |
+          docker run -d --name ffs-test -p 3000:3000 ffs-squad-monitor:ci
+          sleep 5
+          curl -f http://localhost:3000/health || (docker logs ffs-test && exit 1)
+          docker stop ffs-test
+          docker rm ffs-test

@@ -71,7 +71,28 @@ Available API endpoints:
 
 For production deployment options and instructions, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-The dashboard includes a health check endpoint at `GET /api/health` for monitoring.
+### Docker
+
+```bash
+# Build and run with Docker
+docker build -t ffs-squad-monitor .
+docker run -d -p 3000:3000 --name ffs-monitor ffs-squad-monitor
+
+# Or use docker-compose
+docker compose up -d
+```
+
+The container runs the Express backend on port 3000 with a built-in health check at `GET /health`.
+
+### Bundle Analysis
+
+```bash
+# Build with bundle visualizer (generates dist/bundle-stats.html)
+ANALYZE=true npm run build
+
+# Build and check bundle sizes against budgets
+npm run build:analyze
+```
 
 ## Testing
 
