@@ -13,6 +13,7 @@ import workflowsRoute from './api/workflows.js';
 import reposRoute from './api/repos.js';
 import configRoute from './api/config.js';
 import eventsRoute from './api/events.js';
+import usageRoute from './api/usage.js';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.get('/api/agents', workflowsRoute);
 app.get('/api/repos', reposRoute);
 app.get('/api/config', configRoute);
 app.get('/api/events', eventsRoute);
+app.get('/api/usage', usageRoute);
 
 // Health check with rate limit status
 app.get('/health', (req, res) => {
@@ -77,6 +79,7 @@ app.listen(PORT, () => {
   console.log(`   - GET /api/repos`);
   console.log(`   - GET /api/config`);
   console.log(`   - GET /api/events`);
+  console.log(`   - GET /api/usage`);
   console.log(`   - GET /health\n`);
 });
 
