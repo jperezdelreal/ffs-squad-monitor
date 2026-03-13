@@ -46,6 +46,18 @@ const mockIssues = [
   },
 ]
 
+function makeBottleneckIssues(count) {
+  return Array.from({ length: count }, (_, i) => ({
+    number: 100 + i,
+    title: 'Bottleneck issue ' + (i + 1),
+    state: 'open',
+    repoGithub: 'jperezdelreal/BottleneckRepo',
+    labels: ['pipeline:code'],
+    url: 'https://github.com/jperezdelreal/BottleneckRepo/issues/' + (100 + i),
+    createdAt: '2026-03-' + String(10 + i).padStart(2, '0') + 'T10:00:00Z',
+  }))
+}
+
 describe('PipelineVisualizer', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
@@ -321,4 +333,46 @@ describe('PipelineVisualizer', () => {
     expect(screen.getAllByText('✅').length).toBeGreaterThan(0) // complete stages
     expect(screen.getAllByText('🚫').length).toBeGreaterThan(0) // blocked stages
   })
+
+  it('shows bottleneck indicator when 5+ open issues in a stage', async () => {
+    const bottleneckData = makeBottleneckIssues(6)
+    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(bottleneckData) }))
+    const { container } = render(<PipelineVisualizer />)
+    await waitFor(() => { expect(screen.getByText('BottleneckRepo')).toBeInTheDocument() })
+    expect(container.textContent).toMatch(/STUCK/)
+  })
+
+  it('does not show bottleneck for fewer than 5 open issues', async () => {
+    const fewIssues = makeBottleneckIssues(4)
+    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(fewIssues) }))
+    render(<PipelineVisualizer />)
+    await waitFor(() => { expect(screen.getByText('BottleneckRepo')).toBeInTheDocument() })
+    expect(screen.queryByText('STUCK')).not.toBeInTheDocument()
+  })
+
+  it('shows average time in stage for open issues', async () => {
+    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(mockIssues) }))
+    const { container } = render(<PipelineVisualizer />)
+    await waitFor(() => { expect(screen.getByText('GameRepo')).toBeInTheDocument() })
+    expect(container.textContent).toMatch(/avg \d+[dh]/)
+  })
+
+  it('shows bottleneck legend entry', async () => {
+    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(mockIssues) }))
+    const { container } = render(<PipelineVisualizer />)
+    await waitFor(() => { expect(screen.getByText('Pipeline Status')).toBeInTheDocument() })
+    expect(container.textContent).toMatch(/Bottleneck/)
+  })
+
+  it('shows bottleneck info in modal when bottleneck cell clicked', async () => {
+    const bottleneckData = makeBottleneckIssues(6)
+    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(bottleneckData) }))
+    const { container } = render(<PipelineVisualizer />)
+    await waitFor(() => { expect(screen.getByText('BottleneckRepo')).toBeInTheDocument() })
+    const stuckBadge = screen.getByText('STUCK')
+    fireEvent.click(stuckBadge.closest('[class*="cursor-pointer"]'))
+    await waitFor(() => { expect(container.textContent).toMatch(/6 issues accumulated/) })
+    expect(container.textContent).toMatch(/Avg time in stage/)
+  })
+
 })
