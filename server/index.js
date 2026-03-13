@@ -10,6 +10,7 @@ import boardRoute from './api/board.js';
 import pulseRoute from './api/pulse.js';
 import workflowsRoute from './api/workflows.js';
 import reposRoute from './api/repos.js';
+import configRoute from './api/config.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get('/api/issues', boardRoute);
 app.get('/api/pulse', pulseRoute);
 app.get('/api/agents', workflowsRoute);
 app.get('/api/repos', reposRoute);
+app.get('/api/config', configRoute);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -56,6 +58,7 @@ app.listen(PORT, () => {
   console.log(`   - GET /api/pulse`);
   console.log(`   - GET /api/agents`);
   console.log(`   - GET /api/repos`);
+  console.log(`   - GET /api/config`);
   console.log(`   - GET /health\n`);
 });
 

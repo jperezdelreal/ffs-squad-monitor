@@ -27,10 +27,11 @@ export const config = {
 };
 
 // Repository definitions — FFS games only (SS monitors itself + downstream via safety-net.yml)
+// Single source of truth for all REPOS across backend, frontend, and vite config
 export const REPOS = [
-  { id: 'flora',             emoji: '🌿', label: 'Flora',          github: 'jperezdelreal/flora',          dir: path.resolve(__dirname, '..', '..', 'flora') },
-  { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', dir: path.resolve(__dirname, '..', '..', 'ComeRosquillas') },
-  { id: 'pixel-bounce',      emoji: '🎮', label: 'Pixel Bounce',   github: 'jperezdelreal/pixel-bounce',   dir: path.resolve(__dirname, '..', '..', 'pixel-bounce') },
+  { id: 'flora',             emoji: '🌿', label: 'Flora',          github: 'jperezdelreal/flora',          color: '#ef4444', dir: path.resolve(__dirname, '..', '..', 'flora') },
+  { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', color: '#f59e0b', dir: path.resolve(__dirname, '..', '..', 'ComeRosquillas') },
+  { id: 'pixel-bounce',      emoji: '🎮', label: 'Pixel Bounce',   github: 'jperezdelreal/pixel-bounce',   color: '#8b5cf6', dir: path.resolve(__dirname, '..', '..', 'pixel-bounce') },
 ];
 
 // Squad agent roster
