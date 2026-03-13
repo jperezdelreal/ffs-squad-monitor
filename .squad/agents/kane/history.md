@@ -85,3 +85,42 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `vitest.config.js` — coverage include extended
 
 **PR:** #59 (branch: squad/49-github-service-tests)
+
+### 2026-03-13: Issue #48 — Component tests for JSX components
+
+**What was done:**
+- Created `src/components/__tests__/` with test files for all 7 React components
+- Added @testing-library/react, @testing-library/jest-dom, @testing-library/user-event as dev dependencies
+- Updated vitest.config.js: added React plugin, component coverage include, setup file with jest-dom matchers
+- 81 new component tests, all passing (182 total across project)
+
+**Coverage achieved:**
+- ActivityFeed: 100% statements, 92.68% branches
+- PipelineVisualizer: 100% statements, 83.33% branches
+- TeamBoard: 100% statements, 97.22% branches
+- CostTracker: 92% statements, 100% branches
+- Header: 100% all metrics
+- Sidebar: 100% all metrics
+- ErrorBoundary: 100% all metrics
+
+**Key insights:**
+- Agent names (e.g. "Ripley") appear in both card titles and workload chart — use `getAllByText` not `getByText`
+- CostTracker was refactored on another branch (squad/42-real-cost-data) but main still uses mockData pattern — tests must match the branch's actual component code
+- ErrorBoundary uses class component pattern (getDerivedStateFromError) — needs special test approach with ThrowingComponent helper
+- Some compound emoji characters (e.g. 👩‍🚀) contain invisible joiners that can cause text matching issues
+
+**Files created:**
+- `src/components/__tests__/setup.js`
+- `src/components/__tests__/ActivityFeed.test.jsx` (12 tests)
+- `src/components/__tests__/PipelineVisualizer.test.jsx` (15 tests)
+- `src/components/__tests__/TeamBoard.test.jsx` (11 tests)
+- `src/components/__tests__/CostTracker.test.jsx` (14 tests)
+- `src/components/__tests__/Header.test.jsx` (10 tests)
+- `src/components/__tests__/Sidebar.test.jsx` (8 tests)
+- `src/components/__tests__/ErrorBoundary.test.jsx` (7 tests)
+
+**Files modified:**
+- `vitest.config.js` — React plugin, setupFiles, coverage include
+- `package.json` — testing-library devDependencies
+
+**PR:** #68 (branch: squad/48-component-tests)

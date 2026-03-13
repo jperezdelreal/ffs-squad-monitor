@@ -1,14 +1,17 @@
 import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     globals: true,
     environment: 'happy-dom',
+    setupFiles: ['./src/components/__tests__/setup.js'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/lib/**/*.js', 'src/services/**/*.js'],
-      exclude: ['src/lib/**/*.test.js', 'src/lib/__tests__/**', 'src/services/**/*.test.js', 'src/services/__tests__/**'],
+      include: ['src/lib/**/*.js', 'src/services/**/*.js', 'src/components/**/*.jsx'],
+      exclude: ['src/lib/**/*.test.js', 'src/lib/__tests__/**', 'src/services/**/*.test.js', 'src/services/__tests__/**', 'src/components/__tests__/**'],
       thresholds: {
         lines: 80,
         functions: 80,
