@@ -7,6 +7,21 @@
 
 ## Learnings
 
+### Backend Architecture (2026-03-12)
+
+- **Modular Server Structure:** Extracted 26KB vite.config.js API middleware into dedicated `server/` directory with Express
+- **Key Paths:**
+  - `server/index.js` — Express app entry point (port 3001)
+  - `server/config.js` — Centralized configuration (heartbeat path, logs dir, repos, agents)
+  - `server/api/` — Modular route handlers: heartbeat, logs, timeline, board, pulse, workflows, repos
+- **Patterns:**
+  - SSE streaming for real-time log updates (`/api/logs/stream`)
+  - File watching for heartbeat changes (fs.watch with debounce)
+  - Issue caching with 30s TTL
+  - Environment-based configuration (FFS_ROOT, FFS_HEARTBEAT_PATH, PORT)
+- **Vite Integration:** Dev server proxies `/api` to standalone backend on port 3001
+- **Dependencies:** Express 5.2.1, cors 2.8.6
+
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
 ### 2026-03-12 — PR #27 Code Review Fixes
@@ -26,6 +41,18 @@ Fixed 4 critical issues from Ripley's review of error handling implementation:
 6. **Promise Rejection Handling**: Added `event.preventDefault()` to unhandledrejection handler to properly suppress browser's default console warnings.
 
 **Key Pattern**: Exponential backoff must calculate delay BEFORE incrementing attempt counter to avoid off-by-one errors. Error count state should have time-based reset mechanisms to prevent accumulation from transient issues.
+
+### 2026-03-13 — PR #28 Merge Conflict Resolution
+
+Resolved merge conflicts between squad/21-extract-backend-api and main branch:
+
+- **Context**: PR #28 already had the error handler middleware fix committed (8702c76), but branch had become stale with conflicts against main
+- **Resolution**: Successfully merged origin/main into feature branch with auto-merge of .squad/ files (history.md and decisions.md)
+- **Verification**: Confirmed error handler middleware remains correctly positioned AFTER all route registrations in server/index.js (lines 36-40)
+- **Build Status**: npm run build passed successfully after merge resolution
+- **Pattern**: For merge conflicts in .squad/ files, git's auto-merge typically handles them correctly since they're append-only logs
+
+**Key Learning**: Always verify critical fixes (like middleware ordering) remain intact after conflict resolution, even when git auto-merges successfully.
 ### Backend Architecture (2026-03-12)
 
 - **Modular Server Structure:** Extracted 26KB vite.config.js API middleware into dedicated `server/` directory with Express

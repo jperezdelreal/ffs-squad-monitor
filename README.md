@@ -27,12 +27,45 @@ The FFS repo (`FirstFrameStudios`) runs an autonomous agent loop via `ralph-watc
 
 ## Getting Started
 
+**Development mode (with backend proxy):**
+
 ```bash
-npm install
+# Terminal 1 — Start the backend API server
+npm run server
+
+# Terminal 2 — Start the Vite dev server
 npm run dev
 ```
 
-Then open `http://localhost:5173` in your browser.
+Then open `http://localhost:5173` in your browser. The Vite dev server proxies `/api` requests to the backend server running on port 3001.
+
+**Production mode:**
+
+```bash
+npm run build
+npm run preview
+```
+
+**Running backend independently:**
+
+The backend API server can run standalone without Vite:
+
+```bash
+npm run server
+# Server starts on http://localhost:3001
+```
+
+Available API endpoints:
+- `GET /api/heartbeat` — Ralph heartbeat status
+- `GET /api/logs/files` — Available log files
+- `GET /api/logs/stream` — SSE stream of new log entries
+- `GET /api/logs` — Structured logs (supports ?date and ?agent params)
+- `GET /api/timeline` — Timeline view of rounds
+- `GET /api/issues` — Cross-repo issue board
+- `GET /api/pulse` — Studio pulse stats
+- `GET /api/agents` — Agent roster and status
+- `GET /api/repos` — Repository status
+- `GET /health` — Health check
 
 ## Deployment
 
@@ -64,6 +97,12 @@ Set the path to your FFS repo heartbeat file:
 ```bash
 # Default: looks for ../FirstFrameStudios/tools/.ralph-heartbeat.json
 FFS_HEARTBEAT_PATH=../FirstFrameStudios/tools/.ralph-heartbeat.json
+
+# Override the FFS root path
+FFS_ROOT=../FirstFrameStudios
+
+# Override the server port (default: 3001)
+PORT=3001
 ```
 
 ## Status
