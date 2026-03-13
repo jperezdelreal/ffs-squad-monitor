@@ -26,12 +26,11 @@ export const config = {
   issueCacheTTL: 30_000,
 };
 
-// Repository definitions
+// Repository definitions — FFS games only (SS monitors itself + downstream via safety-net.yml)
 export const REPOS = [
-  { id: 'FirstFrameStudios', emoji: '🏗️', label: 'Studio Hub', github: 'jperezdelreal/FirstFrameStudios', dir: path.resolve(__dirname, '..', '..', 'FirstFrameStudios') },
-  { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', dir: path.resolve(__dirname, '..', '..', 'ComeRosquillas') },
   { id: 'flora',             emoji: '🌿', label: 'Flora',          github: 'jperezdelreal/flora',          dir: path.resolve(__dirname, '..', '..', 'flora') },
-  { id: 'ffs-squad-monitor', emoji: '📊', label: 'Squad Monitor',  github: 'jperezdelreal/ffs-squad-monitor', dir: path.resolve(__dirname, '..') },
+  { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', dir: path.resolve(__dirname, '..', '..', 'ComeRosquillas') },
+  { id: 'pixel-bounce',      emoji: '🎮', label: 'Pixel Bounce',   github: 'jperezdelreal/pixel-bounce',   dir: path.resolve(__dirname, '..', '..', 'pixel-bounce') },
 ];
 
 // Squad agent roster

@@ -7,11 +7,11 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// FFS games only — SS monitors itself + downstream via safety-net.yml
 const REPOS = [
-  { id: 'FirstFrameStudios', emoji: '🏗️', label: 'Studio Hub', github: 'jperezdelreal/FirstFrameStudios', dir: path.resolve(__dirname, '..', 'FirstFrameStudios') },
-  { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', dir: path.resolve(__dirname, '..', 'ComeRosquillas') },
   { id: 'flora',             emoji: '🌿', label: 'Flora',          github: 'jperezdelreal/flora',          dir: path.resolve(__dirname, '..', 'flora') },
-  { id: 'ffs-squad-monitor', emoji: '📊', label: 'Squad Monitor',  github: 'jperezdelreal/ffs-squad-monitor', dir: path.resolve(__dirname) },
+  { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', dir: path.resolve(__dirname, '..', 'ComeRosquillas') },
+  { id: 'pixel-bounce',      emoji: '🎮', label: 'Pixel Bounce',   github: 'jperezdelreal/pixel-bounce',   dir: path.resolve(__dirname, '..', 'pixel-bounce') },
 ];
 
 // Squad agent roster — all agents across all repos
