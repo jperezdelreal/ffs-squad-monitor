@@ -42,6 +42,21 @@
 - Test edge cases: null/undefined, boundaries, error paths
 
 ---
+### Error Handling Standards (2026-03-13)
+**Author:** Ripley (Lead)  
+**Context:** PR #27 review — Error handling and offline resilience  
+**Status:** Approved
+
+Establish standard error handling patterns for all dashboard components:
+
+1. **Memory-Safe Timeouts** — Always create explicit `AbortController` and clear timeouts in both success and error paths
+2. **Error Count Rate Limiting** — Use time-based reset windows to prevent false positives
+3. **Exponential Backoff** — Use `Math.min(1000 * Math.pow(2, attempts), maxDelay)`, not linear delays
+4. **XSS Prevention in Error Messages** — Always use `textContent` for user-controlled content, never `innerHTML`
+5. **Promise Rejection Handling** — Prevent duplicate logging with `preventDefault()` as first call
+6. **Component Error UI Pattern** — Standard error state structure with icon, message, and retry button
+
+These patterns prevent memory leaks, false positives, XSS vulnerabilities, duplicate logging, and inconsistent error UX.
 
 ## Governance
 
