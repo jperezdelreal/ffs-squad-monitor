@@ -1,6 +1,7 @@
 import React from 'react';
+import { HealthBadge } from './HealthBadge';
 
-export function Header({ lastUpdate, isConnected }) {
+export function Header({ lastUpdate, isConnected, healthScore, healthLevel, healthBreakdown }) {
   const getTimeSince = () => {
     if (!lastUpdate) return 'Never';
     const seconds = Math.floor((Date.now() - lastUpdate) / 1000);
@@ -20,6 +21,7 @@ export function Header({ lastUpdate, isConnected }) {
           <span className="text-sm text-gray-400 font-mono">FFS Operations</span>
         </div>
         <div className="flex items-center gap-6">
+          <HealthBadge score={healthScore} level={healthLevel} breakdown={healthBreakdown} />
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
             <div className="relative">
               <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`} />
