@@ -9,6 +9,7 @@ import {
   fetchAgents,
   fetchIssues,
   fetchPulse,
+  requestCache,
 } from '../api.js';
 
 describe('api', () => {
@@ -17,6 +18,7 @@ describe('api', () => {
   beforeEach(() => {
     mockFetch = vi.fn();
     global.fetch = mockFetch;
+    requestCache.clear();
   });
 
   afterEach(() => {
@@ -73,6 +75,7 @@ describe('api', () => {
       });
       await fetchHeartbeat();
 
+      requestCache.clear();
       mockFetch.mockRejectedValue(new Error('Network error'));
       await fetchHeartbeat();
 

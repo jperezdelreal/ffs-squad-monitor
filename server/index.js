@@ -15,6 +15,7 @@ import reposRoute from './api/repos.js';
 import configRoute from './api/config.js';
 import eventsRoute from './api/events.js';
 import usageRoute from './api/usage.js';
+import healthRoute from './api/health.js';
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.get('/api/repos', reposRoute);
 app.get('/api/config', configRoute);
 app.get('/api/events', eventsRoute);
 app.get('/api/usage', usageRoute);
+app.get('/api/health', healthRoute);
 
 // Health check with rate limit status
 app.get('/health', (req, res) => {
@@ -77,7 +79,7 @@ app.listen(PORT, () => {
     endpoints: [
       '/api/heartbeat', '/api/logs/files', '/api/logs/stream', '/api/logs',
       '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
-      '/api/repos', '/api/config', '/api/events', '/api/usage', '/health',
+      '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/health', '/health',
     ],
   });
 });
