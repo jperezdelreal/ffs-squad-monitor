@@ -8,6 +8,7 @@ import {
   pruneOldSnapshots,
   querySnapshots,
 } from './metrics-db.js'
+import { snapshotAgentProductivity } from './agent-metrics.js'
 import { logger } from './logger.js'
 
 const log = logger.child({ service: 'snapshot' })
@@ -16,6 +17,7 @@ const INTERVALS = {
   issues: 5 * 60 * 1000,
   agents: 5 * 60 * 1000,
   actions: 15 * 60 * 1000,
+  agentProductivity: 15 * 60 * 1000,
 }
 
 const timers = {}
@@ -204,6 +206,7 @@ export function startSnapshotService() {
     issueInterval: '5m',
     agentInterval: '5m',
     actionsInterval: '15m',
+    agentProductivityInterval: '15m',
   })
 
   // Run initial snapshots after a short delay (let server start)
@@ -211,12 +214,14 @@ export function startSnapshotService() {
     snapshotIssues()
     snapshotAgents()
     snapshotActions()
+    snapshotAgentProductivity()
     computeDailySummary()
   }, 10_000)
 
   timers.issues = setInterval(snapshotIssues, INTERVALS.issues)
   timers.agents = setInterval(snapshotAgents, INTERVALS.agents)
   timers.actions = setInterval(snapshotActions, INTERVALS.actions)
+  timers.agentProductivity = setInterval(snapshotAgentProductivity, INTERVALS.agentProductivity)
   // Check daily summary every hour
   timers.daily = setInterval(computeDailySummary, 60 * 60 * 1000)
 }
