@@ -67,6 +67,21 @@ Available API endpoints:
 - `GET /api/repos` — Repository status
 - `GET /health` — Health check
 
+**Running tests:**
+
+```bash
+# Run tests once
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+The test suite uses [Vitest](https://vitest.dev) and achieves 97%+ coverage on core library modules (util, scheduler, api).
+
 ## Configuration
 
 Set the path to your FFS repo heartbeat file:

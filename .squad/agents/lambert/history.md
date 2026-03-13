@@ -53,3 +53,24 @@ Resolved merge conflicts between squad/21-extract-backend-api and main branch:
 - **Pattern**: For merge conflicts in .squad/ files, git's auto-merge typically handles them correctly since they're append-only logs
 
 **Key Learning**: Always verify critical fixes (like middleware ordering) remain intact after conflict resolution, even when git auto-merges successfully.
+### Backend Architecture (2026-03-12)
+
+- **Modular Server Structure:** Extracted 26KB vite.config.js API middleware into dedicated `server/` directory with Express
+- **Key Paths:**
+  - `server/index.js` — Express app entry point (port 3001)
+  - `server/config.js` — Centralized configuration (heartbeat path, logs dir, repos, agents)
+  - `server/api/` — Modular route handlers: heartbeat, logs, timeline, board, pulse, workflows, repos
+- **Patterns:**
+  - SSE streaming for real-time log updates (`/api/logs/stream`)
+  - File watching for heartbeat changes (fs.watch with debounce)
+  - Issue caching with 30s TTL
+  - Environment-based configuration (FFS_ROOT, FFS_HEARTBEAT_PATH, PORT)
+- **Vite Integration:** Dev server proxies `/api` to standalone backend on port 3001
+- **Dependencies:** Express 5.2.1, cors 2.8.6
+
+### CI & Testing Configuration (2026-03-12)
+
+- **Vitest passWithNoTests:** Added `test: { passWithNoTests: true }` to vite.config.js to prevent CI failures on branches without test files
+- **Rationale:** Backend extraction (PR #28) and test implementation (PR #29) are separate concerns—tests come later
+- **Pattern:** Configure test runner tolerance in build config, not package.json scripts
+- **Location:** vite.config.js test section (vitest uses Vite's config by default)
