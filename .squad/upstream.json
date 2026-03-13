@@ -1,11 +1,19 @@
 {
-  "upstreams": [
-    {
-      "name": "FirstFrameStudios",
-      "type": "local",
-      "source": "C:\\Users\\joperezd\\GitHub Repos\\FirstFrameStudios",
-      "added_at": "2026-03-11T09:47:42.914Z",
-      "last_synced": null
-    }
-  ]
+  "upstream": {
+    "repo": "jperezdelreal/FirstFrameStudios",
+    "relationship": "downstream",
+    "model": "inherit-skills-override-domain"
+  },
+  "governance": {
+    "source": "upstream",
+    "override_allowed": false
+  },
+  "skills": {
+    "source": "upstream",
+    "override_allowed": true
+  },
+  "domain": {
+    "source": "local",
+    "override_allowed": true
+  }
 }

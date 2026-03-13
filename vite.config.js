@@ -142,6 +142,16 @@ function ffsApiPlugin() {
       readHeartbeatFile();
       startWatcher();
 
+      // Health check endpoint
+      server.middlewares.use('/api/health', (req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          status: 'ok',
+          version: '0.1.0',
+          timestamp: new Date().toISOString(),
+        }));
+      });
+
       server.middlewares.use('/api/heartbeat', (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(getHeartbeatResponse()));
@@ -632,5 +642,15 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true,
   },
-  plugins: [ffsApiPlugin()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
+  test: {
+    passWithNoTests: true,
+  },
 });

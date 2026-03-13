@@ -981,6 +981,15 @@ body {
   border-color: var(--red);
   color: var(--red);
 }
+.log-stream-badge.reconnecting {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+.log-stream-badge.failed {
+  border-color: var(--red);
+  color: var(--red);
+  gap: 0.5rem;
+}
 
 .log-stream-dot {
   width: 5px;
@@ -1071,3 +1080,150 @@ body {
   text-decoration: none;
 }
 .footer a:hover { text-decoration: underline; }
+
+/* ── Error States ──────────────────────────────────────── */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 0.75rem;
+  min-height: 150px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 2rem;
+  opacity: 0.7;
+}
+
+.error-message {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-family: var(--mono);
+}
+
+.retry-btn {
+  padding: 0.4rem 0.8rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  color: var(--blue);
+  font-size: 0.75rem;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.retry-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--blue);
+  box-shadow: 0 0 8px var(--blue-glow);
+}
+
+/* ── Error Notifications ───────────────────────────────── */
+.error-notification {
+  position: fixed;
+  top: 60px;
+  right: 1rem;
+  z-index: 1000;
+  animation: slide-in 0.3s ease;
+}
+
+.error-notification-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+}
+
+.error-notification-icon {
+  font-size: 1.2rem;
+}
+
+.error-notification-text {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.error-notification-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+.error-notification-close:hover {
+  color: var(--text);
+}
+
+/* ── Critical Error Overlay ────────────────────────────── */
+.critical-error-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 20, 0.95);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.3s ease;
+}
+
+.critical-error-content {
+  background: var(--surface);
+  border: 2px solid var(--red);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.critical-error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.critical-error-content h2 {
+  color: var(--red);
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.critical-error-content p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.critical-error-reload {
+  padding: 0.6rem 1.2rem;
+  background: var(--red);
+  border: none;
+  border-radius: var(--radius);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.critical-error-reload:hover {
+  background: var(--red-dim);
+  box-shadow: 0 0 12px var(--red-glow);
+}

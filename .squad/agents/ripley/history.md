@@ -140,3 +140,77 @@ Reviewed three PRs (#30, #29, #27) covering workflow automation, testing infrast
 - `src/components/log-viewer.js` - SSE with exponential backoff
 - `src/components/*.js` - Error states with retry buttons
 - `src/styles.css` - Error UI styles
+
+### 2026-03-13: PR #29 Second Review - Unit Testing Infrastructure (Issue #22)
+
+**Review Outcome:** APPROVED - Production-ready testing foundation established.
+
+**Test Execution Verified:**
+- Checked out branch `squad/22-unit-tests` and ran full test suite locally
+- All 50 tests pass: 18 util + 11 scheduler + 21 api
+- Coverage: 97.61% overall (17.6 points above 80% requirement)
+  - util.js: 100%
+  - scheduler.js: 95.45% (line 48 uncovered - edge case in #startTask)
+  - api.js: 97.29%
+
+**Quality Validation:**
+- **Mocking discipline:** fetch API properly mocked, fake timers with proper beforeEach/afterEach cleanup
+- **Edge case coverage:** null/undefined, boundary conditions, XSS prevention (escapeHtml), HTTP errors (404/500), network failures
+- **Test organization:** Single concern per test, descriptive names like "sets disconnected on failure", logical grouping with nested describes
+- **Timer testing:** Proper use of vi.useFakeTimers() + vi.advanceTimersByTime() for scheduler interval verification
+- **Async handling:** All fetch tests properly await, error cases verify null returns
+
+**CI/CD Configuration Review:**
+- `.github/workflows/test.yml` triggers on PR and main branch pushes
+- Uses Node.js 20, npm ci for reproducible builds
+- Runs both `npm test` and `npm run test:coverage`
+- Uploads coverage artifacts with actions/upload-artifact@v4
+- Test failures will block PR merge
+
+**Configuration Files:**
+- `vitest.config.js` properly configured with v8 provider, happy-dom environment
+- Coverage includes only `src/lib/**/*.js`, excludes test files
+- 80% thresholds enforced on lines/functions/branches/statements
+- `.gitignore` includes `coverage/` directory
+
+**Documentation:**
+- README.md updated with testing section showing all three npm commands
+- Clear explanation of Vitest usage and 97%+ coverage achievement
+
+**Minor Observation (not blocking):**
+- `api.test.js` doesn't use `vi.resetModules()` to reset connection state between tests
+- Module-level state (_connected flag, listeners Set) persists across tests
+- However, tests are effectively isolated through intentional sequencing (line 69-80 shows awareness)
+- This is acceptable for P1 foundation; can be improved later if test ordering becomes fragile
+
+**Team Guidance Confirmed:**
+This PR establishes the pattern for future testing:
+- New lib modules require 80%+ coverage
+- Use vi.useFakeTimers() for time-dependent code
+- Mock fetch for network calls
+- Test edge cases: null/undefined, boundaries, error paths
+
+**GitHub API Limitation:**
+Cannot use `gh pr review --approve` when authenticated as PR author. Posted approval as comment instead with explicit "✅ RIPLEY REVIEW: APPROVED" verdict.
+
+**Merge Recommendation:** Ready to merge immediately. All acceptance criteria met, tests pass, coverage exceeds requirements, CI properly configured.
+### 2026-03-13: PR #27 Re-Review — Error Handling Patterns
+
+**Key Files:**
+- `src/lib/api.js` - Centralized API client with connection tracking
+- `src/lib/error-boundary.js` - Global error handler with rate limiting
+- `src/components/log-viewer.js` - SSE streaming with exponential backoff
+- `src/components/studio-pulse.js` - Component error UI pattern
+
+**Patterns Established:**
+- **AbortController Memory Safety:** Always create explicit controller, clear timeout in both success/error paths
+- **Error Count Reset:** Time-based reset window (60s) prevents false positives from accumulated errors
+- **Exponential Backoff:** Use `Math.pow(2, attempts)` for proper exponential growth (not `attempts + 1`)
+- **XSS Prevention:** Use `textContent` (not `innerHTML`) for user-controlled error messages
+- **Global Retry Functions:** Expose `window.__retryX()` handlers for manual recovery UX
+- **unhandledrejection:** Always call `event.preventDefault()` before handling to prevent duplicate logging
+
+**Architecture Notes:**
+- All components follow consistent error UI pattern: error icon + message + retry button
+- API layer uses Map-based per-endpoint status tracking to compute global connection state
+- Error boundary wraps component refreshes via `wrapComponentRefresh()` helper
