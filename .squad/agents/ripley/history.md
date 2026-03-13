@@ -67,3 +67,42 @@ Reviewed three PRs (#30, #29, #27) covering workflow automation, testing infrast
 - Consider connection pooling if GitHub API rate limits become an issue
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+
+### 2026-03-12: PR #29 Review - Unit Testing Infrastructure (Issue #22)
+
+**Architecture Decision: Testing Infrastructure**
+- Adopted Vitest 4.1.0 as test framework with happy-dom environment for DOM testing
+- Test files located in `src/lib/__tests__/` subdirectories adjacent to source files
+- Coverage configuration in `vitest.config.js` with 80% threshold enforcement across all metrics (lines, functions, branches, statements)
+- Three npm scripts: `npm test` (run once), `npm run test:watch` (watch mode), `npm run test:coverage` (coverage report)
+
+**Coverage Achievement:**
+- 97.61% overall coverage on src/lib/ modules (exceeding 80% requirement by 17.6 points)
+- util.js: 100% (18 tests)
+- scheduler.js: 95.45% (11 tests)
+- api.js: 97.29% (21 tests)
+- Total: 50 passing tests
+
+**Test Quality Patterns:**
+- Proper edge case coverage: null/undefined handling, boundary conditions, XSS prevention in escapeHtml
+- Mock management: fetch API properly mocked with realistic success/failure scenarios in api tests
+- Timer management: vi.useFakeTimers() with proper cleanup in beforeEach/afterEach for scheduler tests
+- Module state: Used vi.resetModules() where internal state persists across tests
+- Clean test organization: Each test focuses on single concern, descriptive test names
+
+**CI/CD Integration:**
+- GitHub Actions workflow at `.github/workflows/test.yml`
+- Runs on PR and main branch pushes
+- Uses Node.js 20 with npm ci for reproducible builds
+- Uploads coverage artifacts with actions/upload-artifact@v4
+- Test failures block PR merge
+
+**Key File Paths:**
+- Test config: `vitest.config.js`
+- CI workflow: `.github/workflows/test.yml`
+- Tests: `src/lib/__tests__/{util,scheduler,api}.test.js`
+- Source modules: `src/lib/{util,scheduler,api}.js`
+
+**Documentation:**
+- README.md updated with testing section including all three npm commands
+- Clear instructions for running tests locally and in watch mode
