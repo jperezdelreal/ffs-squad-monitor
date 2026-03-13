@@ -286,6 +286,84 @@ Establish standard error handling patterns for all dashboard components:
 
 These patterns prevent memory leaks, false positives, XSS vulnerabilities, duplicate logging, and inconsistent error UX.
 
+---
+
+### 2026-03-13T20:12Z: Cross-repo communication rule
+**By:** Coordinator  
+**Tier:** T0  
+**Status:** ✅ ACTIVE
+
+No repo may make direct git commits to another repo's branch. ALL cross-repo communication goes through GitHub Issues. Each repo's Squad session owns its git state exclusively. This prevents push conflicts when multiple Ralph Go sessions run concurrently.
+
+**Rule:** Use `gh issue create`, `gh issue comment`, `gh pr review` — NEVER `gh api repos/.../contents -X PUT`.
+
+---
+
+### 2026-03-13T19:58Z: Ralph Refueling Behavior
+**By:** Coordinator  
+**Tier:** T1  
+**Status:** ✅ ACTIVE
+
+When Ralph detects an empty board (no open issues with squad labels, no open PRs), instead of idling he MUST:
+1. Check if a "Define next roadmap" issue already exists
+2. If none exists → create one with roadmap label
+3. If one already exists → skip, just report "Roadmap issue already open, waiting for Lead."
+
+**Why:** Prevents the autonomous pipeline from ever fully stopping. Complements perpetual-motion.yml (reactive) with proactive refueling.
+
+---
+
+### 2026-03-13 (Issue #35): Legacy Vanilla JS Architecture Removed
+**Agent:** Dallas (Frontend Dev)  
+**Status:** COMPLETED (PR #61 merged)
+
+Removed all legacy vanilla JS files. The active frontend is now exclusively React (`main.jsx` → `App.jsx` → React components with Tailwind CSS).
+
+**Removed:**
+- `src/index.html`, `src/monitor.js`, `src/styles.css`
+- `src/lib/error-boundary.js` + test file
+- 10 vanilla JS components in `src/components/`
+
+**Impact:** README updated, 22 tests removed, all other tests unaffected. Build output unchanged.
+
+---
+
+### 2026-03-13 (Issue #37): Config Centralization Architecture
+**Agent:** Lambert (Backend Dev)  
+**Status:** COMPLETED (PR #60 merged)
+
+`server/config.js` is the single source of truth for REPOS and AGENTS configuration. Frontend accesses config via `/api/config` endpoint.
+
+**Key Changes:**
+- REPOS now include `color` field
+- `/api/config` response includes owner/name transformation
+- `dir` intentionally excluded from frontend
+- Frontend caches config after first fetch
+
+**Pattern:** To add/remove repo or agent, edit `server/config.js` — frontend picks it up automatically.
+
+---
+
+### 2026-03-13 (Issue #39): GitHub Token Auth Architecture
+**Agent:** Lambert (Backend Dev)  
+**Status:** COMPLETED (PR #62 merged)
+
+All backend GitHub API calls now go through `server/lib/github-client.js` instead of `gh` CLI.
+
+**Token Resolution:**
+1. `process.env.GITHUB_TOKEN` (explicit)
+2. `gh auth token` via execSync (fallback)
+3. `null` (unauthenticated, 60 req/hr)
+
+**Rate Limit Handling:**
+- Headers parsed on every response
+- Warning logged when remaining < 100
+- 503 + `Retry-After` returned when exhausted
+
+**Security:** Token stored server-side only, never serialized to frontend. `/health` exposes rate limit numbers but not the token.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
