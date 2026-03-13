@@ -2,6 +2,31 @@
 
 ## Active Decisions
 
+### Package-lock.json Merge Strategy
+
+**Date:** 2026-03-13  
+**Agent:** Lambert (Backend Dev)  
+**Context:** PR #28 merge conflict resolution
+
+**Decision:** Always regenerate `package-lock.json` via `npm install` after manually resolving `package.json` conflicts.
+
+**Rationale:**
+1. **Correctness**: npm's lockfile resolver handles transitive dependencies, version resolution, and integrity hashes correctly
+2. **Safety**: Manual lockfile editing risks breaking the dependency tree or introducing version mismatches
+3. **Efficiency**: Regeneration takes ~3s vs manual conflict resolution which is time-consuming and risky
+
+**Implementation:**
+```bash
+git checkout --theirs package-lock.json  # or --ours, doesn't matter
+git add package.json
+npm install  # Regenerates lockfile with merged dependencies
+git add package-lock.json
+```
+
+**Outcome:** Applied successfully in PR #28 — merged express/cors dependencies with vitest dependencies with zero manual conflict resolution in lockfile.
+
+---
+
 ### Error Handling Architecture Review (PR #27)
 
 **Date:** 2026-03-12  
