@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllRepoIssues } from '../services/github';
 
 const STAGES = [
   { id: 'proposal', name: 'Proposal', emoji: '💡', color: 'from-yellow-500 to-amber-600' },
@@ -24,18 +23,27 @@ export function PipelineVisualizer() {
     setLoading(true);
     setError(null);
     try {
-      const repoIssues = await fetchAllRepoIssues();
-      const data = {};
+      const response = await fetch('/api/issues?state=all');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const issues = await response.json();
 
-      repoIssues.forEach(({ repo, issues }) => {
-        const repoName = repo.split('/')[1];
+      // Group flat issues by repoGithub for pipeline analysis
+      const repoGroups = {};
+      issues.forEach(issue => {
+        const repoName = issue.repoGithub?.split('/')[1] || issue.repo;
+        if (!repoGroups[repoName]) repoGroups[repoName] = [];
+        repoGroups[repoName].push(issue);
+      });
+
+      const data = {};
+      Object.entries(repoGroups).forEach(([repoName, repoIssues]) => {
         data[repoName] = {
-          proposal: analyzeStage(issues, 'pipeline:proposal'),
-          gdd: analyzeStage(issues, 'pipeline:gdd'),
-          issues: analyzeStage(issues, 'pipeline:issues'),
-          code: analyzeStage(issues, 'pipeline:code'),
-          build: analyzeStage(issues, 'pipeline:build'),
-          deploy: analyzeStage(issues, 'pipeline:deploy'),
+          proposal: analyzeStage(repoIssues, 'pipeline:proposal'),
+          gdd: analyzeStage(repoIssues, 'pipeline:gdd'),
+          issues: analyzeStage(repoIssues, 'pipeline:issues'),
+          code: analyzeStage(repoIssues, 'pipeline:code'),
+          build: analyzeStage(repoIssues, 'pipeline:build'),
+          deploy: analyzeStage(repoIssues, 'pipeline:deploy'),
         };
       });
 
@@ -49,8 +57,9 @@ export function PipelineVisualizer() {
   };
 
   const analyzeStage = (issues, label) => {
-    const stageIssues = issues.filter(issue => 
-      issue.labels?.some(l => l.name === label)
+    // Labels come as string arrays from /api/issues
+    const stageIssues = issues.filter(issue =>
+      issue.labels?.some(l => l === label)
     );
 
     if (stageIssues.length === 0) {
@@ -68,7 +77,7 @@ export function PipelineVisualizer() {
     }
 
     const hasBlockedLabel = stageIssues.some(i => 
-      i.labels?.some(l => l.name.includes('blocked'))
+      i.labels?.some(l => l.includes('blocked'))
     );
     if (hasBlockedLabel) {
       status = 'blocked';
@@ -81,7 +90,7 @@ export function PipelineVisualizer() {
         number: i.number,
         title: i.title,
         state: i.state,
-        url: i.html_url,
+        url: i.url,
       })),
     };
   };

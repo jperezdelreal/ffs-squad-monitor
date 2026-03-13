@@ -7,7 +7,11 @@ let issueCacheTime = 0;
 
 export default async function boardRoute(req, res) {
   try {
-    if (issueCache && Date.now() - issueCacheTime < ISSUE_CACHE_TTL) {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const stateParam = url.searchParams.get('state') || 'open';
+
+    // Use cache only for default (open) queries
+    if (stateParam === 'open' && issueCache && Date.now() - issueCacheTime < ISSUE_CACHE_TTL) {
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(issueCache));
       return;
@@ -17,8 +21,9 @@ export default async function boardRoute(req, res) {
     for (const repo of REPOS) {
       try {
         const [owner, name] = repo.github.split('/');
+        const perPage = stateParam === 'all' ? 100 : 50;
         const { data: issues } = await githubFetch(
-          `/repos/${owner}/${name}/issues?state=open&per_page=50`
+          `/repos/${owner}/${name}/issues?state=${stateParam}&per_page=${perPage}`
         );
 
         for (const issue of issues) {
@@ -47,8 +52,10 @@ export default async function boardRoute(req, res) {
             repo: repo.id,
             repoLabel: repo.label,
             repoEmoji: repo.emoji,
+            repoGithub: repo.github,
             number: issue.number,
             title: issue.title,
+            state: issue.state,
             url: issue.html_url,
             priority,
             labels,
@@ -66,8 +73,11 @@ export default async function boardRoute(req, res) {
 
     allIssues.sort((a, b) => a.priority - b.priority || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
 
-    issueCache = allIssues;
-    issueCacheTime = Date.now();
+    // Cache only default (open) queries
+    if (stateParam === 'open') {
+      issueCache = allIssues;
+      issueCacheTime = Date.now();
+    }
 
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(allIssues));

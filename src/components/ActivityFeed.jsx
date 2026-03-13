@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllRepoEvents, getRepoColor } from '../services/github';
+import { getConfigSync } from '../services/config';
+
+function getRepoColor(repoName) {
+  const config = getConfigSync();
+  const repos = config?.repos || [];
+  const repo = repos.find(r => repoName.includes(r.name));
+  return repo?.color || '#6b7280';
+}
 
 export function ActivityFeed() {
   const [events, setEvents] = useState([]);
@@ -18,7 +25,9 @@ export function ActivityFeed() {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchAllRepoEvents();
+      const response = await fetch('/api/events');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
       setEvents(data);
     } catch (error) {
       console.error('Failed to load events:', error);

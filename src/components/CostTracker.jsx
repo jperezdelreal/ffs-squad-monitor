@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { fetchWorkflowRuns } from '../services/github';
 import { getCostHistory, getCIMinutesUsage } from '../services/mockData';
 
 export function CostTracker() {
