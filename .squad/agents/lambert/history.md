@@ -93,3 +93,15 @@ Eliminated config duplication across 3+ files. Key decisions:
 6. **AGENTS completely replaced** — mockData.js had fictional names; server/config.js has real squad roster.
 
 **Pattern:** When centralizing config, expose via API endpoint rather than sharing module imports between server and frontend.
+
+### 2026-03-13 — Issue #39 GitHub Token Auth (PR #62)
+
+Added GitHub token authentication to all backend API calls:
+
+1. **Token Resolution:** `server/config.js` resolves `GITHUB_TOKEN` env var first, falls back to `gh auth token` via execSync. Token is resolved once at startup and stored in config.
+2. **GitHub Client:** Created `server/lib/github-client.js` — shared utility for authenticated `fetch()` calls. Parses rate limit headers, logs warnings when remaining < 100, throws `GitHubApiError` with `retryAfter` for 503 responses.
+3. **Handler Migration:** Migrated `board.js`, `repos.js`, `pulse.js` from `gh` CLI `execSync` to direct GitHub REST API calls via `githubFetch()`. Routes are now async.
+4. **Health Endpoint:** Enhanced `/health` to include rate limit status (remaining, limit, reset time) without exposing the token.
+5. **Unchanged:** `workflows.js` doesn't call GitHub API (reads local files). Git operations in `repos.js` still use `git -C` execSync (not GitHub API).
+
+**Key Pattern:** All GitHub API calls go through `server/lib/github-client.js` — centralized auth, rate limit tracking, and error handling. Token never reaches frontend.
