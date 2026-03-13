@@ -10,7 +10,9 @@
     "server": "node server/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "build:analyze": "vite build && node scripts/check-bundle-size.js",
+    "bundle:check": "node scripts/check-bundle-size.js"
   },
   "keywords": [
     "squad",
@@ -27,6 +29,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@vitest/coverage-v8": "^4.1.0",
     "happy-dom": "^20.8.3",
+    "rollup-plugin-visualizer": "^7.0.1",
     "vite": "^6.0.0",
     "vitest": "^4.1.0"
   },

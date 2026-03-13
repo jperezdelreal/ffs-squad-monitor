@@ -3,6 +3,7 @@ dist/
 coverage/
 .env
 *.log
+bundle-report.json
 # Squad: ignore runtime state (logs, inbox, sessions)
 .squad/orchestration-log/
 .squad/log/
