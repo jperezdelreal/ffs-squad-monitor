@@ -74,3 +74,26 @@
 - Use explicit AbortController + setTimeout instead of AbortSignal.timeout() for better GC
 - Always clear timeouts in both success and error paths
 - Clean up event sources and timers on reconnection attempts
+
+### Issues #52 & #53: Request Optimization & Health Check (2026-03-13)
+
+**Architecture decisions:**
+- `src/lib/request-cache.js` is a standalone factory (`createRequestCache`) — not coupled to api.js internals
+- Cache integrated into api.js via `safeFetch` wrapping `rawFetch` through `dedupedFetch`
+- Errors are never cached — only successful responses get TTL-based caching
+- Backend `/api/health` uses cached GitHub reachability checks (60s interval) to avoid rate limit waste
+- DependencyHealth component polls independently at 30s, separate from main polling cycle
+
+**Key patterns:**
+- In-flight dedup via pending promise Map — all concurrent callers get the same promise
+- Cache key is the URL string (simple and effective for our GET-only API)
+- `requestCache` exported from api.js so tests can `clear()` between test cases
+- DependencyHealth tests mock `fetchHealth` via `vi.mock('../../lib/api')` to avoid cache interference
+- Backend health route is async (awaits GitHub check) unlike other sync route handlers
+
+**File paths:**
+- `src/lib/request-cache.js` - Dedup + cache utility
+- `src/lib/api.js` - Integrated cache, added fetchHealth()
+- `server/api/health.js` - Backend health endpoint with dependency status
+- `src/components/DependencyHealth.jsx` - Dashboard dependency health widget
+- `src/components/Header.jsx` - Added DependencyHealth to header bar
