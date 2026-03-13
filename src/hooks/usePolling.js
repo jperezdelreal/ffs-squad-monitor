@@ -2,19 +2,13 @@ import { useEffect } from 'react';
 import { useStore } from '../store/store';
 
 const POLL_INTERVAL = 60000;
-const HEARTBEAT_URL = 'https://raw.githubusercontent.com/jperezdelreal/Syntax-Sorcery/main/.squad/heartbeat/ralph.json';
 
 export function usePolling() {
   const { setHeartbeatData, setError, lastUpdate, isConnected } = useStore();
 
   const fetchHeartbeat = async () => {
     try {
-      const response = await fetch(HEARTBEAT_URL, {
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      });
+      const response = await fetch('/api/heartbeat');
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
