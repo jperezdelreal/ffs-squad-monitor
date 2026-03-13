@@ -62,3 +62,26 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `.github/workflows/squad-ci.yml` — branch targeting master → main
 
 **PR:** #58 (branch: squad/38-fix-ci-blockers)
+
+### 2026-03-13: Issue #49 — Service tests for github.js
+
+**What was done:**
+- Created `src/services/__tests__/github.test.js` with 30 tests covering all 6 exported functions + REPOS constant
+- Extended `vitest.config.js` coverage to include `src/services/**/*.js`
+- Achieved 100% coverage on github.js (statements, branches, functions, lines)
+
+**Key insight:** The github.js service functions return `[]` on error (not `{error: true, message}` like the API layer). This is a different error-handling contract — the service layer silently degrades while the API layer surfaces errors to components. Both patterns are valid for their contexts: services feed aggregation functions that need arrays, while API functions feed UI components that need error states.
+
+**Edge cases tested:**
+- 403 rate limit, 404 not found, 500 server error
+- Network failures (fetch rejection)
+- Partial failures in aggregation functions (some repos fail, others succeed)
+- Result capping (fetchAllRepoEvents caps at 50)
+- Missing data (fetchWorkflowRuns with no workflow_runs key)
+- getRepoColor with paths, unknown repos, empty strings
+
+**Files created/modified:**
+- `src/services/__tests__/github.test.js` — new (30 tests)
+- `vitest.config.js` — coverage include extended
+
+**PR:** #59 (branch: squad/49-github-service-tests)
