@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { escapeHtml, formatDuration, timeAgo } from '../util.js';
+import { escapeHtml, formatDuration, timeAgo, downloadAsFile, jsonToCSV } from '../util.js';
 
 describe('escapeHtml', () => {
   it('escapes basic HTML entities', () => {
@@ -113,5 +113,101 @@ describe('timeAgo', () => {
 
     const day7 = new Date('2025-12-25T12:00:00Z').toISOString();
     expect(timeAgo(day7)).toBe('7d ago');
+  });
+});
+
+describe('downloadAsFile', () => {
+  beforeEach(() => {
+    // Mock DOM elements
+    document.body.innerHTML = '';
+    global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+    global.URL.revokeObjectURL = vi.fn();
+  });
+
+  it('creates a download link and triggers download', () => {
+    const data = 'test data';
+    const filename = 'test.txt';
+    const mimeType = 'text/plain';
+
+    downloadAsFile(data, filename, mimeType);
+
+    // Verify URL methods were called
+    expect(global.URL.createObjectURL).toHaveBeenCalled();
+    expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+  });
+
+  it('handles JSON data', () => {
+    const data = JSON.stringify({ test: 'value' });
+    downloadAsFile(data, 'data.json', 'application/json');
+    
+    expect(global.URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it('handles CSV data', () => {
+    const data = 'col1,col2\nval1,val2';
+    downloadAsFile(data, 'data.csv', 'text/csv');
+    
+    expect(global.URL.createObjectURL).toHaveBeenCalled();
+  });
+});
+
+describe('jsonToCSV', () => {
+  it('handles empty array', () => {
+    expect(jsonToCSV([])).toBe('');
+  });
+
+  it('handles null', () => {
+    expect(jsonToCSV(null)).toBe('');
+  });
+
+  it('handles undefined', () => {
+    expect(jsonToCSV(undefined)).toBe('');
+  });
+
+  it('converts simple objects', () => {
+    const data = [
+      { name: 'Alice', age: 30 },
+      { name: 'Bob', age: 25 }
+    ];
+    const result = jsonToCSV(data);
+    expect(result).toBe('name,age\nAlice,30\nBob,25');
+  });
+
+  it('escapes commas in values', () => {
+    const data = [{ name: 'Smith, John', city: 'New York' }];
+    const result = jsonToCSV(data);
+    expect(result).toBe('name,city\n"Smith, John",New York');
+  });
+
+  it('escapes quotes in values', () => {
+    const data = [{ text: 'He said "hello"' }];
+    const result = jsonToCSV(data);
+    expect(result).toBe('text\n"He said ""hello"""');
+  });
+
+  it('escapes newlines in values', () => {
+    const data = [{ text: 'Line1\nLine2' }];
+    const result = jsonToCSV(data);
+    expect(result).toBe('text\n"Line1\nLine2"');
+  });
+
+  it('handles null and undefined values', () => {
+    const data = [{ a: null, b: undefined, c: 'value' }];
+    const result = jsonToCSV(data);
+    expect(result).toBe('a,b,c\n,,value');
+  });
+
+  it('handles mixed data types', () => {
+    const data = [
+      { str: 'text', num: 42, bool: true, nil: null }
+    ];
+    const result = jsonToCSV(data);
+    expect(result).toBe('str,num,bool,nil\ntext,42,true,');
+  });
+
+  it('handles complex escaping', () => {
+    const data = [{ field: 'a,b"c\nd' }];
+    const result = jsonToCSV(data);
+    expect(result).toBe('field\n"a,b""c\nd"');
   });
 });

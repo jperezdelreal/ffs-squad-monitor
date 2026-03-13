@@ -144,9 +144,9 @@ function renderTimeline(data) {
       const roundId = `${r.agent}-${i}`;
       const isActive = expandedRoundId === roundId ? ' active' : '';
       const time = r.timestamp ? new Date(r.timestamp).toLocaleTimeString() : '?';
-      const title = `Round ${r.round} - ${r.outcome} (${formatDuration(Math.round(r.duration))}) at ${time}`;
+      const title = `${escapeHtml(r.agent)} - Round ${r.round}\nOutcome: ${r.outcome}\nDuration: ${formatDuration(Math.round(r.duration))}\nTime: ${time}`;
 
-      html += `<div class="swim-bar ${outcomeClass}${isActive}" data-round-id="${roundId}" title="${escapeHtml(title)}" style="width:${widthPct.toFixed(1)}%">`;
+      html += `<div class="swim-bar ${outcomeClass}${isActive}" data-round-id="${roundId}" title="${title}" style="width:${widthPct.toFixed(1)}%">`;
       html += `<span class="swim-bar-label">R${r.round}</span>`;
       html += `</div>`;
     });

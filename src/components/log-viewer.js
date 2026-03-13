@@ -2,7 +2,7 @@
  * Log viewer component.
  * Real-time log streaming via SSE with agent/level/date filtering.
  */
-import { escapeHtml } from '../lib/util.js';
+import { escapeHtml, timeAgo, downloadAsFile, jsonToCSV } from '../lib/util.js';
 
 const logState = {
   entries: [],
@@ -22,6 +22,7 @@ export async function refreshLogs() {}
 export function initLogViewer() {
   setupFilters();
   setupAutoScroll();
+  setupExportButton();
   connectLogStream();
 }
 
@@ -29,6 +30,7 @@ export function initLogViewer() {
 
 function formatLogEntry(e) {
   const time = e.timestamp ? new Date(e.timestamp).toLocaleTimeString() : '??:??';
+  const relTime = e.timestamp ? timeAgo(e.timestamp) : '';
   const level = e._level || 'info';
   const agent = e._agent || 'unknown';
   const duration = e.duration != null ? `${e.duration}s` : '';
@@ -39,7 +41,7 @@ function formatLogEntry(e) {
   const parts = [round, e.phase || '', e.status || '', duration, metrics].filter(Boolean).join(' · ');
 
   return `<div class="log-entry">
-    <span class="log-time">${escapeHtml(time)}</span>
+    <span class="log-time" title="${escapeHtml(time)}">${escapeHtml(relTime || time)}</span>
     <span class="log-level ${level}">${level}</span>
     <span class="log-agent">${escapeHtml(agent)}</span>
     <span class="log-message">${escapeHtml(parts)}</span>
@@ -196,6 +198,7 @@ function setupFilters() {
   const agentSelect = document.getElementById('log-agent');
   const levelSelect = document.getElementById('log-level');
   const dateInput = document.getElementById('log-date');
+  const clearBtn = document.getElementById('log-clear-filters');
   if (!agentSelect || !levelSelect || !dateInput) return;
 
   dateInput.value = new Date().toISOString().slice(0, 10);
@@ -227,4 +230,56 @@ function setupFilters() {
     logState.dateFilter = dateInput.value;
     renderLogs();
   });
+
+  // Clear filters button
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      logState.agentFilter = '';
+      logState.levelFilter = '';
+      logState.dateFilter = '';
+      agentSelect.value = '';
+      levelSelect.value = '';
+      dateInput.value = new Date().toISOString().slice(0, 10);
+      renderLogs();
+    });
+  }
+}
+
+function setupExportButton() {
+  const exportJsonBtn = document.getElementById('log-export-json');
+  const exportCsvBtn = document.getElementById('log-export-csv');
+
+  if (exportJsonBtn) {
+    exportJsonBtn.addEventListener('click', () => {
+      const filtered = logState.entries.filter(matchesFilters);
+      const data = JSON.stringify(filtered, null, 2);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      downloadAsFile(data, `ffs-logs-${timestamp}.json`, 'application/json');
+    });
+  }
+
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      const filtered = logState.entries.filter(matchesFilters);
+      const flatData = filtered.map(e => ({
+        timestamp: e.timestamp || '',
+        level: e._level || 'info',
+        agent: e._agent || 'unknown',
+        round: e.round || '',
+        phase: e.phase || '',
+        status: e.status || '',
+        duration: e.duration || '',
+        prsMerged: e.metrics?.prsMerged || 0,
+        issuesClosed: e.metrics?.issuesClosed || 0,
+      }));
+      const csv = jsonToCSV(flatData);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      downloadAsFile(csv, `ffs-logs-${timestamp}.csv`, 'text/csv');
+    });
+  }
+}
+
+export function focusLogSearch() {
+  const agentSelect = document.getElementById('log-agent');
+  if (agentSelect) agentSelect.focus();
 }
