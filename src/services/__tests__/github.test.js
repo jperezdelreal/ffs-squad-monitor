@@ -1,4 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
+// Mock config service before importing github.js
+const MOCK_REPOS = [
+  { id: 'flora',          owner: 'jperezdelreal', name: 'flora',          color: '#ef4444' },
+  { id: 'ComeRosquillas', owner: 'jperezdelreal', name: 'ComeRosquillas', color: '#f59e0b' },
+  { id: 'pixel-bounce',   owner: 'jperezdelreal', name: 'pixel-bounce',   color: '#8b5cf6' },
+]
+
+vi.mock('../config.js', () => ({
+  fetchConfig: vi.fn(async () => ({ repos: MOCK_REPOS })),
+  getConfigSync: vi.fn(() => ({ repos: MOCK_REPOS })),
+  clearConfigCache: vi.fn(),
+}))
+
 import {
   fetchRepoEvents,
   fetchAllRepoEvents,
@@ -6,7 +20,6 @@ import {
   fetchAllRepoIssues,
   fetchWorkflowRuns,
   getRepoColor,
-  REPOS,
 } from '../github.js'
 
 describe('github service', () => {
@@ -21,30 +34,6 @@ describe('github service', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
-  })
-
-  describe('REPOS constant', () => {
-    it('contains expected repositories', () => {
-      expect(REPOS).toBeInstanceOf(Array)
-      expect(REPOS.length).toBeGreaterThan(0)
-    })
-
-    it('each repo has owner, name, and color', () => {
-      for (const repo of REPOS) {
-        expect(repo).toHaveProperty('owner')
-        expect(repo).toHaveProperty('name')
-        expect(repo).toHaveProperty('color')
-        expect(typeof repo.owner).toBe('string')
-        expect(typeof repo.name).toBe('string')
-        expect(repo.color).toMatch(/^#[0-9a-f]{6}$/i)
-      }
-    })
-
-    it('includes FirstFrameStudios and ffs-squad-monitor', () => {
-      const names = REPOS.map(r => r.name)
-      expect(names).toContain('FirstFrameStudios')
-      expect(names).toContain('ffs-squad-monitor')
-    })
   })
 
   describe('fetchRepoEvents', () => {
@@ -165,7 +154,7 @@ describe('github service', () => {
 
       const result = await fetchAllRepoEvents()
 
-      expect(mockFetch).toHaveBeenCalledTimes(REPOS.length)
+      expect(mockFetch).toHaveBeenCalledTimes(MOCK_REPOS.length)
       expect(result.length).toBeLessThanOrEqual(50)
       // Sorted descending by date
       for (let i = 1; i < result.length; i++) {
@@ -195,13 +184,13 @@ describe('github service', () => {
       const result = await fetchAllRepoEvents()
 
       // Should still return events from successful fetches
-      expect(result.length).toBe(REPOS.length - 1)
+      expect(result.length).toBe(MOCK_REPOS.length - 1)
     })
 
     it('caps results at 50 events', async () => {
-      // Return 10 events per repo (6 repos × 10 = 60, should cap at 50)
+      // Return 20 events per repo (3 repos × 20 = 60, should cap at 50)
       mockFetch.mockImplementation(() => {
-        const events = Array.from({ length: 10 }, (_, i) => ({
+        const events = Array.from({ length: 20 }, (_, i) => ({
           id: String(Math.random()),
           type: 'PushEvent',
           actor: { login: 'user' },
@@ -278,8 +267,8 @@ describe('github service', () => {
 
       const result = await fetchAllRepoIssues()
 
-      expect(mockFetch).toHaveBeenCalledTimes(REPOS.length)
-      expect(result).toHaveLength(REPOS.length)
+      expect(mockFetch).toHaveBeenCalledTimes(MOCK_REPOS.length)
+      expect(result).toHaveLength(MOCK_REPOS.length)
       for (const entry of result) {
         expect(entry).toHaveProperty('repo')
         expect(entry).toHaveProperty('issues')
@@ -302,7 +291,7 @@ describe('github service', () => {
 
       const result = await fetchAllRepoIssues()
 
-      expect(result).toHaveLength(REPOS.length)
+      expect(result).toHaveLength(MOCK_REPOS.length)
       // First repo should have empty issues
       const emptyEntry = result.find(r => r.issues.length === 0)
       expect(emptyEntry).toBeDefined()
@@ -379,12 +368,12 @@ describe('github service', () => {
 
   describe('getRepoColor', () => {
     it('returns correct color for known repo name', () => {
-      expect(getRepoColor('FirstFrameStudios')).toBe('#3b82f6')
-      expect(getRepoColor('ffs-squad-monitor')).toBe('#ec4899')
+      expect(getRepoColor('flora')).toBe('#ef4444')
+      expect(getRepoColor('ComeRosquillas')).toBe('#f59e0b')
     })
 
     it('returns correct color when repo name is part of a path', () => {
-      expect(getRepoColor('jperezdelreal/FirstFrameStudios')).toBe('#3b82f6')
+      expect(getRepoColor('jperezdelreal/flora')).toBe('#ef4444')
       expect(getRepoColor('some/path/pixel-bounce/thing')).toBe('#8b5cf6')
     })
 
