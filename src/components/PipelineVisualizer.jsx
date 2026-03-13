@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllRepoIssues, REPOS } from '../services/github';
+import { fetchAllRepoIssues } from '../services/github';
 
 const STAGES = [
   { id: 'proposal', name: 'Proposal', emoji: '💡', color: 'from-yellow-500 to-amber-600' },

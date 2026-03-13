@@ -80,3 +80,16 @@ Resolved merge conflicts between squad/21-extract-backend-api and main branch:
 - **Rationale:** Backend extraction (PR #28) and test implementation (PR #29) are separate concerns—tests come later
 - **Pattern:** Configure test runner tolerance in build config, not package.json scripts
 - **Location:** vite.config.js test section (vitest uses Vite's config by default)
+
+### 2026-03-13 — Issue #37 Centralize REPOS/AGENTS Config (PR #60)
+
+Eliminated config duplication across 3+ files. Key decisions:
+
+1. **server/config.js is the single source of truth** for REPOS and AGENTS. Added `color` field to REPOS for frontend use.
+2. **New `/api/config` endpoint** (`server/api/config.js`) exposes config to frontend, transforming `github` field into `owner`/`name` and stripping `dir` from response.
+3. **Frontend config service** (`src/services/config.js`) fetches from `/api/config` with promise deduplication and caching.
+4. **vite.config.js imports from server/config.js** instead of defining its own copy.
+5. **REPOS reduced from 6 to 3** in frontend — source of truth wins.
+6. **AGENTS completely replaced** — mockData.js had fictional names; server/config.js has real squad roster.
+
+**Pattern:** When centralizing config, expose via API endpoint rather than sharing module imports between server and frontend.

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAllRepoIssues } from '../services/github';
-import { AGENTS, getAgentWorkload } from '../services/mockData';
+import { fetchConfig } from '../services/config';
+import { getAgentWorkload } from '../services/mockData';
 
 export function TeamBoard() {
-  const [agents, setAgents] = useState(AGENTS);
+  const [agents, setAgents] = useState([]);
   const [workload, setWorkload] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,7 +17,20 @@ export function TeamBoard() {
     setLoading(true);
     setError(null);
     try {
-      const repoIssues = await fetchAllRepoIssues();
+      const [repoIssues, config] = await Promise.all([
+        fetchAllRepoIssues(),
+        fetchConfig(),
+      ]);
+
+      const agentEntries = Object.entries(config.agents).map(([id, meta]) => ({
+        id,
+        name: id.charAt(0).toUpperCase() + id.slice(1),
+        emoji: meta.emoji,
+        role: meta.role,
+        status: 'idle',
+        currentTask: null,
+      }));
+
       const agentMap = new Map();
 
       repoIssues.forEach(({ repo, issues }) => {
@@ -41,7 +55,7 @@ export function TeamBoard() {
         });
       });
 
-      const updatedAgents = AGENTS.map(agent => {
+      const updatedAgents = agentEntries.map(agent => {
         const tasks = agentMap.get(agent.id) || [];
         return {
           ...agent,

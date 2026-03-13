@@ -1,12 +1,6 @@
+import { fetchConfig, getConfigSync } from './config.js'
+
 const GITHUB_API = 'https://api.github.com';
-const REPOS = [
-  { owner: 'jperezdelreal', name: 'FirstFrameStudios', color: '#3b82f6' },
-  { owner: 'jperezdelreal', name: 'Syntax-Sorcery', color: '#10b981' },
-  { owner: 'jperezdelreal', name: 'pixel-bounce', color: '#8b5cf6' },
-  { owner: 'jperezdelreal', name: 'ComeRosquillas', color: '#f59e0b' },
-  { owner: 'jperezdelreal', name: 'FLORA', color: '#ef4444' },
-  { owner: 'jperezdelreal', name: 'ffs-squad-monitor', color: '#ec4899' },
-];
 
 export async function fetchRepoEvents(owner, repo, limit = 10) {
   try {
@@ -37,7 +31,8 @@ export async function fetchRepoEvents(owner, repo, limit = 10) {
 }
 
 export async function fetchAllRepoEvents() {
-  const promises = REPOS.map(repo => fetchRepoEvents(repo.owner, repo.name, 10));
+  const { repos } = await fetchConfig();
+  const promises = repos.map(repo => fetchRepoEvents(repo.owner, repo.name, 10));
   const results = await Promise.all(promises);
   
   const allEvents = results.flat().sort((a, b) => 
@@ -68,7 +63,8 @@ export async function fetchRepoIssues(owner, repo) {
 }
 
 export async function fetchAllRepoIssues() {
-  const promises = REPOS.map(repo => 
+  const { repos } = await fetchConfig();
+  const promises = repos.map(repo => 
     fetchRepoIssues(repo.owner, repo.name).then(issues => ({
       repo: `${repo.owner}/${repo.name}`,
       issues,
@@ -100,8 +96,9 @@ export async function fetchWorkflowRuns(owner, repo) {
 }
 
 export function getRepoColor(repoName) {
-  const repo = REPOS.find(r => repoName.includes(r.name));
-  return repo ? repo.color : '#6b7280';
+  const config = getConfigSync();
+  const repos = config?.repos || [];
+  const repo = repos.find(r => repoName.includes(r.name));
+  return repo?.color || '#6b7280';
 }
 
-export { REPOS };
