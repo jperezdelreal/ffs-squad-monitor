@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllRepoIssues } from '../services/github';
 import { fetchConfig } from '../services/config';
 import { getAgentWorkload } from '../services/mockData';
 
@@ -17,10 +16,13 @@ export function TeamBoard() {
     setLoading(true);
     setError(null);
     try {
-      const [repoIssues, config] = await Promise.all([
-        fetchAllRepoIssues(),
+      const [issuesResponse, config] = await Promise.all([
+        fetch('/api/issues'),
         fetchConfig(),
       ]);
+
+      if (!issuesResponse.ok) throw new Error(`HTTP ${issuesResponse.status}`);
+      const issues = await issuesResponse.json();
 
       const agentEntries = Object.entries(config.agents).map(([id, meta]) => ({
         id,
@@ -33,26 +35,25 @@ export function TeamBoard() {
 
       const agentMap = new Map();
 
-      repoIssues.forEach(({ repo, issues }) => {
-        issues.forEach(issue => {
-          if (issue.state === 'open') {
-            issue.labels?.forEach(label => {
-              const match = label.name.match(/^squad:(.+)$/);
-              if (match) {
-                const agentId = match[1].toLowerCase();
-                if (!agentMap.has(agentId)) {
-                  agentMap.set(agentId, []);
-                }
-                agentMap.get(agentId).push({
-                  number: issue.number,
-                  title: issue.title,
-                  repo: repo.split('/')[1],
-                  url: issue.html_url,
-                });
+      issues.forEach(issue => {
+        if (issue.state === 'open') {
+          issue.labels?.forEach(label => {
+            // Labels are strings from /api/issues
+            const match = label.match(/^squad:(.+)$/);
+            if (match) {
+              const agentId = match[1].toLowerCase();
+              if (!agentMap.has(agentId)) {
+                agentMap.set(agentId, []);
               }
-            });
-          }
-        });
+              agentMap.get(agentId).push({
+                number: issue.number,
+                title: issue.title,
+                repo: issue.repoLabel || issue.repo,
+                url: issue.url,
+              });
+            }
+          });
+        }
       });
 
       const updatedAgents = agentEntries.map(agent => {

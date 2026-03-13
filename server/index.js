@@ -12,6 +12,7 @@ import pulseRoute from './api/pulse.js';
 import workflowsRoute from './api/workflows.js';
 import reposRoute from './api/repos.js';
 import configRoute from './api/config.js';
+import eventsRoute from './api/events.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.get('/api/pulse', pulseRoute);
 app.get('/api/agents', workflowsRoute);
 app.get('/api/repos', reposRoute);
 app.get('/api/config', configRoute);
+app.get('/api/events', eventsRoute);
 
 // Health check with rate limit status
 app.get('/health', (req, res) => {
@@ -74,6 +76,7 @@ app.listen(PORT, () => {
   console.log(`   - GET /api/agents`);
   console.log(`   - GET /api/repos`);
   console.log(`   - GET /api/config`);
+  console.log(`   - GET /api/events`);
   console.log(`   - GET /health\n`);
 });
 
