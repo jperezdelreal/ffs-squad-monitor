@@ -55,11 +55,17 @@ function logError(endpoint, error) {
 }
 
 async function safeFetch(url, options = {}) {
+  // Explicit AbortController for memory safety
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  
   try {
     const res = await fetch(url, {
       ...options,
-      signal: AbortSignal.timeout(10000), // 10s timeout
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
     
     if (!res.ok) {
       const error = new Error(`HTTP ${res.status}`);
@@ -71,6 +77,7 @@ async function safeFetch(url, options = {}) {
     updateConnectionState();
     return await res.json();
   } catch (error) {
+    clearTimeout(timeoutId);
     endpointStatus.set(url, false);
     updateConnectionState();
     logError(url, error);

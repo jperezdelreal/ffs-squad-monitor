@@ -19,10 +19,15 @@ function renderPulseError() {
   const issuesEl = document.getElementById('pulse-issues');
   const agentsEl = document.getElementById('pulse-agents');
   
-  if (prsEl) prsEl.textContent = '—';
+  if (prsEl) prsEl.innerHTML = '— <button class="retry-btn" onclick="window.__retryPulse()">Retry</button>';
   if (issuesEl) issuesEl.textContent = '—';
   if (agentsEl) agentsEl.textContent = '—';
 }
+
+// Expose retry function globally
+window.__retryPulse = () => {
+  refreshPulse();
+};
 
 function renderPulse(data) {
   const prsEl = document.getElementById('pulse-prs');

@@ -164,8 +164,8 @@ function connectLogStream() {
       return;
     }
     
-    logState.reconnectAttempts++;
     const delay = getReconnectDelay();
+    logState.reconnectAttempts++;
     setStreamBadge('reconnecting');
     
     console.log(`[LogViewer] Reconnecting in ${delay}ms (attempt ${logState.reconnectAttempts})...`);

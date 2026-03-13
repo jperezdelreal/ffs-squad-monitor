@@ -4,7 +4,9 @@
  */
 
 let errorCount = 0;
+let lastErrorTime = 0;
 const MAX_ERRORS_BEFORE_STOP = 10;
+const ERROR_COUNT_RESET_WINDOW = 60000; // 1 minute
 
 export function initErrorBoundary() {
   // Global error handler for uncaught errors
@@ -18,6 +20,7 @@ export function initErrorBoundary() {
 
   // Handler for unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
+    event.preventDefault();
     handleComponentError('Promise', event.reason, {
       promise: event.promise,
     });
@@ -35,7 +38,15 @@ export function wrapComponentRefresh(componentName, refreshFn) {
 }
 
 function handleComponentError(component, error, context = {}) {
+  const now = Date.now();
+  
+  // Reset error count if it's been >1 minute since last error
+  if (now - lastErrorTime > ERROR_COUNT_RESET_WINDOW) {
+    errorCount = 0;
+  }
+  
   errorCount++;
+  lastErrorTime = now;
   
   console.error(`[Error Boundary] ${component} error:`, {
     component,
@@ -59,15 +70,27 @@ function handleComponentError(component, error, context = {}) {
 function showErrorNotification(component, error) {
   const notification = document.createElement('div');
   notification.className = 'error-notification';
-  notification.innerHTML = `
-    <div class="error-notification-content">
-      <span class="error-notification-icon">⚠️</span>
-      <span class="error-notification-text">
-        ${component} error: ${error?.message || 'Unknown error'}
-      </span>
-      <button class="error-notification-close" onclick="this.parentElement.parentElement.remove()">✕</button>
-    </div>
-  `;
+  
+  const content = document.createElement('div');
+  content.className = 'error-notification-content';
+  
+  const icon = document.createElement('span');
+  icon.className = 'error-notification-icon';
+  icon.textContent = '⚠️';
+  
+  const text = document.createElement('span');
+  text.className = 'error-notification-text';
+  text.textContent = `${component} error: ${error?.message || 'Unknown error'}`;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'error-notification-close';
+  closeBtn.textContent = '✕';
+  closeBtn.onclick = () => notification.remove();
+  
+  content.appendChild(icon);
+  content.appendChild(text);
+  content.appendChild(closeBtn);
+  notification.appendChild(content);
   
   document.body.appendChild(notification);
   
