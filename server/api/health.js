@@ -2,6 +2,7 @@ import fs from 'fs'
 import { config } from '../config.js'
 import { getRateLimitStatus, githubFetch } from '../lib/github-client.js'
 import { getHeartbeatResponse } from './heartbeat.js'
+import { getDbStats } from '../lib/metrics-db.js'
 import { logger } from '../lib/logger.js'
 
 let lastGithubCheck = null
@@ -71,6 +72,9 @@ export default async function healthRoute(req, res) {
         lastTimestamp: heartbeat.timestamp || null,
         healthy: heartbeatHealthy,
       },
+      metricsDb: (() => {
+        try { return getDbStats() } catch { return null }
+      })(),
     },
   })
 }
