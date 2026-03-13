@@ -67,6 +67,14 @@ Available API endpoints:
 - `GET /api/repos` — Repository status
 - `GET /health` — Health check
 
+## Deployment
+
+For production deployment options and instructions, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+The dashboard includes a health check endpoint at `GET /api/health` for monitoring.
+
+## Testing
+
 **Running tests:**
 
 ```bash
