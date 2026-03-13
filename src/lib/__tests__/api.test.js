@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  isConnected,
   onConnectionChange,
   fetchHeartbeat,
   fetchLogs,
@@ -31,19 +32,19 @@ describe('api', () => {
 
       const result = await fetchHeartbeat();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/heartbeat', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith('/api/heartbeat');
       expect(result).toEqual({ status: 'ok', timestamp: 123 });
     });
 
-    it('returns error object on error', async () => {
+    it('returns null on error', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const result = await fetchHeartbeat();
 
-      expect(result).toEqual({ error: true, message: 'Network error' });
+      expect(result).toBe(null);
     });
 
-    it('returns error object on HTTP error status', async () => {
+    it('returns null on HTTP error status', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
@@ -51,22 +52,21 @@ describe('api', () => {
 
       const result = await fetchHeartbeat();
 
-      expect(result).toEqual({ error: true, message: 'HTTP 500' });
+      expect(result).toBe(null);
     });
 
-    it('returns data on success', async () => {
+    it('sets connected state on success', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ status: 'ok' }),
       });
 
-      const result = await fetchHeartbeat();
+      await fetchHeartbeat();
 
-      expect(result).not.toHaveProperty('error');
-      expect(result).toEqual({ status: 'ok' });
+      expect(isConnected()).toBe(true);
     });
 
-    it('handles errors correctly', async () => {
+    it('sets disconnected on failure', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ status: 'ok' }),
@@ -74,9 +74,9 @@ describe('api', () => {
       await fetchHeartbeat();
 
       mockFetch.mockRejectedValue(new Error('Network error'));
-      const result = await fetchHeartbeat();
+      await fetchHeartbeat();
 
-      expect(result).toHaveProperty('error', true);
+      expect(isConnected()).toBe(false);
     });
   });
 
@@ -90,16 +90,16 @@ describe('api', () => {
 
       const result = await fetchLogs();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/logs', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith('/api/logs');
       expect(result).toEqual(logs);
     });
 
-    it('returns error object on error', async () => {
+    it('returns null on error', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const result = await fetchLogs();
 
-      expect(result).toEqual({ error: true, message: 'Network error' });
+      expect(result).toBe(null);
     });
   });
 
@@ -113,16 +113,16 @@ describe('api', () => {
 
       const result = await fetchTimeline();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/timeline', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith('/api/timeline');
       expect(result).toEqual(timeline);
     });
 
-    it('returns error object on error', async () => {
+    it('returns null on error', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const result = await fetchTimeline();
 
-      expect(result).toEqual({ error: true, message: 'Network error' });
+      expect(result).toBe(null);
     });
   });
 
@@ -136,16 +136,16 @@ describe('api', () => {
 
       const result = await fetchRepos();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/repos', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith('/api/repos');
       expect(result).toEqual(repos);
     });
 
-    it('returns error object on error', async () => {
+    it('returns null on error', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const result = await fetchRepos();
 
-      expect(result).toEqual({ error: true, message: 'Network error' });
+      expect(result).toBe(null);
     });
   });
 
@@ -159,16 +159,16 @@ describe('api', () => {
 
       const result = await fetchAgents();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/agents', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith('/api/agents');
       expect(result).toEqual(agents);
     });
 
-    it('returns error object on error', async () => {
+    it('returns null on error', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const result = await fetchAgents();
 
-      expect(result).toEqual({ error: true, message: 'Network error' });
+      expect(result).toBe(null);
     });
   });
 
@@ -182,16 +182,16 @@ describe('api', () => {
 
       const result = await fetchIssues();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/issues', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith('/api/issues');
       expect(result).toEqual(issues);
     });
 
-    it('returns error object on error', async () => {
+    it('returns null on error', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const result = await fetchIssues();
 
-      expect(result).toEqual({ error: true, message: 'Network error' });
+      expect(result).toBe(null);
     });
   });
 
@@ -205,16 +205,16 @@ describe('api', () => {
 
       const result = await fetchPulse();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/pulse', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith('/api/pulse');
       expect(result).toEqual(pulse);
     });
 
-    it('returns error object on error', async () => {
+    it('returns null on error', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const result = await fetchPulse();
 
-      expect(result).toEqual({ error: true, message: 'Network error' });
+      expect(result).toBe(null);
     });
   });
 
@@ -245,7 +245,7 @@ describe('api', () => {
 
       const result = await fetchLogs();
 
-      expect(result).toEqual({ error: true, message: 'HTTP 404' });
+      expect(result).toBe(null);
     });
 
     it('handles 500 errors', async () => {
@@ -256,7 +256,7 @@ describe('api', () => {
 
       const result = await fetchAgents();
 
-      expect(result).toEqual({ error: true, message: 'HTTP 500' });
+      expect(result).toBe(null);
     });
 
     it('handles network errors', async () => {
@@ -264,7 +264,7 @@ describe('api', () => {
 
       const result = await fetchRepos();
 
-      expect(result).toEqual({ error: true, message: 'Failed to fetch' });
+      expect(result).toBe(null);
     });
   });
 });

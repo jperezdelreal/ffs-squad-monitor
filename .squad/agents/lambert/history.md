@@ -22,6 +22,12 @@
 - **Vite Integration:** Dev server proxies `/api` to standalone backend on port 3001
 - **Dependencies:** Express 5.2.1, cors 2.8.6
 
+### CI & Testing Configuration (2026-03-12)
+
+- **Vitest passWithNoTests:** Added `test: { passWithNoTests: true }` to vite.config.js to prevent CI failures on branches without test files
+- **Rationale:** Backend extraction (PR #28) and test implementation (PR #29) are separate concerns—tests come later
+- **Pattern:** Configure test runner tolerance in build config, not package.json scripts
+- **Location:** vite.config.js test section (vitest uses Vite's config by default)
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
 ### 2026-03-12 — PR #27 Code Review Fixes
