@@ -214,3 +214,30 @@ Cannot use `gh pr review --approve` when authenticated as PR author. Posted appr
 - All components follow consistent error UI pattern: error icon + message + retry button
 - API layer uses Map-based per-endpoint status tracking to compute global connection state
 - Error boundary wraps component refreshes via `wrapComponentRefresh()` helper
+
+### 2026-03-14: Phase 2 Sprint Planning — Real-Time Intelligence Platform
+
+**Decision:** Defined Sprint 2 with 18 issues (#75-#92) across 5 themes, transforming the dashboard from a polling-based status board into a real-time intelligence platform.
+
+**Sprint 1 Results:**
+- 17 issues closed across 5 themes (consolidation, data integrity, intelligence, DX, hardening)
+- 227+ tests at 94%+ coverage
+- Foundation: React + Express + Zustand + Docker + CI bundle tracking
+
+**Phase 2 Strategic Pillars:**
+1. **Real-Time Streaming (SSE)** — Replace polling with Server-Sent Events for live updates (#75-#78)
+2. **Historical Analytics** — SQLite persistence + Chart.js trend visualization + Analytics view (#79-#83)
+3. **Proactive Alerting** — Desktop notifications for critical events (#84-#86)
+4. **API & Integration** — OpenAPI docs + data export endpoints (#87-#88)
+5. **Testing & Quality** — SSE tests + metrics tests + Playwright E2E + benchmarks (#89-#92)
+
+**Team Balance:** Lambert 7 issues (backend), Dallas 7 issues (frontend), Kane 4 issues (testing)
+
+**Key Architectural Decisions:**
+- SSE over WebSockets: read-only dashboard doesn't need bidirectional communication
+- SQLite (better-sqlite3) over external DB: zero-config, embedded, WAL mode handles concurrent reads
+- Chart.js over D3: simpler API, react-chartjs-2 wrapper available, sufficient for dashboard charts
+- Playwright over Cypress: faster, built-in browser management, better CI performance
+- Deferred: TypeScript migration, multi-squad support, plugin architecture, WebSockets
+
+**Decision Document:** `.squad/decisions/inbox/ripley-phase2-pipeline.md`

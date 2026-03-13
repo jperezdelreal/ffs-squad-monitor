@@ -290,35 +290,170 @@
 
 ---
 
-## Future Vision (6-Month Horizon)
+## Phase 2 — Sprint 2: Real-Time Intelligence Platform
 
-### Phase 1: Foundation (Weeks 1-4) — Themes 1 & 2
-Consolidate to single React architecture, route all data through Express backend with GitHub authentication. Kill mock data. Establish single source of truth for configuration. **Outcome:** Dashboard shows real data reliably.
+> Defined by Ripley (Lead) · March 2026 · Supersedes Phase 1 completion
 
-### Phase 2: Intelligence (Weeks 5-8) — Themes 3 & 4
-Add health scoring, alerting, and anomaly detection. Expand test coverage to components. Centralize state management. **Outcome:** Dashboard helps users make operational decisions.
+### Sprint 1 Results (17 issues closed)
 
-### Phase 3: Hardening (Weeks 9-12) — Theme 5
-Structured logging, enhanced health checks, Docker deployment, bundle size tracking, performance monitoring. **Outcome:** Dashboard runs reliably in production without babysitting.
+Phase 1 delivered architectural consolidation, data integrity, and production hardening:
+- Legacy vanilla JS removed (3,381 lines of dead code)
+- All React components routed through Express backend
+- REPOS/AGENTS configuration centralized
+- GitHub token authentication for backend
+- Real GitHub Actions usage data (CostTracker)
+- 227+ tests, 94%+ coverage (81 component + 30 service + lib tests)
+- Zustand store expanded for centralized state
+- React Error Boundary, structured JSON logging, bundle size tracking
+- Docker deployment validated, CI branch targeting fixed
+- Global health score + heartbeat staleness alerts
 
-### Phase 4: Real-Time (Weeks 13-16) — Technical Bet
-Migrate from polling to SSE for all data feeds. The backend already has SSE infrastructure (log streaming). Extend it to heartbeat, agents, and pipeline updates. **Outcome:** Dashboard shows live data with sub-second latency.
+**The foundation is solid. Phase 2 is the considerable leap.**
 
-### Phase 5: Cross-Org Intelligence (Weeks 17-24) — Future
-Aggregate data across FFS squads to show organizational health. Sprint velocity, cross-repo dependency tracking, cost trends over time, agent utilization patterns. **Outcome:** Dashboard becomes an organizational intelligence tool, not just a status board.
+### Strategic Direction
+
+The dashboard transforms from a **polling-based status board** into a **real-time intelligence platform**. Three pillars:
+
+1. **Real-Time Streaming** — Replace polling with SSE. Live data, no refresh needed.
+2. **Historical Analytics** — Store metrics over time. Trends, velocity, agent productivity.
+3. **Proactive Alerting** — Desktop notifications for critical events. Don't wait for someone to look at the screen.
+
+### Theme 6: Real-Time Data Streaming (P1)
+
+**Why:** Polling every 30-60 seconds means the dashboard is always 30-60 seconds stale. The backend already has SSE for log streaming. Extending it to all data channels eliminates lag and makes the dashboard feel alive. This is the single most impactful UX improvement.
+
+| # | Title | Priority | Assignee | Effort |
+|---|-------|----------|----------|--------|
+| #75 | SSE event bus infrastructure | P1 | Lambert | M |
+| #76 | SSE data channels (heartbeat, events, issues, usage) | P1 | Lambert | M |
+| #77 | React useSSE hook with Zustand integration | P1 | Dallas | L |
+| #78 | SSE connection status indicator in Header | P1 | Dallas | S |
+
+**Dependencies:** #75 → #76 → #77 → #78 (sequential pipeline)
+
+### Theme 7: Historical Analytics (P1)
+
+**Why:** The dashboard shows current state but has no memory. Users can't answer "how are we trending?" or "was last week better than this week?" Persisting metrics enables trend charts, sprint velocity, and agent productivity analysis — transforming the dashboard from a status board into an analytics tool.
+
+| # | Title | Priority | Assignee | Effort |
+|---|-------|----------|----------|--------|
+| #79 | Metrics persistence layer (SQLite) | P1 | Lambert | L |
+| #80 | Agent productivity metrics API | P1 | Lambert | M |
+| #81 | Trend charts component (Chart.js) | P1 | Dallas | L |
+| #82 | Analytics dashboard view | P1 | Dallas | M |
+| #83 | Timeline swimlane view (Gantt-style) | P2 | Dallas | L |
+
+**Dependencies:** #79 → #80, #81, #82; #83 depends on #79 + #80
+
+### Theme 8: Notification & Alerts (P1-P2)
+
+**Why:** The dashboard is passive — you have to look at it to know something's wrong. Desktop notifications make it proactive. When an agent gets blocked or the heartbeat goes stale, you know immediately.
+
+| # | Title | Priority | Assignee | Effort |
+|---|-------|----------|----------|--------|
+| #84 | Browser notification service with SSE triggers | P1 | Lambert | M |
+| #85 | Alert configuration panel | P2 | Dallas | M |
+| #86 | Notification history panel with bell badge | P2 | Dallas | S |
+
+**Dependencies:** #84 depends on #75 (SSE event bus); #85/#86 depend on #84
+
+### Theme 9: API & Integration (P2)
+
+**Why:** The backend has 12+ endpoints with zero documentation. Other tools can't integrate. Data is trapped in the dashboard. OpenAPI docs and export endpoints open the platform up.
+
+| # | Title | Priority | Assignee | Effort |
+|---|-------|----------|----------|--------|
+| #87 | OpenAPI/Swagger documentation | P2 | Lambert | M |
+| #88 | Data export endpoints (CSV/JSON) | P2 | Lambert | S |
+
+**Dependencies:** None — documents and extends existing endpoints
+
+### Theme 10: Testing & Quality (P1-P2)
+
+**Why:** Every new feature needs tests. SSE introduces complex connection lifecycle. SQLite introduces data integrity requirements. E2E tests catch the bugs that unit tests miss (blank pages, broken routing, build failures).
+
+| # | Title | Priority | Assignee | Effort |
+|---|-------|----------|----------|--------|
+| #89 | SSE integration tests | P1 | Kane | M |
+| #90 | Historical metrics tests | P1 | Kane | M |
+| #91 | E2E smoke tests with Playwright | P1 | Kane | L |
+| #92 | Performance benchmarks for SSE and APIs | P2 | Kane | M |
+
+**Dependencies:** #89 follows #75-#77; #90 follows #79-#80; #91 independent
+
+### Sprint 2 Prioritized Backlog
+
+| # | Title | Priority | Theme | Assignee | Dependencies | Effort |
+|---|-------|----------|-------|----------|--------------|--------|
+| #75 | SSE event bus infrastructure | P1 | 6: Streaming | Lambert | None | M |
+| #79 | Metrics persistence layer (SQLite) | P1 | 7: Analytics | Lambert | None | L |
+| #91 | E2E smoke tests with Playwright | P1 | 10: Testing | Kane | None | L |
+| #76 | SSE data channels | P1 | 6: Streaming | Lambert | #75 | M |
+| #80 | Agent productivity API | P1 | 7: Analytics | Lambert | #79 | M |
+| #77 | React useSSE hook | P1 | 6: Streaming | Dallas | #75, #76 | L |
+| #81 | Trend charts (Chart.js) | P1 | 7: Analytics | Dallas | #79 | L |
+| #84 | Browser notification service | P1 | 8: Alerts | Lambert | #75, #76 | M |
+| #89 | SSE integration tests | P1 | 10: Testing | Kane | #75, #76, #77 | M |
+| #90 | Historical metrics tests | P1 | 10: Testing | Kane | #79, #80 | M |
+| #78 | SSE connection status UI | P1 | 6: Streaming | Dallas | #77 | S |
+| #82 | Analytics dashboard view | P1 | 7: Analytics | Dallas | #79, #80, #81 | M |
+| #83 | Timeline swimlane view | P2 | 7: Analytics | Dallas | #79, #80 | L |
+| #85 | Alert configuration panel | P2 | 8: Alerts | Dallas | #84 | M |
+| #86 | Notification history panel | P2 | 8: Alerts | Dallas | #84, #85 | S |
+| #87 | OpenAPI documentation | P2 | 9: API | Lambert | None | M |
+| #88 | Data export endpoints | P2 | 9: API | Lambert | #79 | S |
+| #92 | Performance benchmarks | P2 | 10: Testing | Kane | #75, #79 | M |
+
+**Team Balance:** Lambert: 7 issues (backend infrastructure) · Dallas: 7 issues (frontend features) · Kane: 4 issues (quality & testing)
+
+**Effort Key:** XS (<1h), S (1-3h), M (3-8h), L (8-16h)
 
 ---
 
-## Appendix: Existing Issue Disposition
+## Future Vision (6-Month Horizon)
 
+### Phase 1: Foundation ✅ COMPLETE — Sprint 1
+Consolidated to single React architecture, routed all data through Express backend with GitHub authentication. Mock data eliminated. Single source of truth for configuration. 17 issues closed. **Outcome:** Dashboard shows real data reliably.
+
+### Phase 2: Real-Time Intelligence 🔄 IN PROGRESS — Sprint 2
+SSE streaming, historical metrics with SQLite persistence, trend charts with Chart.js, browser notifications, and E2E testing with Playwright. 18 issues defined. **Outcome:** Dashboard is live, has memory, and is proactive.
+
+### Phase 3: Cross-Org Intelligence (Future)
+Aggregate data across FFS squads to show organizational health. Multi-squad support, sprint velocity comparisons, cross-repo dependency tracking, cost trends over time, agent utilization patterns. **Outcome:** Dashboard becomes an organizational intelligence tool.
+
+### Phase 4: Platform (Future)
+REST API documentation, webhook integrations, Slack/Discord alerts, PWA support, offline capability. **Outcome:** Dashboard becomes a platform that other tools plug into.
+
+---
+
+## Appendix: Issue Disposition
+
+### Sprint 1 (Closed)
+| Issue | Title | Status |
+|-------|-------|--------|
+| #34 | Strategic roadmap | ✅ Closed |
+| #35 | Remove legacy vanilla JS | ✅ Closed |
+| #36 | Route React through Express | ✅ Closed |
+| #37 | Centralize REPOS/AGENTS config | ✅ Closed |
+| #38 | Fix CI branch targeting | ✅ Closed |
+| #39 | GitHub token authentication | ✅ Closed |
+| #41, #42, #43 | Real data integration | ✅ Closed |
+| #44, #45 | Health score + staleness alerts | ✅ Closed |
+| #48, #49 | Component + service tests | ✅ Closed |
+| #50 | Zustand store expansion | ✅ Closed |
+| #51 | React Error Boundary | ✅ Closed |
+| #54 | Structured JSON logging | ✅ Closed |
+| #55 | Bundle size tracking | ✅ Closed |
+| #56 | Docker deployment | ✅ Closed |
+
+### Pre-Sprint (Legacy)
 | Issue | Title | Status | Recommendation |
 |-------|-------|--------|----------------|
-| #34 | Define next roadmap | Open | This document closes it |
-| #14 | Round timeline filter (show last N) | Open/Legacy | Superseded by React redesign. Close if timeline.js is removed |
-| #5 | GitHub Actions status integration | Open/Legacy | Partially covered by PipelineVisualizer. Revisit in Theme 3 |
-| #3 | Agent activity timeline | Open/Legacy | Covered by ActivityFeed.jsx. Close |
-| #2 | Log viewer improvements | Open/Legacy | Log viewer is legacy vanilla JS. Defer until React port |
-| #1 | Heartbeat reader improvements | Open/Legacy | Covered by usePolling + Header. Close or redefine for React |
+| #14 | Round timeline filter | Open/Legacy | Superseded by React redesign. Close. |
+| #5 | GitHub Actions status | Open/Legacy | Covered by CostTracker. Close. |
+| #3 | Agent activity timeline | Open/Legacy | Covered by ActivityFeed.jsx. Close. |
+| #2 | Log viewer improvements | Open/Legacy | Legacy vanilla JS removed. Close. |
+| #1 | Heartbeat reader improvements | Open/Legacy | Covered by usePolling + Header. Close. |
 
 ---
 
