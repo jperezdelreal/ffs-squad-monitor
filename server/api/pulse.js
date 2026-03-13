@@ -1,30 +1,32 @@
 import fs from 'fs';
-import { execSync } from 'child_process';
 import { config, REPOS, SQUAD_AGENTS } from '../config.js';
+import { githubFetch, handleGitHubError } from '../lib/github-client.js';
 
-export default function pulseRoute(req, res) {
+export default async function pulseRoute(req, res) {
   try {
     let prsMergedToday = 0;
     let issuesClosedToday = 0;
     const today = new Date().toISOString().slice(0, 10);
 
     for (const repo of REPOS) {
+      const [owner, name] = repo.github.split('/');
+
       try {
-        const prOut = execSync(
-          `gh pr list --repo ${repo.github} --state merged --json mergedAt --limit 20`,
-          { timeout: 10000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        const { data: prs } = await githubFetch(
+          `/repos/${owner}/${name}/pulls?state=closed&sort=updated&direction=desc&per_page=20`
         );
-        const prs = JSON.parse(prOut);
-        prsMergedToday += prs.filter(pr => pr.mergedAt && pr.mergedAt.startsWith(today)).length;
+        prsMergedToday += prs.filter(
+          pr => pr.merged_at && pr.merged_at.startsWith(today)
+        ).length;
       } catch { /* skip */ }
 
       try {
-        const issueOut = execSync(
-          `gh issue list --repo ${repo.github} --state closed --json closedAt --limit 20`,
-          { timeout: 10000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        const { data: issues } = await githubFetch(
+          `/repos/${owner}/${name}/issues?state=closed&sort=updated&direction=desc&per_page=20`
         );
-        const issues = JSON.parse(issueOut);
-        issuesClosedToday += issues.filter(i => i.closedAt && i.closedAt.startsWith(today)).length;
+        issuesClosedToday += issues.filter(
+          i => !i.pull_request && i.closed_at && i.closed_at.startsWith(today)
+        ).length;
       } catch { /* skip */ }
     }
 
@@ -44,7 +46,8 @@ export default function pulseRoute(req, res) {
       activeAgents,
       totalAgents: Object.keys(SQUAD_AGENTS).length,
     }));
-  } catch {
+  } catch (err) {
+    if (handleGitHubError(res, err)) return;
     res.statusCode = 500;
     res.end(JSON.stringify({ error: 'Failed to compute pulse' }));
   }
