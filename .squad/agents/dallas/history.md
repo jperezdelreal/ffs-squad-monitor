@@ -97,3 +97,23 @@
 - `server/api/health.js` - Backend health endpoint with dependency status
 - `src/components/DependencyHealth.jsx` - Dashboard dependency health widget
 - `src/components/Header.jsx` - Added DependencyHealth to header bar
+
+
+### Issues #46/#47: Operational Intelligence - Bottleneck Detection and Blocked-Time Tracking (2026-03-14)
+
+**Architecture decisions:**
+- Pipeline bottleneck detection uses threshold-based analysis (5+ open issues in a stage)
+- Bottleneck status coexists with existing pipeline statuses (pending/in-progress/complete/blocked)
+- Agent blocked-time computed from blocked-by:* labels + updatedAt timestamps
+- Three-tier severity model for blocked agents: <4h (yellow), >4h (orange), >24h (red)
+
+**Key patterns:**
+- calcAvgTimeInStage() computes average duration from createdAt timestamps of open issues
+- getBlockedInfo() filters agent issues by blocked-by:* labels and sorts by longest block
+- agentBlockedInfo useMemo depends on [agents, issues] - recomputes when either changes
+- Blocked agents sorted to top of grid via .sort() before .map() rendering
+- Used Unicode escapes for emoji in JSX to avoid encoding issues in test environments
+
+**File paths:**
+- src/components/PipelineVisualizer.jsx - Bottleneck detection, avg time, STUCK badge
+- src/components/TeamBoard.jsx - Blocked-time tracking, severity indicators, sort-to-top

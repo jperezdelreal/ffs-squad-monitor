@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../store/store';
 
+const BOTTLENECK_THRESHOLD = 5;
+
 const STAGES = [
   { id: 'proposal', name: 'Proposal', emoji: '💡', color: 'from-yellow-500 to-amber-600' },
   { id: 'gdd', name: 'GDD', emoji: '📋', color: 'from-blue-500 to-cyan-600' },
@@ -9,6 +11,21 @@ const STAGES = [
   { id: 'build', name: 'Build', emoji: '🔨', color: 'from-orange-500 to-red-600' },
   { id: 'deploy', name: 'Deploy', emoji: '🚀', color: 'from-cyan-500 to-blue-600' },
 ];
+
+function formatDuration(ms) {
+  const hours = Math.floor(ms / (1000 * 60 * 60))
+  if (hours < 24) return hours + 'h'
+  const days = Math.floor(hours / 24)
+  return days + 'd'
+}
+
+function calcAvgTimeInStage(issues) {
+  const now = Date.now()
+  const openWithTimestamp = issues.filter(i => i.state === 'open' && i.createdAt)
+  if (openWithTimestamp.length === 0) return null
+  const total = openWithTimestamp.reduce((sum, i) => sum + (now - new Date(i.createdAt).getTime()), 0)
+  return total / openWithTimestamp.length
+}
 
 export function PipelineVisualizer() {
   const { issues, issuesLoading: loading, issuesError: error, fetchIssues } = useStore();
@@ -24,7 +41,7 @@ export function PipelineVisualizer() {
     );
 
     if (matched.length === 0) {
-      return { status: 'pending', count: 0, issues: [] };
+      return { status: 'pending', count: 0, issues: [], isBottleneck: false, avgTime: null };
     }
 
     const open = matched.filter(i => i.state === 'open');
@@ -44,6 +61,13 @@ export function PipelineVisualizer() {
       status = 'blocked';
     }
 
+    const isBottleneck = open.length >= BOTTLENECK_THRESHOLD
+    const avgTime = calcAvgTimeInStage(matched)
+
+    if (isBottleneck && status !== 'blocked') {
+      status = 'bottleneck'
+    }
+
     return {
       status,
       count: matched.length,
@@ -53,6 +77,8 @@ export function PipelineVisualizer() {
         state: i.state,
         url: i.url,
       })),
+      isBottleneck,
+      avgTime,
     };
   };
 
@@ -85,6 +111,7 @@ export function PipelineVisualizer() {
       'in-progress': 'from-amber-500 to-yellow-600',
       complete: 'from-emerald-500 to-green-600',
       blocked: 'from-red-500 to-rose-600',
+      bottleneck: 'from-orange-600 to-red-700',
     };
     return colors[status] || colors.pending;
   };
@@ -95,6 +122,7 @@ export function PipelineVisualizer() {
       'in-progress': '⚡',
       complete: '✅',
       blocked: '🚫',
+      bottleneck: '🔥',
     };
     return icons[status] || icons.pending;
   };
@@ -170,6 +198,10 @@ export function PipelineVisualizer() {
             <div className="w-3 h-3 bg-gradient-to-br from-red-500 to-rose-600 rounded" />
             <span className="text-gray-400">Blocked</span>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gradient-to-br from-orange-600 to-red-700 rounded animate-pulse" />
+            <span className="text-gray-400">Bottleneck ({BOTTLENECK_THRESHOLD}+ issues)</span>
+          </div>
         </div>
       </div>
 
@@ -213,14 +245,17 @@ export function PipelineVisualizer() {
                     </td>
                     {STAGES.map(stage => {
                       const stageData = stages[stage.id];
+                      const cellClasses = [
+                        'bg-gradient-to-br',
+                        getStatusColor(stageData.status),
+                        'rounded-lg p-3 text-center cursor-pointer transition-all hover:scale-105 hover:shadow-lg relative group',
+                        stageData.isBottleneck ? 'ring-2 ring-orange-400/60 animate-pulse' : '',
+                      ].filter(Boolean).join(' ')
                       return (
-                        <td
-                          key={stage.id}
-                          className="p-3"
-                        >
+                        <td key={stage.id} className="p-3">
                           <div
                             onClick={() => setSelectedCell({ repo, stage: stage.name, data: stageData })}
-                            className={`bg-gradient-to-br ${getStatusColor(stageData.status)} rounded-lg p-3 text-center cursor-pointer transition-all hover:scale-105 hover:shadow-lg relative group`}
+                            className={cellClasses}
                           >
                             <div className="text-2xl mb-1">{getStatusIcon(stageData.status)}</div>
                             {stageData.count > 0 && (
@@ -230,6 +265,16 @@ export function PipelineVisualizer() {
                             )}
                             {stageData.count === 0 && (
                               <div className="text-xs font-mono text-white/60">-</div>
+                            )}
+                            {stageData.avgTime !== null && stageData.count > 0 && (
+                              <div className="text-[10px] font-mono text-white/70 mt-1">
+                                avg {formatDuration(stageData.avgTime)}
+                              </div>
+                            )}
+                            {stageData.isBottleneck && (
+                              <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-lg">
+                                STUCK
+                              </div>
                             )}
                           </div>
                         </td>
@@ -265,11 +310,21 @@ export function PipelineVisualizer() {
               </button>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-4 flex items-center gap-3 flex-wrap">
               <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${getStatusColor(selectedCell.data.status)} text-white font-medium`}>
                 <span>{getStatusIcon(selectedCell.data.status)}</span>
                 <span className="capitalize">{selectedCell.data.status.replace('-', ' ')}</span>
               </div>
+              {selectedCell.data.isBottleneck && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-300 text-sm font-medium">
+                  🔥 Bottleneck — {selectedCell.data.count} issues accumulated
+                </div>
+              )}
+              {selectedCell.data.avgTime !== null && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-sm">
+                  ⏱️ Avg time in stage: {formatDuration(selectedCell.data.avgTime)}
+                </div>
+              )}
             </div>
 
             {selectedCell.data.issues.length > 0 ? (

@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TeamBoard } from '../TeamBoard'
 import { clearConfigCache } from '../../services/config'
+import { useStore } from '../../store/store'
 
 const mockConfig = {
   agents: {
@@ -45,6 +46,23 @@ const mockIssues = [
     labels: ['squad:ripley'],
     url: 'https://github.com/jperezdelreal/ffs-squad-monitor/issues/52',
     repo: 'ffs-squad-monitor',
+  },
+]
+
+
+const mockBlockedIssues = [
+  ...mockIssues,
+  {
+    number: 60, title: 'Blocked by upstream', state: 'open',
+    labels: ['squad:dallas', 'blocked-by:upstream'],
+    url: 'https://github.com/jperezdelreal/ffs-squad-monitor/issues/60',
+    repo: 'ffs-squad-monitor', createdAt: '2026-03-11T10:00:00Z', updatedAt: '2026-03-12T06:00:00Z',
+  },
+  {
+    number: 61, title: 'Blocked by decision', state: 'open',
+    labels: ['squad:lambert', 'blocked-by:decision'],
+    url: 'https://github.com/jperezdelreal/ffs-squad-monitor/issues/61',
+    repo: 'ffs-squad-monitor', createdAt: '2026-03-13T08:00:00Z', updatedAt: '2026-03-13T10:00:00Z',
   },
 ]
 
@@ -195,4 +213,55 @@ describe('TeamBoard', () => {
     })
     expect(screen.getByText('more in queue')).toBeInTheDocument()
   })
+
+  it('shows blocked indicator for agents with blocked-by issues', async () => {
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.includes('/api/config')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockConfig) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockBlockedIssues) })
+    })
+    const { container } = render(<TeamBoard />)
+    await waitFor(() => {
+      expect(screen.getByText('Team Board')).toBeInTheDocument()
+      expect(container.textContent).toMatch(/Blocked/)
+    })
+  })
+
+  it('shows blocker type for blocked issues', async () => {
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.includes('/api/config')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockConfig) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockBlockedIssues) })
+    })
+    const { container } = render(<TeamBoard />)
+    await waitFor(() => {
+      expect(container.textContent).toMatch(/upstream/)
+    })
+  })
+
+  it('shows blocked duration for blocked agents', async () => {
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.includes('/api/config')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockConfig) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockBlockedIssues) })
+    })
+    const { container } = render(<TeamBoard />)
+    await waitFor(() => {
+      expect(container.textContent).toMatch(/\d+[dhm]/)
+    })
+  })
+
+  it('does not show blocked indicator for agents without blocked issues', async () => {
+    mockFetchSuccess()
+    render(<TeamBoard />)
+    await waitFor(() => { expect(screen.getByText('Team Board')).toBeInTheDocument() })
+    await waitFor(() => { expect(screen.getAllByText('Ripley').length).toBeGreaterThanOrEqual(1) })
+    expect(screen.queryByText(/Recently blocked/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Blocked >4h/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Blocked >24h/)).not.toBeInTheDocument()
+  })
+
 })
