@@ -107,18 +107,33 @@ The test suite uses [Vitest](https://vitest.dev) and achieves 97%+ coverage on c
 
 ## Configuration
 
-Set the path to your FFS repo heartbeat file:
+Set environment variables to configure the dashboard:
 
 ```bash
-# Default: looks for ../FirstFrameStudios/tools/.ralph-heartbeat.json
-FFS_HEARTBEAT_PATH=../FirstFrameStudios/tools/.ralph-heartbeat.json
+# GitHub API authentication (recommended — raises rate limit from 60 to 5,000 req/hr)
+# Option 1: Set the token directly
+GITHUB_TOKEN=ghp_your_token_here
 
-# Override the FFS root path
+# Option 2: If gh CLI is authenticated, the server auto-detects the token via `gh auth token`
+
+# FFS paths (defaults shown)
+FFS_HEARTBEAT_PATH=../FirstFrameStudios/tools/.ralph-heartbeat.json
 FFS_ROOT=../FirstFrameStudios
 
-# Override the server port (default: 3001)
+# Server port (default: 3001)
 PORT=3001
 ```
+
+### GitHub Token
+
+The backend makes GitHub API calls to fetch issues, PRs, and repo status. Without a token, GitHub's anonymous rate limit of **60 requests/hour** applies and will quickly be exhausted.
+
+**Setting up a token:**
+1. Create a [fine-grained personal access token](https://github.com/settings/tokens?type=beta) with read-only access to your repositories
+2. Set it as `GITHUB_TOKEN` in your environment or `.env` file
+3. Alternatively, if you have `gh` CLI authenticated (`gh auth login`), the server will automatically use its token
+
+The token is **never exposed to the frontend** — all GitHub API calls go through the backend. The `/health` endpoint shows rate limit status without revealing the token.
 
 ## Status
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { config } from './config.js';
+import { getRateLimitStatus } from './lib/github-client.js';
 
 // Import route handlers
 import heartbeatRoute from './api/heartbeat.js';
@@ -30,9 +31,22 @@ app.get('/api/agents', workflowsRoute);
 app.get('/api/repos', reposRoute);
 app.get('/api/config', configRoute);
 
-// Health check
+// Health check with rate limit status
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const rl = getRateLimitStatus();
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    github: {
+      authenticated: !!config.githubToken,
+      rateLimit: {
+        remaining: rl.remaining,
+        limit: rl.limit,
+        resetsAt: rl.reset ? new Date(rl.reset * 1000).toISOString() : null,
+        lastChecked: rl.lastChecked,
+      },
+    },
+  });
 });
 
 // Error handling middleware (must be after all routes)
@@ -48,6 +62,7 @@ app.listen(PORT, () => {
   console.log(`   Port: ${PORT}`);
   console.log(`   Heartbeat: ${config.heartbeatPath}`);
   console.log(`   Logs: ${config.logsDir}`);
+  console.log(`   GitHub Auth: ${config.githubToken ? '✅ Token configured' : '⚠️  No token (unauthenticated, 60 req/hr limit)'}`);
   console.log(`\n   Endpoints:`);
   console.log(`   - GET /api/heartbeat`);
   console.log(`   - GET /api/logs/files`);

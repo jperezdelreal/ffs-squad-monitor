@@ -1,7 +1,28 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Resolve GitHub token: env var first, then gh CLI fallback
+function resolveGitHubToken() {
+  if (process.env.GITHUB_TOKEN) {
+    return process.env.GITHUB_TOKEN;
+  }
+  try {
+    const token = execSync('gh auth token', {
+      timeout: 5000,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+    if (token) return token;
+  } catch {
+    // gh CLI not available or not authenticated
+  }
+  return null;
+}
+
+const githubToken = resolveGitHubToken();
 
 export const config = {
   // Server configuration
@@ -24,6 +45,9 @@ export const config = {
   
   // Cache TTL
   issueCacheTTL: 30_000,
+
+  // GitHub authentication
+  githubToken,
 };
 
 // Repository definitions — FFS games only (SS monitors itself + downstream via safety-net.yml)

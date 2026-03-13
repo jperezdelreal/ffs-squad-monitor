@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { REPOS } from '../config.js';
+import { githubFetch, handleGitHubError } from '../lib/github-client.js';
 
 function readNowMd(repoDir) {
   const p = path.join(repoDir, '.squad', 'identity', 'now.md');
@@ -17,13 +18,18 @@ function readNowMd(repoDir) {
   } catch { return null; }
 }
 
-function getOpenIssueCount(ghRepo) {
+async function getOpenIssueCount(ghRepo) {
   try {
-    const out = execSync(
-      `gh issue list --repo ${ghRepo} --state open --json number --limit 50`,
-      { timeout: 8000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+    const [owner, name] = ghRepo.split('/');
+    const { data } = await githubFetch(
+      `/repos/${owner}/${name}/issues?state=open&per_page=1`,
     );
-    return JSON.parse(out).length;
+    // Use the array length as a rough count; for accurate count we'd parse Link header
+    // but for this dashboard, re-fetch with higher limit
+    const { data: issues } = await githubFetch(
+      `/repos/${owner}/${name}/issues?state=open&per_page=50`,
+    );
+    return issues.filter(i => !i.pull_request).length;
   } catch { return null; }
 }
 
@@ -40,23 +46,30 @@ function getLastCommit(repoDir) {
   } catch { return null; }
 }
 
-export default function reposRoute(req, res) {
-  const results = REPOS.map(repo => {
-    const hasSquad = fs.existsSync(path.join(repo.dir, '.squad'));
-    const focus = readNowMd(repo.dir);
-    const openIssues = getOpenIssueCount(repo.github);
-    const lastCommit = getLastCommit(repo.dir);
-    return {
-      id: repo.id,
-      emoji: repo.emoji,
-      label: repo.label,
-      github: repo.github,
-      hasSquad,
-      focus,
-      openIssues,
-      lastCommit,
-    };
-  });
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(results));
+export default async function reposRoute(req, res) {
+  try {
+    const results = [];
+    for (const repo of REPOS) {
+      const hasSquad = fs.existsSync(path.join(repo.dir, '.squad'));
+      const focus = readNowMd(repo.dir);
+      const openIssues = await getOpenIssueCount(repo.github);
+      const lastCommit = getLastCommit(repo.dir);
+      results.push({
+        id: repo.id,
+        emoji: repo.emoji,
+        label: repo.label,
+        github: repo.github,
+        hasSquad,
+        focus,
+        openIssues,
+        lastCommit,
+      });
+    }
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(results));
+  } catch (err) {
+    if (handleGitHubError(res, err)) return;
+    res.statusCode = 500;
+    res.end(JSON.stringify({ error: 'Failed to fetch repos' }));
+  }
 }

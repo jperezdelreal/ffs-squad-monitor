@@ -1,11 +1,11 @@
-import { execSync } from 'child_process';
-import { config, REPOS } from '../config.js';
+import { config, REPOS } from '../config.js'
+import { githubFetch, handleGitHubError } from '../lib/github-client.js'
 
 const ISSUE_CACHE_TTL = config.issueCacheTTL;
 let issueCache = null;
 let issueCacheTime = 0;
 
-export default function boardRoute(req, res) {
+export default async function boardRoute(req, res) {
   try {
     if (issueCache && Date.now() - issueCacheTime < ISSUE_CACHE_TTL) {
       res.setHeader('Content-Type', 'application/json');
@@ -16,13 +16,15 @@ export default function boardRoute(req, res) {
     const allIssues = [];
     for (const repo of REPOS) {
       try {
-        const out = execSync(
-          `gh issue list --repo ${repo.github} --state open --json number,title,labels,assignees,url,createdAt,updatedAt --limit 50`,
-          { timeout: 15000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        const [owner, name] = repo.github.split('/');
+        const { data: issues } = await githubFetch(
+          `/repos/${owner}/${name}/issues?state=open&per_page=50`
         );
-        const issues = JSON.parse(out);
+
         for (const issue of issues) {
-          // Derive priority from labels
+          // Skip pull requests (GitHub API includes them in issues endpoint)
+          if (issue.pull_request) continue;
+
           const labels = (issue.labels || []).map(l => l.name || l);
           let priority = 3;
           if (labels.some(l => /p0|priority.*0|critical/i.test(l))) priority = 0;
@@ -30,17 +32,16 @@ export default function boardRoute(req, res) {
           else if (labels.some(l => /p2|priority.*2|medium/i.test(l))) priority = 2;
 
           const assignees = (issue.assignees || []).map(a => a.login || a);
+
           // Check if there's a linked PR
           let prStatus = null;
           try {
-            const prOut = execSync(
-              `gh pr list --repo ${repo.github} --search "${issue.number}" --json number,state,title --limit 3`,
-              { timeout: 8000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+            const { data: prs } = await githubFetch(
+              `/repos/${owner}/${name}/pulls?state=all&per_page=5&sort=updated&direction=desc`
             );
-            const prs = JSON.parse(prOut);
             const linked = prs.find(pr => pr.title && pr.title.includes(`#${issue.number}`));
             if (linked) prStatus = linked.state;
-          } catch { /* skip */ }
+          } catch { /* skip PR lookup failures */ }
 
           allIssues.push({
             repo: repo.id,
@@ -48,19 +49,21 @@ export default function boardRoute(req, res) {
             repoEmoji: repo.emoji,
             number: issue.number,
             title: issue.title,
-            url: issue.url,
+            url: issue.html_url,
             priority,
             labels,
             assignees,
             prStatus,
-            createdAt: issue.createdAt,
-            updatedAt: issue.updatedAt,
+            createdAt: issue.created_at,
+            updatedAt: issue.updated_at,
           });
         }
-      } catch { /* skip repo */ }
+      } catch (err) {
+        if (handleGitHubError(res, err)) return;
+        // Skip individual repo failures
+      }
     }
 
-    // Sort by priority then by updatedAt
     allIssues.sort((a, b) => a.priority - b.priority || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
 
     issueCache = allIssues;
@@ -68,7 +71,8 @@ export default function boardRoute(req, res) {
 
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(allIssues));
-  } catch {
+  } catch (err) {
+    if (handleGitHubError(res, err)) return;
     res.statusCode = 500;
     res.end(JSON.stringify({ error: 'Failed to fetch issues' }));
   }
