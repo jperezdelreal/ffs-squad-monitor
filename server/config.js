@@ -50,8 +50,18 @@ export const config = {
   githubToken,
 };
 
+// ============================================================================
+// CONFIGURATION - SINGLE SOURCE OF TRUTH
+// ============================================================================
+// REPOS and SQUAD_AGENTS are defined here and ONLY here.
+// All backend routes, frontend components, and build scripts import from this file.
+// To add/modify a repo or agent, edit this file and restart the server.
+//
+// Frontend fetches config via /api/config endpoint (see server/api/config.js)
+// Vite build imports directly at build time (see vite.config.js)
+// ============================================================================
+
 // Repository definitions — FFS games only (SS monitors itself + downstream via safety-net.yml)
-// Single source of truth for all REPOS across backend, frontend, and vite config
 export const REPOS = [
   { id: 'flora',             emoji: '🌿', label: 'Flora',          github: 'jperezdelreal/flora',          color: '#ef4444', dir: path.resolve(__dirname, '..', '..', 'flora') },
   { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', color: '#f59e0b', dir: path.resolve(__dirname, '..', '..', 'ComeRosquillas') },

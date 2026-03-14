@@ -80,21 +80,21 @@ export function TrendCharts() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <span className="text-2xl">📈</span> Trend Analytics
+          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+            <span className="text-xl sm:text-2xl">📈</span> Trend Analytics
           </h2>
           <p className="text-sm text-gray-400 mt-1">Historical metrics from the squad</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div className="flex rounded-lg overflow-hidden border border-white/10">
             {TIME_RANGES.map(range => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1.5 text-xs font-medium transition-colors min-h-[44px] ${
                   timeRange === range
                     ? 'bg-cyan-500/20 text-cyan-300 border-r border-cyan-500/30'
                     : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border-r border-white/10 last:border-r-0'
@@ -106,7 +106,7 @@ export function TrendCharts() {
           </div>
           <button
             onClick={handleRefresh}
-            className="px-3 py-1.5 text-xs font-medium bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg border border-white/10 transition-colors"
+            className="px-3 py-1.5 text-xs font-medium bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg border border-white/10 transition-colors min-h-[44px]"
           >
             🔄 Refresh
           </button>
@@ -128,16 +128,16 @@ export function TrendCharts() {
         </div>
       )}
 
-      <div className="glass rounded-xl p-6 border border-white/10">
+      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">📋 Issues Over Time</h3>
-        <div className="h-64">
+        <div className="h-48 sm:h-64">
           <TrendLine data={issuesTrend} label="Total Issues" color="#06b6d4" timeRange={timeRange} />
         </div>
       </div>
 
-      <div className="glass rounded-xl p-6 border border-white/10">
+      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">📊 Open vs Closed Issues</h3>
-        <div className="h-64">
+        <div className="h-48 sm:h-64">
           <AreaChart series={issuesAreaSeries} timeRange={timeRange} />
         </div>
       </div>
