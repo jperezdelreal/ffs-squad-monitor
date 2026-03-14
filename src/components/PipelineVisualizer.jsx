@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
+import { SkeletonContainer, SkeletonGrid, Skeleton } from './Skeleton';
 
 const BOTTLENECK_THRESHOLD = 5;
 
@@ -130,16 +131,10 @@ export function PipelineVisualizer() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="glass rounded-xl p-6 animate-pulse">
-          <div className="h-8 bg-white/5 rounded w-1/4 mb-6" />
-          <div className="grid grid-cols-7 gap-3">
-            {[...Array(42)].map((_, i) => (
-              <div key={i} className="h-24 bg-white/5 rounded-lg" />
-            ))}
-          </div>
-        </div>
-      </div>
+      <SkeletonContainer>
+        <div className="h-8 bg-gradient-to-r from-white/5 via-white/10 to-white/5 bg-[length:200%_100%] animate-shimmer rounded w-1/4 mb-6" />
+        <SkeletonGrid cols={7} rows={6} itemComponent={() => <Skeleton className="h-24 rounded-lg" />} />
+      </SkeletonContainer>
     );
   }
 

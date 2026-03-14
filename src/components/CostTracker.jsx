@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
+import { SkeletonContainer, SkeletonGrid, SkeletonStatCard, Skeleton } from './Skeleton';
 
 export function CostTracker() {
   const { usage, usageLoading: loading, usageError: error, fetchUsage } = useStore();
@@ -11,16 +12,10 @@ export function CostTracker() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="glass rounded-xl p-6 animate-pulse">
-          <div className="h-32 bg-white/5 rounded-2xl mb-6" />
-          <div className="grid grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-white/5 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
+      <SkeletonContainer>
+        <Skeleton className="h-32 rounded-2xl mb-6" />
+        <SkeletonGrid cols={2} rows={2} itemComponent={SkeletonStatCard} />
+      </SkeletonContainer>
     );
   }
 

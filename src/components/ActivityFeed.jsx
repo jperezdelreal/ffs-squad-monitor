@@ -4,6 +4,7 @@ import { useStore } from '../store/store';
 import { getConfigSync } from '../services/config';
 import { ExportButton } from './ExportButton';
 import { staggerContainer, staggerItem, springPresets } from '../lib/motion';
+import { SkeletonContainer, SkeletonList, SkeletonText } from './Skeleton';
 
 function getRepoColor(repoName) {
   const config = getConfigSync();
@@ -85,22 +86,10 @@ export function ActivityFeed() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="glass rounded-xl p-6 animate-pulse">
-          <div className="h-8 bg-white/5 rounded w-1/4 mb-4" />
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-4">
-                <div className="w-12 h-12 bg-white/5 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-white/5 rounded w-3/4" />
-                  <div className="h-3 bg-white/5 rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <SkeletonContainer>
+        <SkeletonText lines={1} className="w-1/4 mb-4 h-8" />
+        <SkeletonList count={5} />
+      </SkeletonContainer>
     );
   }
 

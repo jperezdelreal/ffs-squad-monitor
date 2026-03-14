@@ -3,6 +3,7 @@ import { TrendLine, BarChart, AreaChart } from './charts'
 import { useStore } from '../store/store'
 import { CHART_COLORS } from './charts/chartConfig'
 import { ExportButton } from './ExportButton'
+import { SkeletonChart } from './Skeleton'
 
 const TIME_RANGES = [
   { id: '7d', label: 'Last 7 days' },
@@ -156,9 +157,7 @@ export function Analytics() {
     return (
       <div className="space-y-6" data-testid="analytics-loading">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="glass rounded-xl p-6 animate-pulse">
-            <div className="h-64 bg-white/5 rounded-xl" />
-          </div>
+          <SkeletonChart key={i} />
         ))}
       </div>
     )
