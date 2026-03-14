@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    exclude: ['e2e/**', 'node_modules/**'],
     setupFiles: ['./src/components/__tests__/setup.js'],
     environmentMatchGlobs: [
       ['server/**', 'node'],
