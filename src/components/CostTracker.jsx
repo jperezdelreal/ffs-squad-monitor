@@ -51,7 +51,7 @@ export function CostTracker() {
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 animate-pulse" />
         <div className="relative z-10">
           <div className="text-center mb-6">
-            <div className="inline-flex items-center gap-2 text-emerald-400 text-sm font-semibold mb-4">
+            <div className="inline-flex items-center gap-2 text-emerald-400 text-body-sm font-semibold mb-4">
               <span className="text-2xl">⚡</span>
               <span>GITHUB ACTIONS USAGE</span>
               <span className="text-2xl">⚡</span>
@@ -65,8 +65,8 @@ export function CostTracker() {
                 {usedMinutes}
               </div>
               <div className="text-left">
-                <div className="text-2xl text-gray-400 font-medium">/ {totalMinutes}</div>
-                <div className="text-sm text-gray-500">minutes this month</div>
+                <div className="text-h2 text-gray-400 font-medium">/ {totalMinutes}</div>
+                <div className="text-body-sm text-gray-500">minutes this month</div>
               </div>
             </div>
           </div>
@@ -100,16 +100,16 @@ export function CostTracker() {
       {/* Per-repo breakdown (only from workflow_runs source) */}
       {usage.repos && usage.repos.length > 0 && (
         <div className="glass depth-surface rounded-xl p-6 border border-white/10">
-          <h3 className="text-lg font-bold text-white mb-6">Usage by Repository</h3>
+          <h3 className="text-h3 font-semibold text-white mb-6">Usage by Repository</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {usage.repos.map((repo) => (
               <div key={repo.repo} className="glass depth-raised rounded-lg p-4 border border-white/10 hover:border-cyan-500/30 hover:shadow-glow-cyan-sm transition-all">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-2xl">{repo.emoji}</span>
-                  <span className="text-sm font-semibold text-gray-300">{repo.label}</span>
+                  <span className="text-body-sm font-semibold text-gray-300">{repo.label}</span>
                 </div>
-                <div className="text-2xl font-black text-white mb-1">{repo.durationMinutes} min</div>
-                <div className="text-xs text-gray-400">{repo.runs} workflow runs</div>
+                <div className="text-h2 font-black text-white mb-1">{repo.durationMinutes} min</div>
+                <div className="text-caption text-gray-400">{repo.runs} workflow runs</div>
               </div>
             ))}
           </div>
@@ -118,15 +118,15 @@ export function CostTracker() {
 
       {/* Resource Cards */}
       <div className="glass depth-surface rounded-xl p-6 border border-white/10">
-        <h3 className="text-lg font-bold text-white mb-6">Resource Usage</h3>
+        <h3 className="text-h3 font-semibold text-white mb-6">Resource Usage</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="glass depth-raised rounded-lg p-4 border border-white/10 hover:shadow-depth-floating transition-all">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">💾</span>
-              <span className="text-sm font-semibold text-gray-400">Storage</span>
+              <span className="text-body-sm font-semibold text-gray-400">Storage</span>
             </div>
-            <div className="text-3xl font-black text-white mb-1">€0</div>
-            <div className="text-xs text-emerald-400">GitHub Free Tier</div>
+            <div className="text-display font-black text-white mb-1">€0</div>
+            <div className="text-caption text-emerald-400">GitHub Free Tier</div>
           </div>
 
           <div className="glass depth-raised rounded-lg p-4 border border-white/10 hover:shadow-depth-floating transition-all">

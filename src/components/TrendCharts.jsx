@@ -64,6 +64,8 @@ export function TrendCharts() {
     }))
   }, [agentsData])
 
+  const labelsData = useMemo(() => [], [])
+
   const actionsTrend = useMemo(() =>
     actionsData.map(snap => ({
       timestamp: snap.timestamp,
@@ -155,6 +157,7 @@ export function TrendCharts() {
           <h3 className="text-sm font-semibold text-gray-300 mb-4">👥 Tasks by Agent</h3>
           <div className="h-56 sm:h-64 md:h-72">
             <BarChart series={agentsSeries} label="Active Tasks" />
+            <BarChart series={agentBarData} label="Active Tasks" />
           </div>
         </div>
 
@@ -162,6 +165,7 @@ export function TrendCharts() {
           <h3 className="text-sm font-semibold text-gray-300 mb-4">🏷️ Tasks by Label</h3>
           <div className="h-56 sm:h-64 md:h-72">
             <BarChart series={labelsSeries} label="Task Count" />
+            <BarChart series={labelsData} label="Task Count" />
           </div>
         </div>
       </div>
