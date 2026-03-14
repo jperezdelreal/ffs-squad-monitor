@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { TrendLine, BarChart, AreaChart } from './charts'
-import { useMetrics } from '../hooks/useMetrics'
 import { useStore } from '../store/store'
 import { CHART_COLORS } from './charts/chartConfig'
 import { ExportButton } from './ExportButton'
@@ -24,19 +23,28 @@ function getInitialTimeRange() {
 export function Analytics() {
   const [timeRange, setTimeRange] = useState(getInitialTimeRange)
 
+  const metricsIssues = useStore((state) => state.metricsIssues)
+  const metricsAgents = useStore((state) => state.metricsAgents)
+  const metricsActions = useStore((state) => state.metricsActions)
+  const metricsLoading = useStore((state) => state.metricsLoading)
+  const metricsError = useStore((state) => state.metricsError)
+  const issues = useStore((state) => state.issues)
+  const fetchAllMetrics = useStore((state) => state.fetchAllMetrics)
+
+  useEffect(() => {
+    fetchAllMetrics(timeRange)
+  }, [timeRange])
+
   const handleTimeRangeChange = useCallback((range) => {
     setTimeRange(range)
     try { localStorage.setItem(STORAGE_KEY, range) } catch { /* noop */ }
   }, [])
 
-  const { data: issuesData, loading: issuesLoading, error: issuesError, refetch: refetchIssues } = useMetrics('issues', timeRange)
-  const { data: agentsData, loading: agentsLoading, error: agentsError, refetch: refetchAgents } = useMetrics('agents', timeRange)
-  const { data: actionsData, loading: actionsLoading, error: actionsError, refetch: refetchActions } = useMetrics('actions', timeRange)
-
-  const { issues } = useStore()
-
-  const loading = issuesLoading || agentsLoading || actionsLoading
-  const hasError = issuesError || agentsError || actionsError
+  const issuesData = metricsIssues
+  const agentsData = metricsAgents
+  const actionsData = metricsActions
+  const loading = metricsLoading
+  const hasError = !!metricsError
 
   // Sprint velocity: issues opened vs closed per day
   const velocityData = useMemo(() => {
@@ -141,9 +149,7 @@ export function Analytics() {
   }, [actionsTrend, timeRange])
 
   function handleRefresh() {
-    refetchIssues()
-    refetchAgents()
-    refetchActions()
+    fetchAllMetrics(timeRange)
   }
 
   if (loading && !issuesData.length && !agentsData.length && !actionsData.length) {
@@ -198,7 +204,7 @@ export function Analytics() {
         <div className="glass rounded-xl p-4 border border-amber-500/30 bg-amber-500/10 flex items-center gap-3">
           <span className="text-xl">{'\u26A0\uFE0F'}</span>
           <span className="text-sm text-amber-300">
-            Some analytics data failed to load. {issuesError || agentsError || actionsError}
+            Some analytics data failed to load. {metricsError}
           </span>
           <button
             onClick={handleRefresh}

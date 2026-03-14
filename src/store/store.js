@@ -71,6 +71,14 @@ export const initialState = {
   agentsLoading: true,
   agentsError: null,
 
+  // Metrics (TrendCharts, Analytics)
+  metricsIssues: [],
+  metricsAgents: [],
+  metricsActions: [],
+  metricsLoading: false,
+  metricsError: null,
+  metricsTimeRange: '7d',
+
   // Notifications (browser alerts via SSE)
   notifications: [],
   unreadCount: 0,
@@ -204,6 +212,18 @@ export const useStore = create((set, get) => ({
         usageLoading: false,
         usageError: null,
       }),
+      'metrics:issues': () => set({
+        metricsIssues: data,
+        metricsLoading: false,
+      }),
+      'metrics:agents': () => set({
+        metricsAgents: data,
+        metricsLoading: false,
+      }),
+      'metrics:actions': () => set({
+        metricsActions: data,
+        metricsLoading: false,
+      }),
     }
 
     const key = `${channel}:${eventType.split(':').pop()}`
@@ -315,6 +335,54 @@ export const useStore = create((set, get) => ({
     }
   },
 
+  fetchMetrics: async (channel, timeRange) => {
+    const currentTimeRange = get().metricsTimeRange
+    if (timeRange && timeRange !== currentTimeRange) {
+      set({ metricsTimeRange: timeRange })
+    }
+    
+    const effectiveTimeRange = timeRange || currentTimeRange
+    
+    set({ metricsLoading: true, metricsError: null })
+    try {
+      const from = computeMetricsFrom(effectiveTimeRange)
+      const interval = effectiveTimeRange === '7d' ? '1h' : effectiveTimeRange === '30d' ? '6h' : '1d'
+      const url = `/api/metrics?channel=${encodeURIComponent(channel)}&from=${encodeURIComponent(from)}&interval=${interval}`
+      
+      const response = await fetch(url)
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const json = await response.json()
+      const data = json.data || []
+      
+      // Update the specific channel's data
+      if (channel === 'issues') {
+        set({ metricsIssues: data })
+      } else if (channel === 'agents') {
+        set({ metricsAgents: data })
+      } else if (channel === 'actions') {
+        set({ metricsActions: data })
+      }
+      
+      set({ metricsLoading: false })
+    } catch (error) {
+      console.error(`Failed to fetch metrics for ${channel}:`, error)
+      set({ metricsLoading: false, metricsError: `Failed to fetch ${channel} metrics` })
+    }
+  },
+
+  fetchAllMetrics: async (timeRange) => {
+    const { fetchMetrics } = get()
+    set({ metricsLoading: true, metricsError: null })
+    
+    await Promise.allSettled([
+      fetchMetrics('issues', timeRange),
+      fetchMetrics('agents', timeRange),
+      fetchMetrics('actions', timeRange),
+    ])
+    
+    set({ metricsLoading: false })
+  },
+
   refreshAll: async () => {
     const { fetchHeartbeat, fetchEvents, fetchIssues, fetchUsage, fetchAgents } = get()
     await Promise.allSettled([
@@ -327,3 +395,9 @@ export const useStore = create((set, get) => ({
     await fetchAgents()
   },
 }))
+
+function computeMetricsFrom(timeRange) {
+  const now = Date.now()
+  const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
+  return new Date(now - days * 24 * 60 * 60 * 1000).toISOString()
+}
