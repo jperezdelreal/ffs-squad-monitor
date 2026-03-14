@@ -117,3 +117,36 @@
 **File paths:**
 - src/components/PipelineVisualizer.jsx - Bottleneck detection, avg time, STUCK badge
 - src/components/TeamBoard.jsx - Blocked-time tracking, severity indicators, sort-to-top
+
+### Issue #112: Mobile Responsive Layout with Tailwind Breakpoints (2026-03-14)
+
+**Architecture decisions:**
+- Hamburger menu pattern for sidebar on mobile (<lg breakpoint)
+- Mobile-first responsive utilities using Tailwind breakpoints (sm:, md:, lg:)
+- Touch-friendly minimum tap targets (44x44px) on all interactive elements
+- Responsive padding/spacing scales down on smaller screens (p-3 sm:p-4 md:p-6)
+- Collapsible sidebar slides in/out with overlay on mobile, static on desktop
+- Header elements hide progressively (lg: health badge, md: dependency health, sm: connection status)
+
+**Key patterns:**
+- App.jsx manages mobileMenuOpen state and passes to Sidebar and Header
+- Sidebar uses fixed positioning with translate-x transforms for slide animation
+- Mobile overlay (bg-black/50) dismisses menu on click outside
+- Flex layouts switch from row to column on mobile (flex-col sm:flex-row)
+- Chart heights reduce on mobile (h-48 sm:h-64) for better viewport usage
+- Pipeline table uses sticky column headers with responsive cell padding
+- Button text and icons scale down on mobile with hidden labels where appropriate
+
+**File paths:**
+- src/App.jsx - Mobile menu state management, responsive padding on main
+- src/components/Sidebar.jsx - Collapsible sidebar with hamburger close button
+- src/components/Header.jsx - Hamburger menu button, progressive element hiding
+- src/components/ActivityFeed.jsx - Responsive filter bar, touch-friendly controls
+- src/components/PipelineVisualizer.jsx - Responsive table cells and legend
+- src/components/TrendCharts.jsx - Responsive chart heights and button wrapping
+- src/components/TimelineSwimlane.jsx - Responsive controls with hidden zoom on mobile
+
+**Testing:**
+- All 544 tests pass after responsive changes
+- No new test additions required (visual/layout changes only)
+- Responsive behavior verified manually at sm/md/lg breakpoints
