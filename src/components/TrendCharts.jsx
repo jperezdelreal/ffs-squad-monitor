@@ -136,31 +136,32 @@ export function TrendCharts() {
         />
       )}
 
-      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10">
+      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10 snap-start">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">📋 Issues Over Time</h3>
-        <div className="h-48 sm:h-64">
+        <div className="h-56 sm:h-64 md:h-72">
           <TrendLine data={issuesTrend} label="Total Issues" color="#06b6d4" timeRange={metricsTimeRange} />
         </div>
       </div>
 
-      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10">
+      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10 snap-start">
         <h3 className="text-sm font-semibold text-gray-300 mb-4">📊 Open vs Closed Issues</h3>
-        <div className="h-48 sm:h-64">
+        <div className="h-56 sm:h-64 md:h-72">
           <AreaChart series={issuesAreaSeries} timeRange={metricsTimeRange} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 snap-start">
         <div className="glass rounded-xl p-6 border border-white/10">
           <h3 className="text-sm font-semibold text-gray-300 mb-4">👥 Tasks by Agent</h3>
-          <div className="h-56">
-            <BarChart data={agentBarData} title="Tasks" />
+          <div className="h-56 sm:h-64 md:h-72">
+            <BarChart series={agentsSeries} label="Active Tasks" />
           </div>
         </div>
+
         <div className="glass rounded-xl p-6 border border-white/10">
-          <h3 className="text-sm font-semibold text-gray-300 mb-4">⚡ Actions Runs</h3>
-          <div className="h-56">
-            <TrendLine data={actionsTrend} label="Workflow Runs" color="#a855f7" timeRange={metricsTimeRange} />
+          <h3 className="text-sm font-semibold text-gray-300 mb-4">🏷️ Tasks by Label</h3>
+          <div className="h-56 sm:h-64 md:h-72">
+            <BarChart series={labelsSeries} label="Task Count" />
           </div>
         </div>
       </div>

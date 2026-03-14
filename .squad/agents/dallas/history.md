@@ -216,3 +216,47 @@
 - `src/components/Analytics.jsx` - Updated loading state
 - `src/components/TrendCharts.jsx` - Updated loading state
 - `src/components/TimelineSwimlane.jsx` - Updated loading state
+
+### Issue #142: Mobile Responsive Polish — Native App Feel (2026-03-14)
+
+**Architecture decisions:**
+- Bottom navigation bar visible only on mobile (<md breakpoint) as alternative to sidebar
+- Swipe gesture detection via custom `useSwipeGesture` hook (threshold-based horizontal swipe)
+- Touch event handlers (onTouchStart/Move/End) added to TimelineSwimlane for mobile drag
+- Scroll snap CSS utilities for smooth section-to-section scrolling on mobile
+- Safe area CSS utilities using `env(safe-area-inset-*)` for notched devices
+- Portrait-optimized chart heights: h-56 (mobile) → h-64 (sm) → h-72 (md)
+
+**Key patterns:**
+- MobileBottomNav component shows 4 primary views (Activity, Pipeline, Team, Charts)
+- Swipe gesture: right=open sidebar, left=close sidebar (threshold: 75px horizontal delta)
+- Touch drag on timeline uses same state/logic as mouse drag, just different event handlers
+- Main content area has `pb-20 md:pb-6` to accommodate bottom nav on mobile
+- Scroll container has `scroll-smooth snap-y snap-proximity` for native feel
+- Major card sections use `snap-start` class for scroll anchoring
+- Viewport meta includes `viewport-fit=cover` for full-screen notch support
+
+**Mobile optimizations:**
+- Bottom nav uses `safe-area-bottom` padding for devices with gesture bars
+- Touch-pan-x/y classes enable single-axis touch scrolling
+- Timeline drag preserves momentum feel with 1.5x multiplier
+- Charts increase height on larger screens (better data visibility)
+- All interactive elements maintain 44px minimum touch target size
+
+**File paths:**
+- `src/components/MobileBottomNav.jsx` - Mobile bottom navigation bar (new)
+- `src/hooks/useSwipeGesture.js` - Swipe gesture detection hook (new)
+- `src/App.jsx` - Integrated swipe gestures and bottom nav
+- `src/components/TimelineSwimlane.jsx` - Added touch event handlers
+- `src/components/TrendCharts.jsx` - Portrait-optimized chart heights
+- `src/components/ActivityFeed.jsx` - Added snap-start
+- `src/components/PipelineVisualizer.jsx` - Added snap-start, touch-pan-x
+- `src/components/TeamBoard.jsx` - Added snap-start
+- `src/index.css` - Safe area and scroll snap CSS utilities
+- `index.html` - Enhanced viewport meta tags
+
+**Testing:**
+- Build succeeds with no errors
+- 599 tests passing (no new test failures)
+- Manual testing recommended on mobile device or Chrome DevTools emulator
+

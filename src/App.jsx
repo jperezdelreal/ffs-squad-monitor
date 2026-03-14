@@ -15,11 +15,13 @@ import { Settings } from './components/Settings';
 import { NotificationHistory } from './components/NotificationHistory';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { CommandPalette } from './components/CommandPalette';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 import { useSSE } from './hooks/useSSE';
 import { useNotifications } from './hooks/useNotifications';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useSwipeGesture } from './hooks/useSwipeGesture';
 import { useStore } from './store/store';
 import { fadeIn, springPresets } from './lib/motion';
 
@@ -81,6 +83,21 @@ function App() {
   const handleToggleTheme = () => {
     document.documentElement.classList.toggle('light')
   };
+  // Swipe gesture support for mobile sidebar
+  useSwipeGesture({
+    onSwipeRight: () => {
+      if (window.innerWidth < 1024 && !sidebarOpen) {
+        setSidebarOpen(true);
+      }
+    },
+    onSwipeLeft: () => {
+      if (window.innerWidth < 1024 && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    },
+    threshold: 75,
+    enabled: true,
+  });
 
   const renderView = () => {
     switch (activeView) {
@@ -144,7 +161,7 @@ function App() {
             exportButtonRef={exportButtonRef}
           />
           <StalenessAlert staleness={staleness} heartbeatAgeMs={heartbeatAgeMs} />
-          <main id="main-content" className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
+          <main id="main-content" className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6 space-y-3 sm:space-y-4 md:space-y-6 scroll-smooth snap-y snap-proximity">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeView}
@@ -159,6 +176,7 @@ function App() {
             </AnimatePresence>
           </main>
         </div>
+        <MobileBottomNav activeView={activeView} onViewChange={handleViewChange} />
         <Settings />
         <NotificationHistory />
         <ShortcutsOverlay 
