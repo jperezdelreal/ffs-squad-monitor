@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { logger } from './logger.js'
+import { performanceTracker } from './performance-tracker.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -130,6 +131,17 @@ function migrate(instance) {
   })()
 }
 
+// Helper to track query timing
+function timedQuery(fn) {
+  const start = Date.now()
+  try {
+    return fn()
+  } finally {
+    const duration = Date.now() - start
+    performanceTracker.recordSqliteQuery(duration)
+  }
+}
+
 // --- Snapshot CRUD ---
 
 export function insertSnapshot(channel, timestamp, data, hash = null) {
@@ -137,14 +149,14 @@ export function insertSnapshot(channel, timestamp, data, hash = null) {
   const stmt = db.prepare(
     'INSERT INTO metrics_snapshots (channel, timestamp, data, hash) VALUES (?, ?, ?, ?)'
   )
-  return stmt.run(channel, timestamp, JSON.stringify(data), hash)
+  return timedQuery(() => stmt.run(channel, timestamp, JSON.stringify(data), hash))
 }
 
 export function getLatestSnapshotHash(channel) {
   const db = getDb()
-  const row = db.prepare(
+  const row = timedQuery(() => db.prepare(
     'SELECT hash FROM metrics_snapshots WHERE channel = ? ORDER BY timestamp DESC LIMIT 1'
-  ).get(channel)
+  ).get(channel))
   return row?.hash || null
 }
 
@@ -164,7 +176,7 @@ export function querySnapshots(channel, from, to, interval = '5m') {
   }
 
   query += ' ORDER BY timestamp ASC'
-  const rows = db.prepare(query).all(...params)
+  const rows = timedQuery(() => db.prepare(query).all(...params))
 
   const parsed = rows.map(r => ({
     id: r.id,

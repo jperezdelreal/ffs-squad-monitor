@@ -10,6 +10,7 @@ import { closeDb, getDbStats } from './lib/metrics-db.js';
 import { setupSwagger } from './lib/swagger.js';
 import { dataPoller } from './lib/data-poller.js';
 import { startLogIngestion, stopLogIngestion } from './lib/log-ingestion.js';
+import { performanceMiddleware, performanceTracker } from './lib/performance-tracker.js';
 
 // Import route handlers
 import heartbeatRoute from './api/heartbeat.js';
@@ -28,12 +29,14 @@ import sseRoute from './api/sse.js';
 import { exportIssuesRoute, exportMetricsRoute, exportUsageRoute, exportArchiveRoute } from './api/export.js';
 import searchLogsRoute from './api/search.js';
 import tokensRoute from './api/tokens.js';
+import performanceRoute from './api/performance.js';
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(performanceMiddleware);
 app.use(requestLogger);
 
 // Swagger UI at /api/docs
@@ -59,6 +62,7 @@ app.get('/api/metrics', metricsRoute);
 app.get('/api/metrics/summary', metricsSummaryRoute);
 app.get('/api/metrics/agents', metricsAgentsRoute);
 app.get('/api/metrics/stats', metricsStatsRoute);
+app.get('/api/metrics/performance', performanceRoute);
 app.get('/api/sse', sseRoute);
 app.get('/api/export/issues', exportIssuesRoute);
 app.get('/api/export/metrics', exportMetricsRoute);
@@ -128,7 +132,7 @@ app.listen(PORT, () => {
       '/api/heartbeat', '/api/logs/files', '/api/logs/stream', '/api/logs',
       '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
       '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/usage/tokens', '/api/health',
-      '/api/metrics', '/api/metrics/summary', '/api/metrics/agents', '/api/metrics/stats',
+      '/api/metrics', '/api/metrics/summary', '/api/metrics/agents', '/api/metrics/stats', '/api/metrics/performance',
       '/api/sse', '/api/export/issues', '/api/export/metrics', '/api/export/usage', '/api/export/archive',
       '/api/docs', '/health',
     ],
