@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+vi.mock('../performance-tracker.js', () => ({
+  performanceTracker: {
+    setSseConnectionCount: vi.fn(),
+  },
+}))
+
 vi.mock('../logger.js', () => ({
   logger: {
     child: () => ({

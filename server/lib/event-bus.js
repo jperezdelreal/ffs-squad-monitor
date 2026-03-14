@@ -69,11 +69,13 @@ export class EventBus extends EventEmitter {
       channels,
       connectedAt: new Date().toISOString(),
     })
+    performanceTracker.setSseConnectionCount(this._connections.size)
     this._log.info('SSE connection added', { connectionId, channels, total: this._connections.size })
   }
 
   removeConnection(connectionId) {
     this._connections.delete(connectionId)
+    performanceTracker.setSseConnectionCount(this._connections.size)
     this._log.info('SSE connection removed', { connectionId, total: this._connections.size })
   }
 

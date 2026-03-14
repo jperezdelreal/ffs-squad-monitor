@@ -10,6 +10,7 @@ import {
 } from './metrics-db.js'
 import { snapshotAgentProductivity } from './agent-metrics.js'
 import { logger } from './logger.js'
+import { performanceTracker } from './performance-tracker.js'
 
 const log = logger.child({ service: 'snapshot' })
 
@@ -18,6 +19,7 @@ const INTERVALS = {
   agents: 5 * 60 * 1000,
   actions: 15 * 60 * 1000,
   agentProductivity: 15 * 60 * 1000,
+  performance: 5 * 60 * 1000,
 }
 
 const timers = {}
@@ -163,6 +165,25 @@ async function snapshotActions() {
   }
 }
 
+// --- Performance Metrics Snapshot ---
+
+async function snapshotPerformance() {
+  try {
+    const metrics = performanceTracker.getMetrics()
+
+    if (skipIfUnchanged('performance', metrics)) return
+    const ts = new Date().toISOString()
+    insertSnapshot('performance', ts, metrics, dataHash(metrics))
+    log.info('Performance snapshot saved', {
+      requestsPerMinute: metrics.requestsPerMinute,
+      p95: metrics.responseTimes.p95,
+      errorRate: metrics.errorRate,
+    })
+  } catch (err) {
+    log.error('Performance snapshot failed', { error: err.message })
+  }
+}
+
 // --- Daily Summary ---
 
 async function computeDailySummary() {
@@ -176,7 +197,7 @@ async function computeDailySummary() {
     const from = `${yesterday}T00:00:00.000Z`
     const to = `${yesterday}T23:59:59.999Z`
 
-    for (const channel of ['issues', 'agents', 'actions']) {
+    for (const channel of ['issues', 'agents', 'actions', 'performance']) {
       const snapshots = querySnapshots(channel, from, to, '5m')
       if (!snapshots.length) continue
 
@@ -207,6 +228,7 @@ export function startSnapshotService() {
     agentInterval: '5m',
     actionsInterval: '15m',
     agentProductivityInterval: '15m',
+    performanceInterval: '5m',
   })
 
   // Run initial snapshots after a short delay (let server start)
@@ -215,6 +237,7 @@ export function startSnapshotService() {
     snapshotAgents()
     snapshotActions()
     snapshotAgentProductivity()
+    snapshotPerformance()
     computeDailySummary()
   }, 10_000)
 
@@ -222,6 +245,7 @@ export function startSnapshotService() {
   timers.agents = setInterval(snapshotAgents, INTERVALS.agents)
   timers.actions = setInterval(snapshotActions, INTERVALS.actions)
   timers.agentProductivity = setInterval(snapshotAgentProductivity, INTERVALS.agentProductivity)
+  timers.performance = setInterval(snapshotPerformance, INTERVALS.performance)
   // Check daily summary every hour
   timers.daily = setInterval(computeDailySummary, 60 * 60 * 1000)
 }
@@ -235,4 +259,4 @@ export function stopSnapshotService() {
 }
 
 // Export for testing
-export { snapshotIssues, snapshotAgents, snapshotActions, computeDailySummary }
+export { snapshotIssues, snapshotAgents, snapshotActions, snapshotPerformance, computeDailySummary }

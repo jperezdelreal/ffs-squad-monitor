@@ -31,6 +31,23 @@ vi.mock('../agent-metrics.js', () => ({
   snapshotAgentProductivity: vi.fn(),
 }))
 
+vi.mock('../performance-tracker.js', () => ({
+  performanceTracker: {
+    getMetrics: vi.fn(() => ({
+      windowMs: 300000,
+      timestamp: new Date().toISOString(),
+      requestsPerMinute: 0,
+      totalRequests: 0,
+      totalErrors: 0,
+      errorRate: 0,
+      responseTimes: { p50: 0, p95: 0, p99: 0, min: 0, max: 0, avg: 0 },
+      byEndpoint: {},
+      sseConnections: 0,
+      sqliteQueryTime: { p50: 0, p95: 0, p99: 0, avg: 0 },
+    })),
+  },
+}))
+
 vi.mock('../../config.js', () => ({
   REPOS: [
     { id: 'flora', github: 'jperezdelreal/flora', color: '#ef4444' },
@@ -47,6 +64,7 @@ import {
   snapshotIssues,
   snapshotAgents,
   snapshotActions,
+  snapshotPerformance,
   computeDailySummary,
 } from '../snapshot-service.js'
 
@@ -203,6 +221,7 @@ describe('Snapshot Service', () => {
     it('runs initial snapshots after 10s delay', async () => {
       startSnapshotService()
       expect(githubFetch).not.toHaveBeenCalled()
+      vi.clearAllMocks()
       await vi.advanceTimersByTimeAsync(10_000)
       expect(githubFetch).toHaveBeenCalled()
     })
