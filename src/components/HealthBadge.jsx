@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { HEALTH_LEVELS } from '../lib/health'
+import { CounterAnimation } from './PulseIndicator'
 
 const LEVEL_STYLES = {
   [HEALTH_LEVELS.GREEN]: {
@@ -24,7 +26,18 @@ const LEVEL_STYLES = {
 
 export function HealthBadge({ score, level, breakdown }) {
   const [showTooltip, setShowTooltip] = useState(false)
+  const [prevScore, setPrevScore] = useState(score)
+  const [hasChanged, setHasChanged] = useState(false)
   const style = LEVEL_STYLES[level] || LEVEL_STYLES[HEALTH_LEVELS.RED]
+
+  useEffect(() => {
+    if (score !== prevScore) {
+      setHasChanged(true)
+      setPrevScore(score)
+      const timeout = setTimeout(() => setHasChanged(false), 1500)
+      return () => clearTimeout(timeout)
+    }
+  }, [score, prevScore])
 
   return (
     <div
@@ -32,10 +45,18 @@ export function HealthBadge({ score, level, breakdown }) {
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <div
+      <motion.div
         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 cursor-default"
         role="status"
         aria-label={`Health: ${style.label} (${score}%)`}
+        animate={hasChanged ? {
+          boxShadow: [
+            '0 0 0px rgba(6, 182, 212, 0)',
+            '0 0 20px rgba(6, 182, 212, 0.6)',
+            '0 0 0px rgba(6, 182, 212, 0)',
+          ],
+        } : {}}
+        transition={{ duration: 1.5 }}
       >
         <div className="relative">
           <div className={`w-2.5 h-2.5 rounded-full ${style.dot}`} />
@@ -44,9 +65,9 @@ export function HealthBadge({ score, level, breakdown }) {
           )}
         </div>
         <span className={`text-xs font-medium ${style.text}`}>
-          {score}%
+          <CounterAnimation value={score} />%
         </span>
-      </div>
+      </motion.div>
 
       {showTooltip && (
         <div className="absolute top-full right-0 mt-2 w-64 p-3 rounded-lg glass border border-white/10 shadow-xl z-50">
