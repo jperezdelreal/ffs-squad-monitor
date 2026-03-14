@@ -5,6 +5,7 @@ data/
 .env
 *.log
 bundle-report.json
+benchmark-report.json
 # Squad: ignore runtime state (logs, inbox, sessions)
 .squad/orchestration-log/
 .squad/log/
@@ -12,3 +13,7 @@ bundle-report.json
 .squad/sessions/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+# Playwright
+test-results/
+playwright-report/
+blob-report/
