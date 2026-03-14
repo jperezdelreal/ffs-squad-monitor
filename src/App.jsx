@@ -10,9 +10,12 @@ import { CostTracker } from './components/CostTracker';
 import { TrendCharts } from './components/TrendCharts';
 import { Analytics } from './components/Analytics';
 import { TimelineSwimlane } from './components/TimelineSwimlane';
+import { Settings } from './components/Settings';
+import { NotificationHistory } from './components/NotificationHistory';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 import { useSSE } from './hooks/useSSE';
+import { useNotifications } from './hooks/useNotifications';
 
 function App() {
   const [activeView, setActiveView] = useState('activity');
@@ -21,6 +24,7 @@ function App() {
   const { status: sseStatus, reconnect: sseReconnect } = useSSE({
     channels: ['heartbeat', 'events', 'issues', 'usage'],
   });
+  useNotifications();
 
   const renderView = () => {
     switch (activeView) {
@@ -65,6 +69,8 @@ function App() {
             {renderView()}
           </main>
         </div>
+        <Settings />
+        <NotificationHistory />
       </div>
     </ErrorBoundary>
   );
