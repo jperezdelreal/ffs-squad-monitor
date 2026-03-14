@@ -11,6 +11,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:gdd'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/1',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     number: 2,
@@ -19,6 +20,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:code'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/2',
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     number: 3,
@@ -27,6 +29,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:deploy'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/3',
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     number: 4,
@@ -35,6 +38,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:build', 'blocked-by:deps'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/4',
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     number: 5,
@@ -43,6 +47,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/SecondRepo',
     labels: ['pipeline:proposal'],
     url: 'https://github.com/jperezdelreal/SecondRepo/issues/5',
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ]
 
