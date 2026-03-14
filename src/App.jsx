@@ -19,12 +19,18 @@ import { useNotifications } from './hooks/useNotifications';
 
 function App() {
   const [activeView, setActiveView] = useState('activity');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { lastUpdate, isConnected } = usePolling();
   const { score, level, breakdown, staleness, heartbeatAgeMs } = useHealthScore();
   const { status: sseStatus, reconnect: sseReconnect } = useSSE({
     channels: ['heartbeat', 'events', 'issues', 'usage'],
   });
   useNotifications();
+
+  const handleViewChange = (view) => {
+    setActiveView(view);
+    setSidebarOpen(false);
+  };
 
   const renderView = () => {
     switch (activeView) {
@@ -53,7 +59,20 @@ function App() {
         {/* Subtle gradient background */}
         <div className="fixed inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5 pointer-events-none" />
         
-        <Sidebar activeView={activeView} onViewChange={setActiveView} />
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/60 z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
+        <Sidebar 
+          activeView={activeView} 
+          onViewChange={handleViewChange}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
         <div className="flex-1 flex flex-col overflow-hidden relative z-10">
           <Header
             lastUpdate={lastUpdate}
@@ -63,9 +82,10 @@ function App() {
             healthBreakdown={breakdown}
             sseStatus={sseStatus}
             onSSEReconnect={sseReconnect}
+            onMenuClick={() => setSidebarOpen(true)}
           />
           <StalenessAlert staleness={staleness} heartbeatAgeMs={heartbeatAgeMs} />
-          <main className="flex-1 overflow-y-auto p-6 space-y-6">
+          <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
             {renderView()}
           </main>
         </div>

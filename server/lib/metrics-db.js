@@ -13,7 +13,7 @@ const RETENTION_DAYS = 30
 
 let db = null
 
-const SCHEMA_VERSION = 1
+const SCHEMA_VERSION = 2
 
 const MIGRATIONS = [
   `CREATE TABLE IF NOT EXISTS metrics_snapshots (
@@ -36,6 +36,48 @@ const MIGRATIONS = [
   `CREATE TABLE IF NOT EXISTS schema_version (
     version INTEGER NOT NULL
   )`,
+  // Log entries storage for FTS5
+  `CREATE TABLE IF NOT EXISTS log_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    agent TEXT NOT NULL,
+    level TEXT NOT NULL,
+    message TEXT NOT NULL,
+    context TEXT,
+    exit_code INTEGER,
+    duration_ms INTEGER,
+    consecutive_failures INTEGER,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_log_entries_timestamp ON log_entries (timestamp DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_log_entries_agent ON log_entries (agent)`,
+  `CREATE INDEX IF NOT EXISTS idx_log_entries_level ON log_entries (level)`,
+  // FTS5 virtual table for full-text search
+  `CREATE VIRTUAL TABLE IF NOT EXISTS log_entries_fts USING fts5(
+    message,
+    context,
+    agent UNINDEXED,
+    level UNINDEXED,
+    timestamp UNINDEXED,
+    content='log_entries',
+    content_rowid='id',
+    tokenize='porter unicode61 remove_diacritics 2'
+  )`,
+  // Triggers to keep FTS5 in sync with log_entries
+  `CREATE TRIGGER IF NOT EXISTS log_entries_ai AFTER INSERT ON log_entries BEGIN
+    INSERT INTO log_entries_fts(rowid, message, context, agent, level, timestamp)
+    VALUES (new.id, new.message, new.context, new.agent, new.level, new.timestamp);
+  END`,
+  `CREATE TRIGGER IF NOT EXISTS log_entries_ad AFTER DELETE ON log_entries BEGIN
+    INSERT INTO log_entries_fts(log_entries_fts, rowid, message, context, agent, level, timestamp)
+    VALUES ('delete', old.id, old.message, old.context, old.agent, old.level, old.timestamp);
+  END`,
+  `CREATE TRIGGER IF NOT EXISTS log_entries_au AFTER UPDATE ON log_entries BEGIN
+    INSERT INTO log_entries_fts(log_entries_fts, rowid, message, context, agent, level, timestamp)
+    VALUES ('delete', old.id, old.message, old.context, old.agent, old.level, old.timestamp);
+    INSERT INTO log_entries_fts(rowid, message, context, agent, level, timestamp)
+    VALUES (new.id, new.message, new.context, new.agent, new.level, new.timestamp);
+  END`,
 ]
 
 export function getDb() {
@@ -243,6 +285,170 @@ export function getDbStats() {
     summaries: summaryCount,
     retentionDays: RETENTION_DAYS,
   }
+}
+
+// --- Log Ingestion ---
+
+export function insertLogEntry(entry) {
+  const db = getDb()
+  const stmt = db.prepare(`
+    INSERT INTO log_entries (timestamp, agent, level, message, context, exit_code, duration_ms, consecutive_failures)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `)
+  return stmt.run(
+    entry.timestamp,
+    entry.agent,
+    entry.level,
+    entry.message || '',
+    entry.context ? JSON.stringify(entry.context) : null,
+    entry.exitCode ?? null,
+    entry.durationMs ?? null,
+    entry.consecutiveFailures ?? 0
+  )
+}
+
+export function bulkInsertLogEntries(entries) {
+  const db = getDb()
+  return db.transaction(() => {
+    const stmt = db.prepare(`
+      INSERT INTO log_entries (timestamp, agent, level, message, context, exit_code, duration_ms, consecutive_failures)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    for (const entry of entries) {
+      stmt.run(
+        entry.timestamp,
+        entry.agent,
+        entry.level,
+        entry.message || '',
+        entry.context ? JSON.stringify(entry.context) : null,
+        entry.exitCode ?? null,
+        entry.durationMs ?? null,
+        entry.consecutiveFailures ?? 0
+      )
+    }
+  })()
+}
+
+export function getLatestLogTimestamp(agent = null) {
+  const db = getDb()
+  let query = 'SELECT MAX(timestamp) as latest FROM log_entries'
+  const params = []
+  if (agent) {
+    query += ' WHERE agent = ?'
+    params.push(agent)
+  }
+  const row = db.prepare(query).get(...params)
+  return row?.latest || null
+}
+
+// --- FTS5 Search ---
+
+export function searchLogs(options = {}) {
+  const db = getDb()
+  const { query, agent, level, from, to, limit = 100, offset = 0 } = options
+
+  // Validate query
+  if (!query || typeof query !== 'string' || query.trim().length === 0) {
+    return { results: [], total: 0, hasMore: false }
+  }
+
+  // Build FTS5 query with filters
+  let ftsQuery = query.trim()
+  let whereClause = ''
+  const params = []
+
+  // FTS5 query parameter
+  params.push(ftsQuery)
+
+  // Build filter conditions for structured data (agent, level, date range)
+  const conditions = []
+  if (agent) {
+    conditions.push('log_entries.agent = ?')
+    params.push(agent)
+  }
+  if (level) {
+    conditions.push('log_entries.level = ?')
+    params.push(level)
+  }
+  if (from) {
+    conditions.push('log_entries.timestamp >= ?')
+    params.push(from)
+  }
+  if (to) {
+    conditions.push('log_entries.timestamp <= ?')
+    params.push(to)
+  }
+
+  if (conditions.length > 0) {
+    whereClause = ' AND ' + conditions.join(' AND ')
+  }
+
+  // Query with snippet() for context highlighting
+  const sql = `
+    SELECT
+      log_entries.id,
+      log_entries.timestamp,
+      log_entries.agent,
+      log_entries.level,
+      log_entries.message,
+      log_entries.context,
+      log_entries.exit_code,
+      log_entries.duration_ms,
+      log_entries_fts.rank,
+      snippet(log_entries_fts, 0, '<mark>', '</mark>', '...', 32) as message_snippet,
+      snippet(log_entries_fts, 1, '<mark>', '</mark>', '...', 32) as context_snippet
+    FROM log_entries_fts
+    JOIN log_entries ON log_entries.id = log_entries_fts.rowid
+    WHERE log_entries_fts MATCH ?${whereClause}
+    ORDER BY log_entries_fts.rank, log_entries.timestamp DESC
+    LIMIT ? OFFSET ?
+  `
+
+  params.push(limit + 1) // Fetch one extra to check hasMore
+  params.push(offset)
+
+  let rows = []
+  try {
+    rows = db.prepare(sql).all(...params)
+  } catch (err) {
+    // FTS5 query syntax error
+    logger.error('FTS5 search query error', { query: ftsQuery, error: err.message })
+    throw new Error(`Invalid search query: ${err.message}`)
+  }
+
+  // Check if there are more results
+  const hasMore = rows.length > limit
+  if (hasMore) {
+    rows = rows.slice(0, limit)
+  }
+
+  // Get total count (without limit/offset) for pagination
+  const countSql = `
+    SELECT COUNT(*) as total
+    FROM log_entries_fts
+    JOIN log_entries ON log_entries.id = log_entries_fts.rowid
+    WHERE log_entries_fts MATCH ?${whereClause}
+  `
+  const countParams = [ftsQuery, ...params.slice(1, params.length - 2)] // Exclude limit/offset
+  const countRow = db.prepare(countSql).get(...countParams)
+  const total = countRow?.total || 0
+
+  // Format results
+  const results = rows.map(row => ({
+    id: row.id,
+    timestamp: row.timestamp,
+    agent: row.agent,
+    level: row.level,
+    message: row.message,
+    messageSnippet: row.message_snippet,
+    context: row.context ? JSON.parse(row.context) : null,
+    contextSnippet: row.context_snippet,
+    exitCode: row.exit_code,
+    durationMs: row.duration_ms,
+    rank: row.rank,
+  }))
+
+  return { results, total, hasMore, limit, offset }
 }
 
 // --- Lifecycle ---
