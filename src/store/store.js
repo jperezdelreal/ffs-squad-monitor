@@ -27,6 +27,10 @@ export const initialState = {
   agents: [],
   agentsLoading: true,
   agentsError: null,
+
+  // Notifications (browser alerts via SSE)
+  notifications: [],
+  notificationSSEStatus: 'disconnected',
 }
 
 export const useStore = create((set, get) => ({
@@ -45,6 +49,18 @@ export const useStore = create((set, get) => ({
   }),
 
   setLastUpdate: (timestamp) => set({ lastUpdate: timestamp }),
+
+  addNotification: (notification) => set((state) => ({
+    notifications: [notification, ...state.notifications].slice(0, 100),
+  })),
+
+  removeNotification: (id) => set((state) => ({
+    notifications: state.notifications.filter(n => n.id !== id),
+  })),
+
+  clearNotifications: () => set({ notifications: [] }),
+
+  setNotificationSSEStatus: (status) => set({ notificationSSEStatus: status }),
 
   fetchHeartbeat: async () => {
     try {
