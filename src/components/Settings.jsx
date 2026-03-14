@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/store'
-import { slideInRight, springPresets } from '../lib/motion'
+import { slideInRight, springPresets, toggleSwitch, toggleBackground } from '../lib/motion'
 
 const ALERT_TYPE_LABELS = {
   agentBlocked: 'Agent blocked',
@@ -16,20 +16,21 @@ function Toggle({ checked, onChange, label }) {
   return (
     <label className="flex items-center justify-between gap-3 py-2 cursor-pointer group">
       <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{label}</span>
-      <button
+      <motion.button
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
-          checked ? 'bg-cyan-500' : 'bg-gray-600'
-        }`}
+        animate={checked ? 'on' : 'off'}
+        variants={toggleBackground}
+        whileTap={{ scale: 0.95 }}
+        className="relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
       >
-        <span
-          className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-lg transform transition-transform duration-200 ${
-            checked ? 'translate-x-4' : 'translate-x-0'
-          }`}
+        <motion.span
+          animate={checked ? 'on' : 'off'}
+          variants={toggleSwitch}
+          className="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-lg"
         />
-      </button>
+      </motion.button>
     </label>
   )
 }

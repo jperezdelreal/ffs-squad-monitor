@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
 import { SkeletonContainer, SkeletonGrid, Skeleton } from './Skeleton';
+import { buttonPress, cardHover } from '../lib/motion';
 
 const BOTTLENECK_THRESHOLD = 5;
 
@@ -145,12 +147,16 @@ export function PipelineVisualizer() {
           <div className="text-5xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-white mb-2">Connection Error</h3>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <button
+          <motion.button
             onClick={fetchIssues}
+            initial="rest"
+            whileHover="hover"
+            whileTap="tap"
+            variants={buttonPress}
             className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
           >
             Retry
-          </button>
+          </motion.button>
         </div>
       </div>
     );
@@ -169,15 +175,19 @@ export function PipelineVisualizer() {
           </div>
           <div className="flex items-center gap-2">
             <ExportButton endpoint="/api/export/issues?state=all" label="Export" />
-            <button
+            <motion.button
               onClick={fetchIssues}
+              initial="rest"
+              whileHover="hover"
+              whileTap="tap"
+              variants={buttonPress}
               className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               Refresh
-            </button>
+            </motion.button>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-4 text-xs">
@@ -254,8 +264,12 @@ export function PipelineVisualizer() {
                       ].filter(Boolean).join(' ')
                       return (
                         <td key={stage.id} className="p-3">
-                          <div
+                          <motion.div
                             onClick={() => setSelectedCell({ repo, stage: stage.name, data: stageData })}
+                            initial="rest"
+                            whileHover="hover"
+                            whileTap="tap"
+                            variants={cardHover}
                             className={cellClasses}
                           >
                             <div className="text-2xl mb-1">{getStatusIcon(stageData.status)}</div>
@@ -277,7 +291,7 @@ export function PipelineVisualizer() {
                                 STUCK
                               </div>
                             )}
-                          </div>
+                          </motion.div>
                         </td>
                       );
                     })}

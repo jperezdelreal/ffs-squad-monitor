@@ -89,3 +89,55 @@ export const layoutTransition = {
   layout: true,
   transition: springPresets.default,
 }
+
+// Micro-interactions - hover and tap feedback
+export const hoverLift = {
+  rest: { scale: 1, y: 0 },
+  hover: { scale: 1.02, y: -2 },
+  tap: { scale: 0.98, y: 0 },
+}
+
+export const hoverGlow = {
+  rest: { boxShadow: '0 0 0 rgba(6, 182, 212, 0)' },
+  hover: { boxShadow: '0 8px 24px rgba(6, 182, 212, 0.2)' },
+}
+
+export const cardHover = {
+  rest: { scale: 1, y: 0, transition: springPresets.snappy },
+  hover: { scale: 1.02, y: -4, transition: springPresets.snappy },
+  tap: { scale: 0.98, y: 0, transition: springPresets.snappy },
+}
+
+export const buttonPress = {
+  rest: { scale: 1 },
+  hover: { scale: 1.05 },
+  tap: { scale: 0.95 },
+}
+
+export const iconSpin = {
+  rest: { rotate: 0 },
+  hover: { rotate: 180, transition: { duration: 0.3 } },
+}
+
+export const iconBounce = {
+  rest: { scale: 1 },
+  hover: { scale: 1.2, rotate: [0, -10, 10, -10, 0], transition: springPresets.bouncy },
+}
+
+// Ripple effect for interactive elements
+export const ripple = {
+  initial: { scale: 0, opacity: 0.5 },
+  animate: { scale: 2, opacity: 0 },
+  transition: { duration: 0.6, ease: 'easeOut' },
+}
+
+// Toggle switch animation
+export const toggleSwitch = {
+  on: { x: 16, transition: springPresets.snappy },
+  off: { x: 0, transition: springPresets.snappy },
+}
+
+export const toggleBackground = {
+  on: { backgroundColor: 'rgb(6, 182, 212)', transition: springPresets.snappy },
+  off: { backgroundColor: 'rgb(75, 85, 99)', transition: springPresets.snappy },
+}

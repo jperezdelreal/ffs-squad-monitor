@@ -1,10 +1,12 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { HealthBadge } from './HealthBadge'
 import { ConnectionStatus } from './ConnectionStatus'
 import { DependencyHealth } from './DependencyHealth'
 import { NotificationBell } from './NotificationHistory'
 import { ExportButton } from './ExportButton'
 import { useTheme } from '../hooks/useTheme'
+import { buttonPress, iconSpin } from '../lib/motion'
 
 export function Header({ lastUpdate, isConnected, healthScore, healthLevel, healthBreakdown, sseStatus, onSSEReconnect, onMenuClick, exportButtonRef }) {
   const { theme, toggleTheme } = useTheme()
@@ -22,15 +24,19 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
     <header className="glass border-b border-white/10 dark:border-white/10 light:border-black/10 px-3 sm:px-4 md:px-6 py-3 md:py-4 backdrop-blur-xl">
       <div className="flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <button
+          <motion.button
             onClick={onMenuClick}
+            initial="rest"
+            whileHover="hover"
+            whileTap="tap"
+            variants={buttonPress}
             className="lg:hidden p-2 text-gray-400 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Open menu"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-          </button>
+          </motion.button>
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white dark:text-white light:text-gray-900 tracking-tight truncate">Squad Monitor</h1>
           <div className="hidden sm:block h-6 w-px bg-white/10 dark:bg-white/10 light:bg-black/10" />
           <span className="hidden sm:inline text-xs sm:text-sm text-gray-400 dark:text-gray-400 light:text-gray-500 font-mono truncate">FFS Operations</span>
@@ -52,12 +58,17 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
           <div className="hidden md:block" ref={exportButtonRef}>
             <ExportButton endpoint="/api/events" label="Export" />
           </div>
-          <button
+          <motion.button
             onClick={toggleTheme}
+            initial="rest"
+            whileHover="hover"
+            whileTap="tap"
+            variants={buttonPress}
             className="p-2 rounded-lg text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-black/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           >
+            <motion.div variants={iconSpin}>
             {theme === 'dark' ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -67,7 +78,8 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
-          </button>
+            </motion.div>
+          </motion.button>
           <NotificationBell />
           <div className="hidden md:flex items-center gap-2 text-sm text-gray-400 dark:text-gray-400 light:text-gray-500">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
