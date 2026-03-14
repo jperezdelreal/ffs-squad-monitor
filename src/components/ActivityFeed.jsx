@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { getConfigSync } from '../services/config';
 import { ExportButton } from './ExportButton';
-import { staggerContainer, staggerItem, springPresets } from '../lib/motion';
+import { staggerContainer, staggerItem, springPresets, cardHover } from '../lib/motion';
 import { SkeletonContainer, SkeletonList, SkeletonText } from './Skeleton';
 import { PulseDot } from './PulseIndicator';
 

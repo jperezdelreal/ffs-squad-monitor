@@ -131,8 +131,8 @@ export function TeamBoard() {
       <div className="glass depth-surface rounded-xl p-6 border border-white/10">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">Team Board</h2>
-            <p className="text-sm text-gray-400">{agents.filter(a => a.status === 'active').length} of {agents.length} agents active</p>
+            <h2 className="text-h2 font-semibold text-white mb-1">Team Board</h2>
+            <p className="text-body-sm text-gray-400">{agents.filter(a => a.status === 'active').length} of {agents.length} agents active</p>
           </div>
           <div className="flex items-center gap-2">
             <ExportButton endpoint="/api/export/issues" label="Export" />
@@ -228,8 +228,8 @@ export function TeamBoard() {
               <div className={`mb-3 p-3 rounded-lg border ${blocked.severity.color}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <div className={`w-2 h-2 rounded-full ${blocked.severity.dot} animate-pulse`} />
-                  <span className="text-xs font-semibold uppercase">{blocked.severity.label}</span>
-                  <span className="text-xs ml-auto font-mono">{formatBlockedDuration(blocked.longestBlock)}</span>
+                  <span className="text-caption font-semibold uppercase tracking-wider">{blocked.severity.label}</span>
+                  <span className="text-caption ml-auto font-mono">{formatBlockedDuration(blocked.longestBlock)}</span>
                 </div>
                 {blocked.blockedIssues.slice(0, 2).map(bi => (
                   <div key={bi.number} className="text-xs mt-1 truncate opacity-80">
@@ -246,9 +246,9 @@ export function TeamBoard() {
 
             {agent.currentTask ? (
               <div className="mt-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                <div className="text-xs font-semibold text-cyan-400 mb-2">CURRENT TASK</div>
+                <div className="text-caption font-semibold text-cyan-400 mb-2 uppercase tracking-wide">Current Task</div>
                 {typeof agent.currentTask === 'string' ? (
-                  <p className="text-sm text-white line-clamp-2">{agent.currentTask}</p>
+                  <p className="text-body-sm text-white line-clamp-2">{agent.currentTask}</p>
                 ) : (
                   <a
                     href={agent.currentTask.url}
@@ -279,7 +279,7 @@ export function TeamBoard() {
 
       {/* Workload Chart */}
       <div className="glass rounded-xl p-6 border border-white/10">
-        <h3 className="text-lg font-bold text-white mb-6">Workload Distribution</h3>
+        <h3 className="text-h3 font-semibold text-white mb-6">Workload Distribution</h3>
         <motion.div 
           variants={staggerContainer}
           initial="initial"

@@ -161,8 +161,8 @@ export function PipelineVisualizer() {
       <div className="glass depth-surface rounded-xl p-4 sm:p-6 border border-white/10 snap-start">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Pipeline Status</h2>
-            <p className="text-sm text-gray-400">{repoCount} repositories tracked</p>
+            <h2 className="text-h2 md:text-h1 font-semibold text-white mb-1">Pipeline Status</h2>
+            <p className="text-body-sm text-gray-400">{repoCount} repositories tracked</p>
           </div>
           <div className="flex items-center gap-2">
             <ExportButton endpoint="/api/export/issues?state=all" label="Export" />
@@ -207,7 +207,7 @@ export function PipelineVisualizer() {
         <div className="glass rounded-xl p-12 border border-white/10">
           <div className="text-center">
             <div className="text-6xl mb-4">🔄</div>
-            <h3 className="text-lg font-semibold text-white mb-2">No Pipeline Data</h3>
+            <h3 className="text-body-lg font-semibold text-white mb-2">No Pipeline Data</h3>
             <p className="text-gray-400 text-sm">Pipeline stages will appear here once configured</p>
           </div>
         </div>
@@ -217,11 +217,11 @@ export function PipelineVisualizer() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">
-                  <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-semibold text-gray-300 sticky left-0 bg-[#151920]/95 backdrop-blur-sm z-10">
+                  <th className="text-left p-3 sm:p-4 text-caption sm:text-body-sm font-semibold text-gray-300 uppercase tracking-wide sticky left-0 bg-[#151920]/95 backdrop-blur-sm z-10">
                     Repository
                   </th>
                   {STAGES.map(stage => (
-                    <th key={stage.id} className="text-center p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-300 min-w-[100px] sm:min-w-[140px]">
+                    <th key={stage.id} className="text-center p-2 sm:p-4 text-caption sm:text-body-sm font-semibold text-gray-300 uppercase tracking-wide min-w-[100px] sm:min-w-[140px]">
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-xl sm:text-2xl">{stage.emoji}</span>
                         <span className="hidden sm:inline">{stage.name}</span>
@@ -238,7 +238,7 @@ export function PipelineVisualizer() {
                     className="border-b border-white/5 hover:bg-white/5 transition-colors animate-slide-up"
                     style={{ animationDelay: `${rowIndex * 0.05}s` }}
                   >
-                    <td className="p-4 text-sm font-semibold text-white sticky left-0 bg-[#151920]/95 backdrop-blur-sm border-r border-white/5">
+                    <td className="p-4 text-body-sm font-semibold text-white sticky left-0 bg-[#151920]/95 backdrop-blur-sm border-r border-white/5">
                       {repo}
                     </td>
                     {STAGES.map(stage => {
@@ -297,7 +297,7 @@ export function PipelineVisualizer() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">
+              <h3 className="text-h3 font-semibold text-white">
                 {selectedCell.repo} • {selectedCell.stage}
               </h3>
               <button

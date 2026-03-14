@@ -35,8 +35,8 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
             🎬
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-white dark:text-white light:text-gray-900">FFS Monitor</h2>
-            <p className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-500 truncate">First Frame Studios</p>
+            <h2 className="text-h4 font-semibold text-white dark:text-white light:text-gray-900">FFS Monitor</h2>
+            <p className="text-caption text-gray-400 dark:text-gray-400 light:text-gray-500 truncate">First Frame Studios</p>
           </div>
           <button
             onClick={onClose}
@@ -79,7 +79,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
               >
                 {item.icon}
               </motion.span>
-              <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+              <span className="text-body-sm font-medium flex-1 text-left">{item.label}</span>
               {item.badge && (
                 <motion.span 
                   initial={{ scale: 0 }}
@@ -121,7 +121,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
           >
             ⚙️
           </motion.span>
-          <span className="text-sm font-medium">Settings</span>
+          <span className="text-body-sm font-medium">Settings</span>
         </motion.button>
         <div className="text-xs text-gray-500 dark:text-gray-500 light:text-gray-400 text-center font-mono">
           v1.0.0 • Made with ❤️
