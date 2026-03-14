@@ -125,7 +125,7 @@ describe('ActivityFeed', () => {
     await waitFor(() => {
       expect(screen.getByText('Connection Error')).toBeInTheDocument()
     })
-    expect(screen.getByText('Failed to fetch activity data')).toBeInTheDocument()
+    expect(screen.getByText(/Unable to load activity feed/)).toBeInTheDocument()
   })
 
   it('shows error state on non-ok response', async () => {
@@ -159,7 +159,7 @@ describe('ActivityFeed', () => {
       expect(screen.getByText('Connection Error')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('Retry'))
+    fireEvent.click(screen.getByText('Try Again'))
     await waitFor(() => {
       expect(screen.getByText('dallas')).toBeInTheDocument()
     })

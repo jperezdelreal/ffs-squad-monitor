@@ -5,6 +5,7 @@ import { ExportButton } from './ExportButton';
 import { SkeletonContainer, SkeletonGrid, SkeletonStatCard, Skeleton } from './Skeleton';
 import { AnimatedCounter } from './AnimatedCounter';
 import { cardHover, buttonPress } from '../lib/motion';
+import { ErrorState } from './ErrorState';
 
 export function CostTracker() {
   const { usage, usageLoading: loading, usageError: error, fetchUsage } = useStore();
@@ -43,6 +44,13 @@ export function CostTracker() {
           </motion.button>
         </div>
       </div>
+      <ErrorState
+        title="Cost data not available"
+        message="Unable to fetch GitHub Actions usage data. This may be due to missing permissions or the backend being unreachable."
+        error={error}
+        retry={fetchUsage}
+        retryLabel="Retry"
+      />
     );
   }
 

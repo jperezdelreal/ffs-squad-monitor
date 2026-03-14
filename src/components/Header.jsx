@@ -7,17 +7,15 @@ import { NotificationBell } from './NotificationHistory'
 import { ExportButton } from './ExportButton'
 import { useTheme } from '../hooks/useTheme'
 import { buttonPress, iconSpin } from '../lib/motion'
+import { LiveTimestamp, SignalBars } from './PulseIndicator'
 
 export function Header({ lastUpdate, isConnected, healthScore, healthLevel, healthBreakdown, sseStatus, onSSEReconnect, onMenuClick, exportButtonRef }) {
   const { theme, toggleTheme } = useTheme()
-  const getTimeSince = () => {
-    if (!lastUpdate) return 'Never'
-    const seconds = Math.floor((Date.now() - lastUpdate) / 1000)
-    if (seconds < 60) return `${seconds}s ago`
-    const minutes = Math.floor(seconds / 60)
-    if (minutes < 60) return `${minutes}m ago`
-    const hours = Math.floor(minutes / 60)
-    return `${hours}h ago`
+  
+  const getSignalStrength = () => {
+    if (sseStatus === 'streaming') return 3
+    if (sseStatus === 'polling') return 2
+    return 1
   }
 
   return (
@@ -48,7 +46,8 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
           <div className="hidden lg:block">
             <DependencyHealth />
           </div>
-          <div className="hidden sm:block">
+          <div className="hidden sm:flex items-center gap-2">
+            <SignalBars strength={getSignalStrength()} />
             <ConnectionStatus
               sseStatus={sseStatus}
               lastUpdate={lastUpdate}
@@ -85,7 +84,10 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="font-mono text-xs">{getTimeSince()}</span>
+            <LiveTimestamp 
+              timestamp={lastUpdate} 
+              className="font-mono text-xs" 
+            />
           </div>
         </div>
       </div>

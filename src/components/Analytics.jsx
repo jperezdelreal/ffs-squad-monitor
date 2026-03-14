@@ -4,6 +4,7 @@ import { useStore } from '../store/store'
 import { CHART_COLORS } from './charts/chartConfig'
 import { ExportButton } from './ExportButton'
 import { SkeletonChart } from './Skeleton'
+import { ErrorState } from './ErrorState'
 
 const TIME_RANGES = [
   { id: '7d', label: 'Last 7 days' },
@@ -200,18 +201,15 @@ export function Analytics() {
       </div>
 
       {hasError && (
-        <div className="glass rounded-xl p-4 border border-amber-500/30 bg-amber-500/10 flex items-center gap-3">
-          <span className="text-xl">{'\u26A0\uFE0F'}</span>
-          <span className="text-sm text-amber-300">
-            Some analytics data failed to load. {metricsError}
-          </span>
-          <button
-            onClick={handleRefresh}
-            className="ml-auto px-3 py-1 text-xs bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+        <ErrorState
+          title="Analytics Error"
+          message="Some analytics data failed to load. Partial data may still be visible below."
+          error={metricsError}
+          retry={handleRefresh}
+          retryLabel="Retry"
+          showDetails={false}
+          className="mb-4"
+        />
       )}
 
       {/* KPI Cards */}

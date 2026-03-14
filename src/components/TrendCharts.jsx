@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react'
 import { TrendLine, BarChart, AreaChart } from './charts'
 import { useStore } from '../store/store'
 import { SkeletonChart } from './Skeleton'
+import { ErrorState } from './ErrorState'
 
 const TIME_RANGES = ['7d', '30d', '90d']
 
@@ -124,18 +125,15 @@ export function TrendCharts() {
       </div>
 
       {hasError && (
-        <div className="glass rounded-xl p-4 border border-amber-500/30 bg-amber-500/10 flex items-center gap-3">
-          <span className="text-xl">⚠️</span>
-          <span className="text-sm text-amber-300">
-            Some metrics failed to load. {metricsError}
-          </span>
-          <button
-            onClick={handleRefresh}
-            className="ml-auto px-3 py-1 text-xs bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+        <ErrorState
+          title="Metrics Error"
+          message="Failed to load trend data. Historical charts may be incomplete."
+          error={metricsError}
+          retry={handleRefresh}
+          retryLabel="Retry"
+          showDetails={false}
+          className="mb-4"
+        />
       )}
 
       <div className="glass rounded-xl p-4 sm:p-6 border border-white/10">

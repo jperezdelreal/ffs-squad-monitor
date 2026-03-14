@@ -4,6 +4,8 @@ import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
 import { SkeletonContainer, SkeletonGrid, Skeleton } from './Skeleton';
 import { buttonPress, cardHover } from '../lib/motion';
+import { EmptyState, EmptyStateIllustrations } from './EmptyState';
+import { ErrorState } from './ErrorState';
 
 const BOTTLENECK_THRESHOLD = 5;
 
@@ -159,6 +161,13 @@ export function PipelineVisualizer() {
           </motion.button>
         </div>
       </div>
+      <ErrorState
+        title="Connection Error"
+        message="Unable to load pipeline data. The backend might be unreachable."
+        error={error}
+        retry={fetchIssues}
+        retryLabel="Retry"
+      />
     );
   }
 

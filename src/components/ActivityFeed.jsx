@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { getConfigSync } from '../services/config';
 import { ExportButton } from './ExportButton';
 import { staggerContainer, staggerItem, springPresets, buttonPress, cardHover } from '../lib/motion';
 import { SkeletonContainer, SkeletonList, SkeletonText } from './Skeleton';
+import { PulseDot } from './PulseIndicator';
 
 function getRepoColor(repoName) {
   const config = getConfigSync();
@@ -19,12 +20,41 @@ export function ActivityFeed() {
     repo: 'all',
     type: 'all',
   });
+  const [newEventIds, setNewEventIds] = useState(new Set());
 
   useEffect(() => {
     if (sseStatus !== 'streaming') {
       fetchEvents();
     }
   }, []);
+
+  // Track new events
+  useEffect(() => {
+    if (events.length > 0) {
+      const latestEvent = events[0];
+      const timeSinceEvent = Date.now() - new Date(latestEvent.createdAt).getTime();
+      
+      // Mark events from last 30 seconds as new
+      if (timeSinceEvent < 30000) {
+        setNewEventIds(prev => {
+          const next = new Set(prev);
+          next.add(latestEvent.id);
+          return next;
+        });
+        
+        // Remove after 5 seconds
+        const timeout = setTimeout(() => {
+          setNewEventIds(prev => {
+            const next = new Set(prev);
+            next.delete(latestEvent.id);
+            return next;
+          });
+        }, 5000);
+        
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [events]);
 
   const getEventIcon = (type) => {
     const icons = {
@@ -171,6 +201,15 @@ export function ActivityFeed() {
 
       {/* Activity Timeline */}
       <div className="glass rounded-xl border border-white/10 overflow-hidden">
+        <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-semibold text-white">Activity Stream</h3>
+            <PulseDot status={sseStatus} size="xs" />
+          </div>
+          <span className="text-xs text-gray-400 font-mono">
+            {filteredEvents.length} events
+          </span>
+        </div>
         {filteredEvents.length === 0 ? (
           <div className="p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
@@ -185,7 +224,9 @@ export function ActivityFeed() {
             className="divide-y divide-white/5 max-h-[calc(100vh-20rem)] overflow-y-auto"
           >
             <AnimatePresence mode="popLayout">
-              {filteredEvents.map((event) => (
+              {filteredEvents.map((event) => {
+                const isNew = newEventIds.has(event.id);
+                return (
                 <motion.div
                   key={event.id}
                   variants={staggerItem}
@@ -195,17 +236,33 @@ export function ActivityFeed() {
                   exit={{ opacity: 0, x: -20 }}
                   layout
                   transition={springPresets.default}
-                  className="p-4 hover:bg-white/5 group"
+                  className={`p-4 hover:bg-white/5 group relative ${isNew ? 'bg-cyan-500/5' : ''}`}
                 >
                 <motion.div variants={cardHover}>
+                  {isNew && (
+                    <motion.div
+                      className="absolute inset-0 border-l-2 border-cyan-500"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 2, repeat: 2 }}
+                    />
+                  )}
                 <div className="flex items-start gap-4">
                   {/* Timeline Dot */}
                   <div className="flex flex-col items-center gap-1 pt-1">
                     <motion.div
                       whileHover={{ scale: 1.5 }}
-                      transition={springPresets.snappy}
                       className="w-3 h-3 rounded-full ring-4 ring-white/10"
                       style={{ backgroundColor: getRepoColor(event.repo) }}
+                      animate={isNew ? {
+                        scale: [1, 1.3, 1],
+                        boxShadow: [
+                          '0 0 0px rgba(6, 182, 212, 0)',
+                          '0 0 15px rgba(6, 182, 212, 0.8)',
+                          '0 0 0px rgba(6, 182, 212, 0)',
+                        ],
+                      } : {}}
+                      transition={isNew ? { duration: 2, repeat: 2 } : springPresets.snappy}
                     />
                   </div>
 
@@ -236,7 +293,8 @@ export function ActivityFeed() {
                 </div>
                 </motion.div>
               </motion.div>
-            ))}
+                );
+              })}
             </AnimatePresence>
           </motion.div>
         )}

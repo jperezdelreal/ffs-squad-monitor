@@ -2,12 +2,18 @@ import React from 'react'
 import { Line } from 'react-chartjs-2'
 import './chartConfig.js'
 import { buildBaseOptions, CHART_COLORS } from './chartConfig.js'
+import { EmptyState, EmptyStateIllustrations } from '../EmptyState'
 
 export function TrendLine({ data = [], label = 'Value', color = CHART_COLORS.emerald, timeRange = '7d' }) {
   if (!data.length) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 text-sm" data-testid="trendline-empty">
-        No data available
+      <div className="flex items-center justify-center h-full" data-testid="trendline-empty">
+        <EmptyState
+          icon={<EmptyStateIllustrations.NotEnoughData />}
+          title="Not enough data for trends"
+          message="Check back after a few rounds to see historical patterns"
+          className="border-0 p-4"
+        />
       </div>
     )
   }

@@ -5,6 +5,9 @@ import { ExportButton } from './ExportButton';
 import { staggerContainer, staggerItem, springPresets, cardHover } from '../lib/motion';
 import { SkeletonContainer, SkeletonGrid, SkeletonAgentCard, SkeletonText } from './Skeleton';
 import { AnimatedCounter } from './AnimatedCounter';
+import { EmptyState, EmptyStateIllustrations } from './EmptyState';
+import { ErrorState } from './ErrorState';
+import { PulseDot } from './PulseIndicator';
 
 const BLOCK_THRESHOLDS = [
   { maxHours: 4, label: 'Recently blocked', color: 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300', dot: 'bg-yellow-400' },
@@ -103,6 +106,19 @@ export function TeamBoard() {
     );
   }
 
+  // Show empty state if no agents at all
+  if (!loading && agents.length === 0) {
+    return (
+      <EmptyState
+        icon={<EmptyStateIllustrations.NoAgents />}
+        title="No agents detected"
+        message="The backend isn't reporting any agents. Check if the server is running and properly configured."
+        action={loadTeamData}
+        actionLabel="Retry"
+      />
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -134,15 +150,15 @@ export function TeamBoard() {
       </div>
 
       {error && (
-        <div className="glass rounded-xl border border-yellow-500/20 p-4">
-          <div className="flex items-start gap-3">
-            <div className="text-xl">⚠️</div>
-            <div className="flex-1">
-              <p className="text-sm text-yellow-200">{error}</p>
-              <p className="text-xs text-gray-400 mt-1">Showing cached data</p>
-            </div>
-          </div>
-        </div>
+        <ErrorState
+          title="Failed to load team data"
+          message="Unable to fetch agents or issues. Showing cached data if available."
+          error={error}
+          retry={loadTeamData}
+          retryLabel="Reload"
+          showDetails={false}
+          className="mb-6"
+        />
       )}
 
       {/* Agent Cards */}
@@ -186,7 +202,13 @@ export function TeamBoard() {
               </motion.div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-bold text-white truncate">{agent.name}</h3>
-                <p className="text-sm text-gray-400 truncate">{agent.role}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-400 truncate">{agent.role}</p>
+                  <PulseDot 
+                    status={blocked ? 'disconnected' : agent.status === 'active' ? 'streaming' : 'polling'} 
+                    size="xs" 
+                  />
+                </div>
               </div>
               <div className="relative">
                 <motion.div 
