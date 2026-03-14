@@ -290,6 +290,43 @@ All GitHub data now flows through Express backend instead of direct browser call
 
 ---
 
+### 13. Phase 2 — Real-Time Intelligence Platform
+
+**Author:** Ripley (Lead)  
+**Date:** 2026-03-14  
+**Status:** APPROVED  
+**Tier:** T1 (Lead authority)
+
+**Context:** Sprint 1 closed 17 issues across 5 themes — architecture consolidation, data integrity, operational intelligence, developer experience, and production hardening. Foundation solid: single React architecture, authenticated Express backend, 227+ tests at 94%+ coverage, Zustand store, Docker deployment, CI with bundle tracking.
+
+**Decision:** Phase 2 (Sprint 2) focuses on three strategic pillars transforming the dashboard from polling-based status board into a **real-time intelligence platform**:
+
+1. **Real-Time Streaming (SSE)** — Replace 30-60s polling with Server-Sent Events. Backend has SSE infrastructure for logs; extend to all channels. Live heartbeat, events, issue state.
+
+2. **Historical Analytics** — Add SQLite persistence for metrics over time. Enable trend charts (Chart.js), sprint velocity, agent productivity. New "Analytics" view.
+
+3. **Proactive Alerting** — Desktop notifications for critical events (blocked agent, stale heartbeat, build failed). Configurable thresholds, notification history panel.
+
+**Issues Created:** 18 issues (#75-#92) across 5 themes — Lambert 7, Dallas 7, Kane 4.
+
+**What We're NOT Doing:** Multi-squad support (premature), WebSockets (SSE sufficient for read-only), TypeScript migration (revisit at 5000+ LOC), plugin architecture (5 views insufficient).
+
+**Risks & Mitigations:**
+- SSE reliability in corporate proxies → built-in polling fallback
+- SQLite locking → better-sqlite3 WAL mode (concurrent reads + single writer)
+- Chart.js bundle impact → tree-shake unused, track via CI
+- E2E flakiness → 1 retry + screenshots + trace
+
+**Success Metrics:**
+- Live data updates without refresh
+- 7-day and 30-day trend charts
+- Desktop notifications for alerts
+- E2E tests catch full-page failures
+- ≥80% coverage on new modules
+- API docs at /api/docs
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
