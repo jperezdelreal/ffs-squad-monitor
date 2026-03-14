@@ -1,4 +1,5 @@
 import React from 'react';
+import { useStore } from '../store/store';
 
 const NAV_ITEMS = [
   { id: 'activity', label: 'Activity Feed', icon: '📊', color: 'cyan' },
@@ -11,6 +12,9 @@ const NAV_ITEMS = [
 ];
 
 export function Sidebar({ activeView, onViewChange }) {
+  const toggleSettingsPanel = useStore(s => s.toggleSettingsPanel);
+  const showSettingsPanel = useStore(s => s.showSettingsPanel);
+
   return (
     <aside className="w-72 glass border-r border-white/10 backdrop-blur-xl flex flex-col">
       <div className="p-6 border-b border-white/10">
@@ -54,7 +58,19 @@ export function Sidebar({ activeView, onViewChange }) {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/10 space-y-3">
+        <button
+          onClick={toggleSettingsPanel}
+          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${
+            showSettingsPanel
+              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white border border-cyan-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+          }`}
+          aria-label="Settings"
+        >
+          <span className="text-xl transition-transform group-hover:rotate-45 duration-300">⚙️</span>
+          <span className="text-sm font-medium">Settings</span>
+        </button>
         <div className="text-xs text-gray-500 text-center font-mono">
           v1.0.0 • Made with ❤️
         </div>

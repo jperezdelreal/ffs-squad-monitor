@@ -1,6 +1,49 @@
 import { create } from 'zustand'
 import { fetchConfig } from '../services/config'
 
+const SETTINGS_KEY = 'ffs-monitor-settings'
+
+const DEFAULT_SETTINGS = {
+  // Per-notification-type toggles
+  alertTypes: {
+    agentBlocked: true,
+    heartbeatStale: true,
+    buildFailed: true,
+    rateLimitWarning: true,
+    issueSpike: false,
+    sprintMilestone: false,
+  },
+  // Sound & desktop
+  soundEnabled: false,
+  desktopEnabled: true,
+  // Thresholds
+  stalenessThresholdMin: 5,
+  rateLimitThreshold: 100,
+  issueSpikeCount: 3,
+  issueSpikeWindowMin: 5,
+  // Display
+  pollingInterval: 60,
+  autoRefresh: true,
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    if (!raw) return { ...DEFAULT_SETTINGS }
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
+  } catch {
+    return { ...DEFAULT_SETTINGS }
+  }
+}
+
+function persistSettings(settings) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+  } catch {
+    // localStorage may be unavailable
+  }
+}
+
 export const initialState = {
   // Heartbeat
   heartbeatData: null,
@@ -30,7 +73,15 @@ export const initialState = {
 
   // Notifications (browser alerts via SSE)
   notifications: [],
+  unreadCount: 0,
   notificationSSEStatus: 'disconnected',
+
+  // UI panels
+  showNotificationPanel: false,
+  showSettingsPanel: false,
+
+  // Settings (hydrated from localStorage)
+  settings: loadSettings(),
 
   // SSE connection status
   sseStatus: 'disconnected',
@@ -53,15 +104,61 @@ export const useStore = create((set, get) => ({
 
   setLastUpdate: (timestamp) => set({ lastUpdate: timestamp }),
 
-  addNotification: (notification) => set((state) => ({
-    notifications: [notification, ...state.notifications].slice(0, 100),
+  addNotification: (notification) => set((state) => {
+    const enriched = {
+      ...notification,
+      id: notification.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: notification.timestamp || new Date().toISOString(),
+      read: false,
+    }
+    const updated = [enriched, ...state.notifications].slice(0, 50)
+    return {
+      notifications: updated,
+      unreadCount: state.unreadCount + 1,
+    }
+  }),
+
+  removeNotification: (id) => set((state) => {
+    const removed = state.notifications.find(n => n.id === id)
+    return {
+      notifications: state.notifications.filter(n => n.id !== id),
+      unreadCount: removed && !removed.read ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+    }
+  }),
+
+  markAllRead: () => set((state) => ({
+    notifications: state.notifications.map(n => ({ ...n, read: true })),
+    unreadCount: 0,
   })),
 
-  removeNotification: (id) => set((state) => ({
-    notifications: state.notifications.filter(n => n.id !== id),
+  clearNotifications: () => set({ notifications: [], unreadCount: 0 }),
+
+  toggleNotificationPanel: () => set((state) => ({
+    showNotificationPanel: !state.showNotificationPanel,
+    showSettingsPanel: false,
   })),
 
-  clearNotifications: () => set({ notifications: [] }),
+  toggleSettingsPanel: () => set((state) => ({
+    showSettingsPanel: !state.showSettingsPanel,
+    showNotificationPanel: false,
+  })),
+
+  closeAllPanels: () => set({ showNotificationPanel: false, showSettingsPanel: false }),
+
+  updateSettings: (patch) => set((state) => {
+    const updated = { ...state.settings, ...patch }
+    persistSettings(updated)
+    return { settings: updated }
+  }),
+
+  updateAlertType: (key, value) => set((state) => {
+    const updated = {
+      ...state.settings,
+      alertTypes: { ...state.settings.alertTypes, [key]: value },
+    }
+    persistSettings(updated)
+    return { settings: updated }
+  }),
 
   setNotificationSSEStatus: (status) => set({ notificationSSEStatus: status }),
 
