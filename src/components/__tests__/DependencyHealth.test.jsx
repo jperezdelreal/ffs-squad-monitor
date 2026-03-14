@@ -1,6 +1,8 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { useStore } from '../../store/store'
+import { DependencyHealth } from '../DependencyHealth'
 
 const HEALTHY_RESPONSE = {
   status: 'healthy',
@@ -56,19 +58,20 @@ const UNHEALTHY_RESPONSE = {
   },
 }
 
-// Mock the api module to control fetchHealth behavior
-vi.mock('../../lib/api', () => ({
-  fetchHealth: vi.fn(),
-}))
-
-import { fetchHealth } from '../../lib/api'
-import { DependencyHealth } from '../DependencyHealth'
+function setHealthState(health, overrides = {}) {
+  useStore.setState({
+    health,
+    healthLoading: false,
+    healthError: null,
+    fetchHealthData: vi.fn(),
+    ...overrides,
+  })
+}
 
 describe('DependencyHealth', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     vi.setSystemTime(new Date('2026-03-15T12:00:00Z'))
-    fetchHealth.mockResolvedValue(HEALTHY_RESPONSE)
   })
 
   afterEach(() => {
@@ -77,40 +80,33 @@ describe('DependencyHealth', () => {
   })
 
   it('shows loading state initially', () => {
-    fetchHealth.mockImplementation(() => new Promise(() => {}))
+    useStore.setState({ healthLoading: true, health: null, fetchHealthData: vi.fn() })
     render(<DependencyHealth />)
     expect(screen.getByText('Checking…')).toBeTruthy()
   })
 
-  it('renders healthy status after data loads', async () => {
+  it('renders healthy status after data loads', () => {
+    setHealthState(HEALTHY_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => {
-      expect(screen.getByText('Deps')).toBeTruthy()
-    })
+    expect(screen.getByText('Deps')).toBeTruthy()
     expect(screen.getByLabelText('Dependencies: Healthy')).toBeTruthy()
   })
 
-  it('renders degraded status', async () => {
-    fetchHealth.mockResolvedValue(DEGRADED_RESPONSE)
+  it('renders degraded status', () => {
+    setHealthState(DEGRADED_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => {
-      expect(screen.getByLabelText('Dependencies: Degraded')).toBeTruthy()
-    })
+    expect(screen.getByLabelText('Dependencies: Degraded')).toBeTruthy()
   })
 
-  it('renders unhealthy status', async () => {
-    fetchHealth.mockResolvedValue(UNHEALTHY_RESPONSE)
+  it('renders unhealthy status', () => {
+    setHealthState(UNHEALTHY_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => {
-      expect(screen.getByLabelText('Dependencies: Unhealthy')).toBeTruthy()
-    })
+    expect(screen.getByLabelText('Dependencies: Unhealthy')).toBeTruthy()
   })
 
   it('shows dependency panel on click', async () => {
+    setHealthState(HEALTHY_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => {
-      expect(screen.getByText('Deps')).toBeTruthy()
-    })
 
     await act(async () => {
       fireEvent.click(screen.getByText('Deps'))
@@ -123,8 +119,8 @@ describe('DependencyHealth', () => {
   })
 
   it('displays rate limit numbers', async () => {
+    setHealthState(HEALTHY_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => expect(screen.getByText('Deps')).toBeTruthy())
 
     await act(async () => {
       fireEvent.click(screen.getByText('Deps'))
@@ -135,9 +131,8 @@ describe('DependencyHealth', () => {
   })
 
   it('shows Anonymous for unauthenticated', async () => {
-    fetchHealth.mockResolvedValue(DEGRADED_RESPONSE)
+    setHealthState(DEGRADED_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => expect(screen.getByText('Deps')).toBeTruthy())
 
     await act(async () => {
       fireEvent.click(screen.getByText('Deps'))
@@ -147,8 +142,8 @@ describe('DependencyHealth', () => {
   })
 
   it('shows overall status in panel', async () => {
+    setHealthState(HEALTHY_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => expect(screen.getByText('Deps')).toBeTruthy())
 
     await act(async () => {
       fireEvent.click(screen.getByText('Deps'))
@@ -158,18 +153,20 @@ describe('DependencyHealth', () => {
     expect(screen.getByText('Healthy')).toBeTruthy()
   })
 
-  it('stays in loading state on fetch error', async () => {
-    fetchHealth.mockResolvedValue({ error: true, message: 'failed' })
-    render(<DependencyHealth />)
-    // Should stay in loading/checking state when error occurs
-    await waitFor(() => {
-      expect(screen.getByText('Checking…')).toBeTruthy()
+  it('stays in loading state on fetch error', () => {
+    useStore.setState({
+      health: null,
+      healthLoading: false,
+      healthError: 'Health check failed',
+      fetchHealthData: vi.fn(),
     })
+    render(<DependencyHealth />)
+    expect(screen.getByText('Checking…')).toBeTruthy()
   })
 
   it('has refresh button in panel', async () => {
+    setHealthState(HEALTHY_RESPONSE)
     render(<DependencyHealth />)
-    await waitFor(() => expect(screen.getByText('Deps')).toBeTruthy())
 
     await act(async () => {
       fireEvent.click(screen.getByText('Deps'))

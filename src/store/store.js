@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { fetchConfig } from '../services/config'
+import { fetchHealth as fetchHealthAPI } from '../lib/api'
 
 const SETTINGS_KEY = 'ffs-monitor-settings'
 
@@ -78,6 +79,11 @@ export const initialState = {
   metricsLoading: false,
   metricsError: null,
   metricsTimeRange: '7d',
+
+  // Health (DependencyHealth)
+  health: null,
+  healthLoading: true,
+  healthError: null,
 
   // Notifications (browser alerts via SSE)
   notifications: [],
@@ -283,6 +289,21 @@ export const useStore = create((set, get) => ({
     }
   },
 
+  fetchHealthData: async () => {
+    set({ healthLoading: true, healthError: null })
+    try {
+      const data = await fetchHealthAPI()
+      if (data?.error) {
+        set({ healthLoading: false, healthError: data.message || 'Health check failed' })
+      } else {
+        set({ health: data, healthLoading: false })
+      }
+    } catch (error) {
+      console.error('Failed to fetch health:', error)
+      set({ healthLoading: false, healthError: 'Health check failed' })
+    }
+  },
+
   fetchAgents: async () => {
     set({ agentsLoading: true, agentsError: null })
     try {
@@ -384,12 +405,13 @@ export const useStore = create((set, get) => ({
   },
 
   refreshAll: async () => {
-    const { fetchHeartbeat, fetchEvents, fetchIssues, fetchUsage, fetchAgents } = get()
+    const { fetchHeartbeat, fetchEvents, fetchIssues, fetchUsage, fetchAgents, fetchHealthData } = get()
     await Promise.allSettled([
       fetchHeartbeat(),
       fetchEvents(),
       fetchIssues(),
       fetchUsage(),
+      fetchHealthData(),
     ])
     // Agents are derived from issues + config, so fetch after issues resolve
     await fetchAgents()

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { fetchHealth } from '../lib/api'
+import React, { useState, useEffect } from 'react'
+import { useStore } from '../store/store'
 
 const STATUS_STYLES = {
   healthy: { dot: 'bg-emerald-500', text: 'text-emerald-400', label: 'Healthy' },
@@ -24,21 +24,16 @@ function DependencyRow({ name, icon, healthy, detail }) {
 }
 
 export function DependencyHealth() {
-  const [health, setHealth] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const health = useStore((state) => state.health)
+  const loading = useStore((state) => state.healthLoading)
+  const fetchHealthData = useStore((state) => state.fetchHealthData)
   const [showPanel, setShowPanel] = useState(false)
 
-  const refresh = useCallback(async () => {
-    const data = await fetchHealth()
-    if (!data?.error) setHealth(data)
-    setLoading(false)
-  }, [])
-
   useEffect(() => {
-    refresh()
-    const interval = setInterval(refresh, 30_000)
+    fetchHealthData()
+    const interval = setInterval(fetchHealthData, 30_000)
     return () => clearInterval(interval)
-  }, [refresh])
+  }, [fetchHealthData])
 
   if (loading || !health) {
     return (
@@ -74,7 +69,7 @@ export function DependencyHealth() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-white">Dependency Status</span>
             <button
-              onClick={refresh}
+              onClick={fetchHealthData}
               className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
               aria-label="Refresh health"
             >
