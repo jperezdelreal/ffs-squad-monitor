@@ -24,6 +24,9 @@ const DEFAULT_SETTINGS = {
   // Display
   pollingInterval: 60,
   autoRefresh: true,
+  // Density & Focus
+  density: 'comfortable', // 'compact' | 'comfortable' | 'spacious'
+  focusMode: false,
 }
 
 function loadSettings() {
@@ -94,6 +97,10 @@ export const initialState = {
 
   // SSE connection status
   sseStatus: 'disconnected',
+
+  // Focus mode and density
+  focusMode: false,
+  density: loadSettings().density || 'comfortable',
 }
 
 export const useStore = create((set, get) => ({
@@ -180,6 +187,14 @@ export const useStore = create((set, get) => ({
   setNotificationSSEStatus: (status) => set({ notificationSSEStatus: status }),
 
   setSseStatus: (status) => set({ sseStatus: status }),
+
+  toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
+
+  setDensity: (density) => set((state) => {
+    const updated = { ...state.settings, density }
+    persistSettings(updated)
+    return { settings: updated, density }
+  }),
 
   handleSSEEvent: (channel, eventType, data) => {
     const handlers = {
