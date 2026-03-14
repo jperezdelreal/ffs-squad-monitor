@@ -1,18 +1,19 @@
-import React from 'react';
-import { HealthBadge } from './HealthBadge';
-import { DependencyHealth } from './DependencyHealth';
-import { NotificationBell } from './NotificationHistory';
+import React from 'react'
+import { HealthBadge } from './HealthBadge'
+import { ConnectionStatus } from './ConnectionStatus'
+import { DependencyHealth } from './DependencyHealth'
+import { NotificationBell } from './NotificationHistory'
 
 export function Header({ lastUpdate, isConnected, healthScore, healthLevel, healthBreakdown, sseStatus, onSSEReconnect }) {
   const getTimeSince = () => {
-    if (!lastUpdate) return 'Never';
-    const seconds = Math.floor((Date.now() - lastUpdate) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
-  };
+    if (!lastUpdate) return 'Never'
+    const seconds = Math.floor((Date.now() - lastUpdate) / 1000)
+    if (seconds < 60) return `${seconds}s ago`
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    return `${hours}h ago`
+  }
 
   return (
     <header className="glass border-b border-white/10 px-6 py-4 backdrop-blur-xl">
@@ -25,28 +26,11 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
         <div className="flex items-center gap-6">
           <HealthBadge score={healthScore} level={healthLevel} breakdown={healthBreakdown} />
           <DependencyHealth />
-          {/* SSE / Polling mode indicator */}
-          {sseStatus && sseStatus !== 'streaming' && sseStatus !== 'disconnected' && (
-            <button
-              onClick={onSSEReconnect}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-all"
-              title="Click to reconnect SSE"
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              {sseStatus === 'polling' ? 'Polling' : sseStatus === 'reconnecting' ? 'Reconnecting\u2026' : 'Connecting\u2026'}
-            </button>
-          )}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-            <div className="relative">
-              <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`} />
-              {isConnected && (
-                <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping opacity-75" />
-              )}
-            </div>
-            <span className={`text-xs font-medium ${isConnected ? 'text-emerald-400' : 'text-red-400'}`}>
-              {sseStatus === 'streaming' ? 'Live \u{1F4E1}' : isConnected ? 'Live' : 'Offline'}
-            </span>
-          </div>
+          <ConnectionStatus
+            sseStatus={sseStatus}
+            lastUpdate={lastUpdate}
+            onReconnect={onSSEReconnect}
+          />
           <NotificationBell />
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,5 +41,5 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
         </div>
       </div>
     </header>
-  );
+  )
 }

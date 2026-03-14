@@ -57,6 +57,28 @@
     }
   }
 
+  .animate-pulse-gentle {
+    animation: pulse-gentle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-gentle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .animate-spin-slow {
+    animation: spin 1.5s linear infinite;
+  }
+
   .glass {
     background: rgba(21, 25, 32, 0.6);
     backdrop-filter: blur(8px);
