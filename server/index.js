@@ -5,6 +5,7 @@ import { getRateLimitStatus } from './lib/github-client.js';
 import { eventBus } from './lib/event-bus.js';
 import { logger, requestLogger } from './lib/logger.js';
 import { startSnapshotService, stopSnapshotService } from './lib/snapshot-service.js';
+import { startNotificationEvaluator, stopNotificationEvaluator } from './lib/notification-evaluator.js';
 import { closeDb, getDbStats } from './lib/metrics-db.js';
 import { setupSwagger } from './lib/swagger.js';
 import { dataPoller } from './lib/data-poller.js';
@@ -125,6 +126,9 @@ app.listen(PORT, () => {
   // Start metrics snapshot service
   startSnapshotService();
 
+  // Start notification evaluator
+  startNotificationEvaluator();
+
   // Start SSE data channel pollers
   dataPoller.start();
 });
@@ -132,6 +136,7 @@ app.listen(PORT, () => {
 // Graceful shutdown
 function shutdown(signal) {
   logger.info('Shutdown signal received', { signal });
+  stopNotificationEvaluator();
   dataPoller.stop();
   stopSnapshotService();
   closeDb();
