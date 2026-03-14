@@ -7,6 +7,7 @@ import { ActivityFeed } from './components/ActivityFeed';
 import { PipelineVisualizer } from './components/PipelineVisualizer';
 import { TeamBoard } from './components/TeamBoard';
 import { CostTracker } from './components/CostTracker';
+import { TrendCharts } from './components/TrendCharts';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 
@@ -23,6 +24,8 @@ function App() {
         return <PipelineVisualizer />;
       case 'team':
         return <TeamBoard />;
+      case 'charts':
+        return <TrendCharts />;
       case 'cost':
         return <CostTracker />;
       default:
