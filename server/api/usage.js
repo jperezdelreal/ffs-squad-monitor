@@ -64,7 +64,7 @@ async function aggregateWorkflowUsage() {
 }
 
 // Try org billing API first, fall back to workflow run aggregation
-async function fetchUsageData() {
+export async function fetchUsageData() {
   // Attempt org billing API (requires org admin access)
   for (const repo of REPOS) {
     const [owner] = repo.github.split('/')

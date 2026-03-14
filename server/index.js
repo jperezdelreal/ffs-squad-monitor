@@ -7,6 +7,7 @@ import { logger, requestLogger } from './lib/logger.js';
 import { startSnapshotService, stopSnapshotService } from './lib/snapshot-service.js';
 import { closeDb, getDbStats } from './lib/metrics-db.js';
 import { setupSwagger } from './lib/swagger.js';
+import { dataPoller } from './lib/data-poller.js';
 
 // Import route handlers
 import heartbeatRoute from './api/heartbeat.js';
@@ -123,11 +124,15 @@ app.listen(PORT, () => {
 
   // Start metrics snapshot service
   startSnapshotService();
+
+  // Start SSE data channel pollers
+  dataPoller.start();
 });
 
 // Graceful shutdown
 function shutdown(signal) {
   logger.info('Shutdown signal received', { signal });
+  dataPoller.stop();
   stopSnapshotService();
   closeDb();
   process.exit(0);

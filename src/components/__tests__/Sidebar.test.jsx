@@ -15,6 +15,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Pipeline')).toBeInTheDocument()
     expect(screen.getByText('Team Board')).toBeInTheDocument()
     expect(screen.getByText('Cost Tracker')).toBeInTheDocument()
+    expect(screen.getByText('Analytics')).toBeInTheDocument()
   })
 
   it('renders the FFS Monitor branding', () => {
@@ -47,6 +48,9 @@ describe('Sidebar', () => {
 
     fireEvent.click(screen.getByText('Cost Tracker'))
     expect(onViewChange).toHaveBeenCalledWith('cost')
+
+    fireEvent.click(screen.getByText('Analytics'))
+    expect(onViewChange).toHaveBeenCalledWith('analytics')
   })
 
   it('renders nav item icons', () => {
