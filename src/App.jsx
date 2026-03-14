@@ -12,11 +12,15 @@ import { Analytics } from './components/Analytics';
 import { TimelineSwimlane } from './components/TimelineSwimlane';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
+import { useSSE } from './hooks/useSSE';
 
 function App() {
   const [activeView, setActiveView] = useState('activity');
   const { lastUpdate, isConnected } = usePolling();
   const { score, level, breakdown, staleness, heartbeatAgeMs } = useHealthScore();
+  const { status: sseStatus, reconnect: sseReconnect } = useSSE({
+    channels: ['heartbeat', 'events', 'issues', 'usage'],
+  });
 
   const renderView = () => {
     switch (activeView) {
@@ -53,6 +57,8 @@ function App() {
             healthScore={score}
             healthLevel={level}
             healthBreakdown={breakdown}
+            sseStatus={sseStatus}
+            onSSEReconnect={sseReconnect}
           />
           <StalenessAlert staleness={staleness} heartbeatAgeMs={heartbeatAgeMs} />
           <main className="flex-1 overflow-y-auto p-6 space-y-6">

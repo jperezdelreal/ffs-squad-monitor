@@ -31,6 +31,9 @@ export const initialState = {
   // Notifications (browser alerts via SSE)
   notifications: [],
   notificationSSEStatus: 'disconnected',
+
+  // SSE connection status
+  sseStatus: 'disconnected',
 }
 
 export const useStore = create((set, get) => ({
@@ -61,6 +64,47 @@ export const useStore = create((set, get) => ({
   clearNotifications: () => set({ notifications: [] }),
 
   setNotificationSSEStatus: (status) => set({ notificationSSEStatus: status }),
+
+  setSseStatus: (status) => set({ sseStatus: status }),
+
+  handleSSEEvent: (channel, eventType, data) => {
+    const handlers = {
+      'heartbeat:update': () => set({
+        heartbeatData: data,
+        isConnected: true,
+        lastUpdate: Date.now(),
+        error: null,
+      }),
+      'events:new': () => set((state) => ({
+        events: [data, ...state.events].slice(0, 500),
+        eventsLoading: false,
+        eventsError: null,
+      })),
+      'events:snapshot': () => set({
+        events: data,
+        eventsLoading: false,
+        eventsError: null,
+      }),
+      'issues:update': () => {
+        set({
+          issues: data.snapshot || data,
+          issuesLoading: false,
+          issuesError: null,
+        })
+        get().fetchAgents()
+      },
+      'usage:update': () => set({
+        usage: data,
+        usageLoading: false,
+        usageError: null,
+      }),
+    }
+
+    const key = `${channel}:${eventType.split(':').pop()}`
+    const fullKey = eventType
+    const handler = handlers[fullKey] || handlers[key]
+    if (handler) handler()
+  },
 
   fetchHeartbeat: async () => {
     try {

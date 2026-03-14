@@ -10,14 +10,16 @@ function getRepoColor(repoName) {
 }
 
 export function ActivityFeed() {
-  const { events, eventsLoading: loading, eventsError: error, fetchEvents } = useStore();
+  const { events, eventsLoading: loading, eventsError: error, fetchEvents, sseStatus } = useStore();
   const [filters, setFilters] = useState({
     repo: 'all',
     type: 'all',
   });
 
   useEffect(() => {
-    fetchEvents();
+    if (sseStatus !== 'streaming') {
+      fetchEvents();
+    }
   }, []);
 
   const getEventIcon = (type) => {
