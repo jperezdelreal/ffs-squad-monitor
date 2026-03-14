@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { getConfigSync } from '../services/config';
 import { ExportButton } from './ExportButton';
-import { staggerContainer, staggerItem, springPresets, buttonPress, cardHover } from '../lib/motion';
+import { staggerContainer, staggerItem, springPresets } from '../lib/motion';
 import { SkeletonContainer, SkeletonList, SkeletonText } from './Skeleton';
 import { PulseDot } from './PulseIndicator';
 
@@ -130,16 +130,12 @@ export function ActivityFeed() {
           <div className="text-5xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-white mb-2">Connection Error</h3>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <motion.button
+          <button
             onClick={fetchEvents}
-            initial="rest"
-            whileHover="hover"
-            whileTap="tap"
-            variants={buttonPress}
             className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
           >
             Retry
-          </motion.button>
+          </button>
         </div>
       </div>
     );
@@ -230,9 +226,8 @@ export function ActivityFeed() {
                 <motion.div
                   key={event.id}
                   variants={staggerItem}
-                  initial="rest"
-                  whileHover="hover"
-                  whileTap="tap"
+                  initial="initial"
+                  animate="animate"
                   exit={{ opacity: 0, x: -20 }}
                   layout
                   transition={springPresets.default}
@@ -291,7 +286,6 @@ export function ActivityFeed() {
                     </p>
                   </div>
                 </div>
-                </motion.div>
               </motion.div>
                 );
               })}

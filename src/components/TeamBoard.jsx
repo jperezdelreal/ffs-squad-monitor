@@ -180,9 +180,8 @@ export function TeamBoard() {
               key={agent.id}
               variants={staggerItem}
               layout
-              initial="rest"
-              whileHover="hover"
-              whileTap="tap"
+              whileHover={{ scale: 1.05, y: -5 }}
+              transition={springPresets.default}
               className={`glass rounded-xl p-5 border ${
                 blocked
                   ? 'border-red-500/30 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20'
@@ -191,7 +190,6 @@ export function TeamBoard() {
                     : 'border-white/10 hover:border-white/20'
               }`}
             >
-            <motion.div variants={cardHover}>
             <div className="flex items-start gap-3 mb-4">
               <motion.div 
                 className="text-5xl"
@@ -273,7 +271,6 @@ export function TeamBoard() {
                 <p className="text-sm text-gray-500 italic text-center">Idle • No active tasks</p>
               </div>
             )}
-            </motion.div>
           </motion.div>
           );
         })}
@@ -313,7 +310,7 @@ export function TeamBoard() {
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-sm font-mono font-bold text-white drop-shadow-lg">
-                    <AnimatedCounter value={item.count} /> issue{item.count !== 1 ? 's' : ''}
+                    {item.count} issue{item.count !== 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
