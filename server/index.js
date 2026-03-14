@@ -9,6 +9,7 @@ import { startNotificationEvaluator, stopNotificationEvaluator } from './lib/not
 import { closeDb, getDbStats } from './lib/metrics-db.js';
 import { setupSwagger } from './lib/swagger.js';
 import { dataPoller } from './lib/data-poller.js';
+import { startLogIngestion, stopLogIngestion } from './lib/log-ingestion.js';
 
 // Import route handlers
 import heartbeatRoute from './api/heartbeat.js';
@@ -25,6 +26,7 @@ import healthRoute from './api/health.js';
 import { metricsRoute, metricsSummaryRoute, metricsAgentsRoute, metricsStatsRoute } from './api/metrics.js';
 import sseRoute from './api/sse.js';
 import { exportIssuesRoute, exportMetricsRoute, exportUsageRoute } from './api/export.js';
+import searchLogsRoute from './api/search.js';
 
 const app = express();
 
@@ -40,6 +42,7 @@ setupSwagger(app);
 app.get('/api/heartbeat', heartbeatRoute);
 app.get('/api/logs/files', logsFilesRoute);
 app.get('/api/logs/stream', logsStreamRoute);
+app.get('/api/logs/search', searchLogsRoute);
 app.get('/api/logs', logsRoute);
 app.get('/api/timeline', timelineRoute);
 app.get('/api/issues', boardRoute);
@@ -136,6 +139,9 @@ app.listen(PORT, () => {
 
   // Start SSE data channel pollers
   dataPoller.start();
+
+  // Start log ingestion service
+  startLogIngestion();
 });
 
 // Graceful shutdown
@@ -144,6 +150,7 @@ function shutdown(signal) {
   stopNotificationEvaluator();
   dataPoller.stop();
   stopSnapshotService();
+  stopLogIngestion();
   closeDb();
   process.exit(0);
 }
