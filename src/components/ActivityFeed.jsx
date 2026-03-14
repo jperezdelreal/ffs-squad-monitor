@@ -128,8 +128,8 @@ export function ActivityFeed() {
       <div className="glass rounded-xl border border-red-500/20 p-8">
         <div className="text-center">
           <div className="text-5xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-white mb-2">Connection Error</h3>
-          <p className="text-gray-400 text-sm mb-4">{error}</p>
+          <h3 className="text-body-lg font-semibold text-white mb-2">Connection Error</h3>
+          <p className="text-gray-400 text-body-sm mb-4">{error}</p>
           <button
             onClick={fetchEvents}
             className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
@@ -153,7 +153,7 @@ export function ActivityFeed() {
       <div className="glass depth-surface rounded-xl p-3 sm:p-4 border border-white/10">
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-            <label className="text-sm font-medium text-gray-400">Repository</label>
+            <label className="text-caption font-medium text-gray-400 uppercase tracking-wide">Repository</label>
             <select
               value={filters.repo}
               onChange={(e) => setFilters({ ...filters, repo: e.target.value })}
@@ -167,7 +167,7 @@ export function ActivityFeed() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-            <label className="text-sm font-medium text-gray-400">Event Type</label>
+            <label className="text-caption font-medium text-gray-400 uppercase tracking-wide">Event Type</label>
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
@@ -199,18 +199,18 @@ export function ActivityFeed() {
       <div className="glass depth-raised rounded-xl border border-white/10 overflow-hidden snap-start">
         <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-white">Activity Stream</h3>
+            <h3 className="text-h4 font-semibold text-white">Activity Stream</h3>
             <PulseDot status={sseStatus} size="xs" />
           </div>
-          <span className="text-xs text-gray-400 font-mono">
+          <span className="text-caption text-gray-400 font-mono">
             {filteredEvents.length} events
           </span>
         </div>
         {filteredEvents.length === 0 ? (
           <div className="p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
-            <h3 className="text-lg font-semibold text-white mb-2">No Activity Yet</h3>
-            <p className="text-gray-400 text-sm">Activity feed will appear here once events are detected</p>
+            <h3 className="text-body-lg font-semibold text-white mb-2">No Activity Yet</h3>
+            <p className="text-gray-400 text-body-sm">Activity feed will appear here once events are detected</p>
           </div>
         ) : (
           <motion.div 
@@ -273,11 +273,11 @@ export function ActivityFeed() {
                   {/* Event Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-body-sm font-semibold text-white">
                         {event.repo.split('/')[1]}
                       </span>
-                      <span className="text-xs text-gray-500">•</span>
-                      <span className="text-xs text-gray-400 font-mono">{formatTime(event.createdAt)}</span>
+                      <span className="text-caption text-gray-500">•</span>
+                      <span className="text-caption text-gray-400 font-mono">{formatTime(event.createdAt)}</span>
                     </div>
                     <p className="text-sm text-gray-300">
                       <span className="font-medium text-cyan-400">{event.actor}</span>
