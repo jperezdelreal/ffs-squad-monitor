@@ -79,6 +79,7 @@ export const initialState = {
   // UI panels
   showNotificationPanel: false,
   showSettingsPanel: false,
+  showShortcutsPanel: false,
 
   // Settings (hydrated from localStorage)
   settings: loadSettings(),
@@ -136,14 +137,22 @@ export const useStore = create((set, get) => ({
   toggleNotificationPanel: () => set((state) => ({
     showNotificationPanel: !state.showNotificationPanel,
     showSettingsPanel: false,
+    showShortcutsPanel: false,
   })),
 
   toggleSettingsPanel: () => set((state) => ({
     showSettingsPanel: !state.showSettingsPanel,
     showNotificationPanel: false,
+    showShortcutsPanel: false,
   })),
 
-  closeAllPanels: () => set({ showNotificationPanel: false, showSettingsPanel: false }),
+  toggleShortcutsPanel: () => set((state) => ({
+    showShortcutsPanel: !state.showShortcutsPanel,
+    showNotificationPanel: false,
+    showSettingsPanel: false,
+  })),
+
+  closeAllPanels: () => set({ showNotificationPanel: false, showSettingsPanel: false, showShortcutsPanel: false }),
 
   updateSettings: (patch) => set((state) => {
     const updated = { ...state.settings, ...patch }
