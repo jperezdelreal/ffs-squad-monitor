@@ -2,7 +2,7 @@ import { REPOS } from '../config.js'
 import { githubFetch, handleGitHubError } from '../lib/github-client.js'
 import { logger } from '../lib/logger.js'
 
-const CACHE_TTL = 30_000
+const CACHE_TTL = 60_000 // 60 seconds per #122
 let usageCache = null
 let usageCacheTime = 0
 
@@ -106,7 +106,7 @@ export async function fetchUsageData() {
  * /api/usage:
  *   get:
  *     summary: Get GitHub Actions usage
- *     description: Returns CI/CD usage data. Tries org billing API first, falls back to aggregating workflow run durations across repos. Cached for 30 seconds.
+ *     description: Returns CI/CD usage data. Tries org billing API first, falls back to aggregating workflow run durations across repos. Cached for 60 seconds per #122.
  *     tags: [Usage]
  *     responses:
  *       200:

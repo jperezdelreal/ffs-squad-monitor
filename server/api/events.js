@@ -1,7 +1,7 @@
 import { REPOS } from '../config.js'
 import { githubFetch, handleGitHubError } from '../lib/github-client.js'
 
-const CACHE_TTL = 30_000
+const CACHE_TTL = 60_000 // 60 seconds per #122
 let eventsCache = null
 let eventsCacheTime = 0
 
@@ -46,7 +46,7 @@ export async function fetchEvents() {
  * /api/events:
  *   get:
  *     summary: Get recent GitHub events
- *     description: Aggregates recent GitHub events across all monitored repositories. Cached for 30 seconds. Returns up to 100 events sorted by most recent first.
+ *     description: Aggregates recent GitHub events across all monitored repositories. Cached for 60 seconds per #122. Returns up to 100 events sorted by most recent first.
  *     tags: [Events]
  *     responses:
  *       200:

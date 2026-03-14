@@ -238,16 +238,18 @@ export function TimelineSwimlane() {
           <div className="hidden sm:flex items-center gap-1 text-xs text-gray-500">
             <button
               onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
-              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Zoom out"
+              aria-label="Zoom out timeline"
             >
               {'\u2212'}
             </button>
             <span className="px-2 font-mono text-gray-400">{Math.round(zoom * 100)}%</span>
             <button
               onClick={() => setZoom(z => Math.min(4, z + 0.25))}
-              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Zoom in"
+              aria-label="Zoom in timeline"
             >
               +
             </button>

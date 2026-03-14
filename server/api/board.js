@@ -1,7 +1,7 @@
 import { config, REPOS } from '../config.js'
 import { githubFetch, handleGitHubError } from '../lib/github-client.js'
 
-const ISSUE_CACHE_TTL = config.issueCacheTTL;
+const ISSUE_CACHE_TTL = 60_000; // 60 seconds per #122
 let issueCache = null;
 let issueCacheTime = 0;
 
@@ -70,7 +70,7 @@ export async function fetchIssues(stateParam = 'open') {
  * /api/issues:
  *   get:
  *     summary: Get issues across all repos
- *     description: Fetches GitHub issues from all monitored repositories, sorted by priority then update time. Includes linked PR status. Default (open) queries are cached for 30 seconds.
+ *     description: Fetches GitHub issues from all monitored repositories, sorted by priority then update time. Includes linked PR status. Default (open) queries are cached for 60 seconds per #122.
  *     tags: [Issues]
  *     parameters:
  *       - in: query

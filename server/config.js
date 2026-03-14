@@ -43,8 +43,8 @@ export const config = {
     return path.join(this.ffsRoot, '.squad', 'orchestration-log');
   },
   
-  // Cache TTL
-  issueCacheTTL: 30_000,
+  // Cache TTL (60s per #122 - GitHub API rate limiting)
+  cacheTTL: 60_000,
 
   // GitHub authentication
   githubToken,

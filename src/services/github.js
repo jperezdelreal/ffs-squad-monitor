@@ -1,104 +1,94 @@
-import { fetchConfig, getConfigSync } from './config.js'
-
-const GITHUB_API = 'https://api.github.com';
+/**
+ * GitHub service - All GitHub data now flows through backend API.
+ * This module provides convenience wrappers for backend endpoints.
+ * Direct GitHub API calls have been removed to enable:
+ * - Centralized rate limiting and auth token management
+ * - Response caching (60s TTL on backend)
+ * - Unified error handling
+ */
 
 export async function fetchRepoEvents(owner, repo, limit = 10) {
   try {
-    const response = await fetch(`${GITHUB_API}/repos/${owner}/${repo}/events?per_page=${limit}`, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
+    const response = await fetch('/api/events?owner=' + owner + '&repo=' + repo + '&limit=' + limit);
     
     if (!response.ok) {
-      console.warn(`Failed to fetch events for ${owner}/${repo}`);
+      console.warn('Failed to fetch events for ' + owner + '/' + repo);
       return [];
     }
     
     const events = await response.json();
-    return events.map(event => ({
-      id: event.id,
-      type: event.type,
-      repo: `${owner}/${repo}`,
-      actor: event.actor.login,
-      createdAt: event.created_at,
-      payload: event.payload,
-    }));
+    return events;
   } catch (error) {
-    console.error(`Error fetching events for ${owner}/${repo}:`, error);
+    console.error('Error fetching events for ' + owner + '/' + repo + ':', error);
     return [];
   }
 }
 
 export async function fetchAllRepoEvents() {
-  const { repos } = await fetchConfig();
-  const promises = repos.map(repo => fetchRepoEvents(repo.owner, repo.name, 10));
-  const results = await Promise.all(promises);
-  
-  const allEvents = results.flat().sort((a, b) => 
-    new Date(b.createdAt) - new Date(a.createdAt)
-  );
-  
-  return allEvents.slice(0, 50);
+  try {
+    const response = await fetch('/api/events');
+    if (!response.ok) {
+      console.warn('Failed to fetch all repo events');
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching all repo events:', error);
+    return [];
+  }
 }
 
 export async function fetchRepoIssues(owner, repo) {
   try {
-    const response = await fetch(`${GITHUB_API}/repos/${owner}/${repo}/issues?state=all&per_page=100`, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
+    const response = await fetch('/api/issues?owner=' + owner + '&repo=' + repo + '&state=all');
     
     if (!response.ok) {
-      console.warn(`Failed to fetch issues for ${owner}/${repo}`);
+      console.warn('Failed to fetch issues for ' + owner + '/' + repo);
       return [];
     }
     
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching issues for ${owner}/${repo}:`, error);
+    console.error('Error fetching issues for ' + owner + '/' + repo + ':', error);
     return [];
   }
 }
 
 export async function fetchAllRepoIssues() {
-  const { repos } = await fetchConfig();
-  const promises = repos.map(repo => 
-    fetchRepoIssues(repo.owner, repo.name).then(issues => ({
-      repo: `${repo.owner}/${repo.name}`,
-      issues,
-    }))
-  );
-  
-  return await Promise.all(promises);
+  try {
+    const response = await fetch('/api/issues?state=all');
+    if (!response.ok) {
+      console.warn('Failed to fetch all repo issues');
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching all repo issues:', error);
+    return [];
+  }
 }
 
 export async function fetchWorkflowRuns(owner, repo) {
   try {
-    const response = await fetch(`${GITHUB_API}/repos/${owner}/${repo}/actions/runs?per_page=30`, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
+    const response = await fetch('/api/workflows?owner=' + owner + '&repo=' + repo);
     
     if (!response.ok) {
-      console.warn(`Failed to fetch workflow runs for ${owner}/${repo}`);
+      console.warn('Failed to fetch workflow runs for ' + owner + '/' + repo);
       return [];
     }
     
     const data = await response.json();
-    return data.workflow_runs || [];
+    return data.workflow_runs || data;
   } catch (error) {
-    console.error(`Error fetching workflow runs for ${owner}/${repo}:`, error);
+    console.error('Error fetching workflow runs for ' + owner + '/' + repo + ':', error);
     return [];
   }
 }
 
 export function getRepoColor(repoName) {
-  const config = getConfigSync();
-  const repos = config?.repos || [];
-  const repo = repos.find(r => repoName.includes(r.name));
+  // This function remains client-side only as it reads from cached config
+  const config = window.__FFS_CONFIG__;
+  if (!config?.repos) return '#6b7280';
+  const repo = config.repos.find(r => repoName.includes(r.id || r.name));
   return repo?.color || '#6b7280';
 }
-
