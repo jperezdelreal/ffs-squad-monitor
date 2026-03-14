@@ -175,3 +175,27 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `scripts/benchmark.js`
 
 **PR:** #110 (branch: squad/92-perf-benchmarks)
+
+### 2026-03-14: Issue #111 — PipelineVisualizer test failing on average time regex
+
+**What was fixed:**
+- Fixed failing test `shows average time in stage for open issues` in PipelineVisualizer.test.jsx
+- Added `createdAt` timestamps to mockIssues test data
+
+**Root cause:**
+- The `calcAvgTimeInStage()` function in PipelineVisualizer component requires `createdAt` field on issues to compute time-in-stage metrics
+- Mock test data was missing this field, causing avgTime to return null
+- Without avgTime, the component doesn't render "avg Xd" or "avg Xh" text, failing the regex match test
+
+**Solution:**
+- Added `createdAt` timestamps to all 5 mockIssues using `Date.now()` relative dates (3d, 5d, 7d, 10d, 14d ago)
+- Used dynamic timestamps (Date.now() - offset) so tests remain valid over time, not hardcoded dates
+
+**Key insight:**
+- Test data must include ALL fields that component logic depends on, even if those fields aren't directly asserted
+- The `makeBottleneckIssues()` helper already had createdAt (line 57), but main mockIssues didn't — this inconsistency should have been a red flag
+
+**Files modified:**
+- `src/components/__tests__/PipelineVisualizer.test.jsx` — added createdAt to mockIssues array
+
+**PR:** #125 (branch: squad/111-fix-pipeline-test)

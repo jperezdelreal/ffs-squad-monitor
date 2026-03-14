@@ -83,7 +83,7 @@ describe('Metrics Database', () => {
     it('records schema version', () => {
       const db = metricsDb.getDb()
       const row = db.prepare('SELECT version FROM schema_version').get()
-      expect(row.version).toBe(1)
+      expect(row.version).toBe(2)
     })
 
     it('returns same instance on subsequent getDb() calls', () => {
