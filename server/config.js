@@ -50,8 +50,18 @@ export const config = {
   githubToken,
 };
 
+// ============================================================================
+// CONFIGURATION - SINGLE SOURCE OF TRUTH
+// ============================================================================
+// REPOS and SQUAD_AGENTS are defined here and ONLY here.
+// All backend routes, frontend components, and build scripts import from this file.
+// To add/modify a repo or agent, edit this file and restart the server.
+//
+// Frontend fetches config via /api/config endpoint (see server/api/config.js)
+// Vite build imports directly at build time (see vite.config.js)
+// ============================================================================
+
 // Repository definitions — FFS games only (SS monitors itself + downstream via safety-net.yml)
-// Single source of truth for all REPOS across backend, frontend, and vite config
 export const REPOS = [
   { id: 'flora',             emoji: '🌿', label: 'Flora',          github: 'jperezdelreal/flora',          color: '#ef4444', dir: path.resolve(__dirname, '..', '..', 'flora') },
   { id: 'ComeRosquillas',    emoji: '🍩', label: 'ComeRosquillas', github: 'jperezdelreal/ComeRosquillas', color: '#f59e0b', dir: path.resolve(__dirname, '..', '..', 'ComeRosquillas') },
@@ -84,3 +94,43 @@ export const SQUAD_AGENTS = {
   scribe:  { emoji: '📋', role: 'Session Logger',          color: '#656d76', repo: 'all' },
   ralph:   { emoji: '🔄', role: 'Work Monitor',            color: '#58a6ff', repo: 'all' },
 };
+
+// Validation functions
+function validateRepoConfig(repo, index) {
+  const required = ['id', 'emoji', 'label', 'github', 'color', 'dir'];
+  const missing = required.filter(field => !repo[field]);
+  
+  if (missing.length > 0) {
+    throw new Error(`REPOS[${index}] missing required fields: ${missing.join(', ')}`);
+  }
+  
+  if (!repo.github.includes('/')) {
+    throw new Error(`REPOS[${index}].github must be in format "owner/repo", got: ${repo.github}`);
+  }
+  
+  if (!repo.color.startsWith('#') || repo.color.length !== 7) {
+    throw new Error(`REPOS[${index}].color must be a hex color (e.g., #ef4444), got: ${repo.color}`);
+  }
+}
+
+function validateAgentConfig(agentId, agent) {
+  const required = ['emoji', 'role', 'color', 'repo'];
+  const missing = required.filter(field => !agent[field]);
+  
+  if (missing.length > 0) {
+    throw new Error(`SQUAD_AGENTS.${agentId} missing required fields: ${missing.join(', ')}`);
+  }
+  
+  if (!agent.color.startsWith('#') || agent.color.length !== 7) {
+    throw new Error(`SQUAD_AGENTS.${agentId}.color must be a hex color (e.g., #58a6ff), got: ${agent.color}`);
+  }
+}
+
+// Run validations on module load
+try {
+  REPOS.forEach((repo, idx) => validateRepoConfig(repo, idx));
+  Object.entries(SQUAD_AGENTS).forEach(([id, agent]) => validateAgentConfig(id, agent));
+} catch (err) {
+  console.error('❌ Configuration validation failed:', err.message);
+  process.exit(1);
+}
