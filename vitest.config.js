@@ -13,8 +13,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/lib/**/*.js', 'src/services/**/*.js', 'src/components/**/*.jsx', 'server/lib/**/*.js'],
-      exclude: ['src/lib/**/*.test.js', 'src/lib/__tests__/**', 'src/services/**/*.test.js', 'src/services/__tests__/**', 'src/components/__tests__/**', 'server/**/__tests__/**'],
+      include: ['src/lib/**/*.js', 'src/services/**/*.js', 'src/components/**/*.jsx', 'src/hooks/**/*.js', 'server/lib/**/*.js', 'server/api/**/*.js'],
+      exclude: ['src/lib/**/*.test.js', 'src/lib/__tests__/**', 'src/services/**/*.test.js', 'src/services/__tests__/**', 'src/components/__tests__/**', 'src/hooks/__tests__/**', 'server/**/__tests__/**'],
       thresholds: {
         lines: 80,
         functions: 80,

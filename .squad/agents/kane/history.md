@@ -124,3 +124,32 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `package.json` — testing-library devDependencies
 
 **PR:** #68 (branch: squad/48-component-tests)
+
+### 2026-03-14: Issues #89 + #90 — SSE integration tests + Historical metrics tests
+
+**What was done:**
+- Created 5 new test files with 108 tests covering SSE and metrics infrastructure
+- `server/api/__tests__/sse.test.js` (17 tests): SSE endpoint validation, headers, connection lifecycle, event streaming format, Last-Event-ID replay, keepalive, concurrent connections
+- `server/lib/__tests__/metrics-db.test.js` (36 tests): SQLite DB auto-creation, schema migration, snapshot CRUD, interval aggregation (5m/1h/1d), retention policy, daily summaries
+- `server/lib/__tests__/snapshot-service.test.js` (13 tests): Snapshot hash dedup, error handling, daily summary computation, service lifecycle
+- `server/lib/__tests__/agent-metrics.test.js` (19 tests): Per-agent metrics, cycle time median, blocked time, PR linking (labels/body/branch), caching
+- `server/api/__tests__/metrics.test.js` (23 tests): All /api/metrics endpoints, query param validation, 400/500 error responses
+- Updated `vitest.config.js` coverage include to track `src/hooks/` and `server/api/` modules
+
+**Key insights:**
+- vi.mock factories are hoisted to file top — can't reference variables declared after them. Use `vi.hoisted()` to create mocks that need to be shared between the mock factory and test code
+- `fetchSquadIssues` / `fetchAllPRs` break pagination early when result count < 100, so mock response ordering must account for fewer calls than expected
+- `better-sqlite3` supports WAL mode for concurrent reads — verified in tests via pragma check
+- Agent metrics uses median (not mean) for avg cycle time — important for accuracy with outliers
+
+**Files created:**
+- `server/api/__tests__/sse.test.js`
+- `server/lib/__tests__/metrics-db.test.js`
+- `server/lib/__tests__/snapshot-service.test.js`
+- `server/lib/__tests__/agent-metrics.test.js`
+- `server/api/__tests__/metrics.test.js`
+
+**Files modified:**
+- `vitest.config.js` — coverage include extended
+
+**PR:** #108 (branch: squad/89-90-integration-tests)
