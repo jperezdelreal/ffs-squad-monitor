@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
-import { staggerContainer, staggerItem, springPresets } from '../lib/motion';
+import { staggerContainer, staggerItem, springPresets, cardHover } from '../lib/motion';
 import { SkeletonContainer, SkeletonGrid, SkeletonAgentCard, SkeletonText } from './Skeleton';
+import { AnimatedCounter } from './AnimatedCounter';
 
 const BLOCK_THRESHOLDS = [
   { maxHours: 4, label: 'Recently blocked', color: 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300', dot: 'bg-yellow-400' },
@@ -163,8 +164,9 @@ export function TeamBoard() {
               key={agent.id}
               variants={staggerItem}
               layout
-              whileHover={{ scale: 1.05, y: -5 }}
-              transition={springPresets.default}
+              initial="rest"
+              whileHover="hover"
+              whileTap="tap"
               className={`glass rounded-xl p-5 border ${
                 blocked
                   ? 'border-red-500/30 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20'
@@ -173,6 +175,7 @@ export function TeamBoard() {
                     : 'border-white/10 hover:border-white/20'
               }`}
             >
+            <motion.div variants={cardHover}>
             <div className="flex items-start gap-3 mb-4">
               <motion.div 
                 className="text-5xl"
@@ -248,6 +251,7 @@ export function TeamBoard() {
                 <p className="text-sm text-gray-500 italic text-center">Idle • No active tasks</p>
               </div>
             )}
+            </motion.div>
           </motion.div>
           );
         })}
@@ -287,7 +291,7 @@ export function TeamBoard() {
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-sm font-mono font-bold text-white drop-shadow-lg">
-                    {item.count} issue{item.count !== 1 ? 's' : ''}
+                    <AnimatedCounter value={item.count} /> issue{item.count !== 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
