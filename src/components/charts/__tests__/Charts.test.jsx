@@ -21,7 +21,7 @@ import { AreaChart } from '../AreaChart'
 describe('TrendLine', () => {
   it('renders empty state when no data', () => {
     render(<TrendLine data={[]} />)
-    expect(screen.getByTestId('trendline-empty')).toHaveTextContent('No data available')
+    expect(screen.getByTestId('trendline-empty')).toHaveTextContent('Not enough data for trends')
   })
 
   it('renders chart with data', () => {

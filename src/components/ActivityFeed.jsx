@@ -43,13 +43,15 @@ export function ActivityFeed() {
         });
         
         // Remove after 5 seconds
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           setNewEventIds(prev => {
             const next = new Set(prev);
             next.delete(latestEvent.id);
             return next;
           });
         }, 5000);
+        
+        return () => clearTimeout(timeout);
       }
     }
   }, [events]);

@@ -92,7 +92,7 @@ describe('Analytics', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     render(<Analytics />)
     await waitFor(() => {
-      expect(screen.getByText(/Some analytics data failed to load/)).toBeInTheDocument()
+      expect(screen.getByText(/Analytics Error/)).toBeInTheDocument()
     })
   })
 

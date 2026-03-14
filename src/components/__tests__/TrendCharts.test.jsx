@@ -50,7 +50,7 @@ describe('TrendCharts', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     render(<TrendCharts />)
     await waitFor(() => {
-      expect(screen.getByText(/Some metrics failed to load/)).toBeInTheDocument()
+      expect(screen.getByText(/Metrics Error/)).toBeInTheDocument()
     })
   })
 

@@ -2,13 +2,19 @@ import React from 'react'
 import { Line } from 'react-chartjs-2'
 import './chartConfig.js'
 import { buildBaseOptions, COLOR_LIST } from './chartConfig.js'
+import { EmptyState, EmptyStateIllustrations } from '../EmptyState'
 
 export function AreaChart({ series = [], timeRange = '30d' }) {
   const hasSomeData = series.some(s => s.data?.length > 0)
   if (!series.length || !hasSomeData) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 text-sm" data-testid="areachart-empty">
-        No data available
+      <div className="flex items-center justify-center h-full" data-testid="areachart-empty">
+        <EmptyState
+          icon={<EmptyStateIllustrations.NotEnoughData />}
+          title="No data available"
+          message="Historical data will appear here once collected"
+          className="border-0 p-4"
+        />
       </div>
     )
   }
