@@ -3,6 +3,7 @@ import { TrendLine, BarChart, AreaChart } from './charts'
 import { useMetrics } from '../hooks/useMetrics'
 import { useStore } from '../store/store'
 import { CHART_COLORS } from './charts/chartConfig'
+import { ExportButton } from './ExportButton'
 
 const TIME_RANGES = [
   { id: '7d', label: 'Last 7 days' },
@@ -183,6 +184,7 @@ export function Analytics() {
               </button>
             ))}
           </div>
+          <ExportButton endpoint="/api/export/metrics?channel=issues" label="Export" />
           <button
             onClick={handleRefresh}
             className="px-3 py-1.5 text-xs font-medium bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg border border-white/10 transition-colors"

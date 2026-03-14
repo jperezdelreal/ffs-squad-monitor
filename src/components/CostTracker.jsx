@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useStore } from '../store/store';
+import { ExportButton } from './ExportButton';
 
 export function CostTracker() {
   const { usage, usageLoading: loading, usageError: error, fetchUsage } = useStore();
@@ -50,6 +51,11 @@ export function CostTracker() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Export header */}
+      <div className="flex justify-end">
+        <ExportButton endpoint="/api/export/usage" label="Export Usage" />
+      </div>
+
       {/* GitHub Actions Usage */}
       <div className="glass rounded-2xl p-8 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-transparent to-cyan-500/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 animate-pulse" />
