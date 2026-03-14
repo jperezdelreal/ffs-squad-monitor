@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
@@ -14,6 +14,7 @@ import { TimelineSwimlane } from './components/TimelineSwimlane';
 import { Settings } from './components/Settings';
 import { NotificationHistory } from './components/NotificationHistory';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { CommandPalette } from './components/CommandPalette';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 import { useSSE } from './hooks/useSSE';
@@ -25,6 +26,7 @@ import { fadeIn, springPresets } from './lib/motion';
 function App() {
   const [activeView, setActiveView] = useState('activity');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const exportButtonRef = useRef(null);
   
   const { lastUpdate, isConnected } = usePolling();

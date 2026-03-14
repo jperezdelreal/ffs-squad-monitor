@@ -45,15 +45,33 @@ export const COLOR_LIST = [
 ]
 
 const glassmorphismTooltip = {
-  backgroundColor: 'rgba(21, 25, 32, 0.85)',
-  titleColor: '#e4e7eb',
-  bodyColor: '#9ca3af',
-  borderColor: 'rgba(255, 255, 255, 0.1)',
-  borderWidth: 1,
-  cornerRadius: 8,
-  padding: 12,
-  boxPadding: 4,
+  backgroundColor: 'rgba(15, 19, 26, 0.95)',
+  titleColor: '#f3f4f6',
+  bodyColor: '#d1d5db',
+  borderColor: 'rgba(255, 255, 255, 0.15)',
+  borderWidth: 1.5,
+  cornerRadius: 12,
+  padding: 14,
+  boxPadding: 6,
   usePointStyle: true,
+  titleFont: {
+    size: 12,
+    weight: 'bold',
+    family: 'Inter, system-ui, sans-serif',
+  },
+  bodyFont: {
+    size: 11,
+    family: 'ui-monospace, monospace',
+  },
+  caretSize: 8,
+  caretPadding: 10,
+  displayColors: true,
+  boxWidth: 12,
+  boxHeight: 12,
+  // Glass backdrop effect
+  callbacks: {
+    labelTextColor: () => '#d1d5db',
+  },
 }
 
 export function buildBaseOptions(overrides = {}) {
@@ -61,11 +79,56 @@ export function buildBaseOptions(overrides = {}) {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: 600,
-      easing: 'easeOutQuart',
+      duration: 800,
+      easing: 'easeInOutQuart',
+      delay: (context) => {
+        // Stagger animation for each data point
+        const delay = context.dataIndex * 30
+        return delay > 300 ? 300 : delay
+      },
+      // Smooth draw-in effect
+      x: {
+        type: 'number',
+        easing: 'easeInOutQuart',
+        duration: 800,
+        from: (ctx) => ctx.chart.scales.x.getPixelForValue(0),
+      },
+      y: {
+        type: 'number',
+        easing: 'easeOutElastic',
+        duration: 1200,
+        from: (ctx) => ctx.chart.scales.y.getPixelForValue(0),
+      },
+    },
+    // Smooth data transition animations
+    transitions: {
+      active: {
+        animation: {
+          duration: 400,
+        },
+      },
+      resize: {
+        animation: {
+          duration: 400,
+          easing: 'easeInOutQuart',
+        },
+      },
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false,
     },
     plugins: {
-      tooltip: { ...glassmorphismTooltip },
+      tooltip: { 
+        ...glassmorphismTooltip,
+        animation: {
+          duration: 250,
+        },
+        displayColors: true,
+        boxWidth: 12,
+        boxHeight: 12,
+        boxPadding: 6,
+      },
       legend: {
         display: overrides.showLegend ?? false,
         position: 'top',
@@ -74,20 +137,42 @@ export function buildBaseOptions(overrides = {}) {
           usePointStyle: true,
           pointStyle: 'circle',
           padding: 16,
-          font: { size: 11 },
+          font: { size: 11, family: 'Inter, system-ui, sans-serif' },
+        },
+        onHover: (event) => {
+          event.native.target.style.cursor = 'pointer'
+        },
+        onLeave: (event) => {
+          event.native.target.style.cursor = 'default'
         },
       },
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
-        ticks: { color: '#6b7280', font: { size: 10 } },
+        grid: { 
+          color: 'rgba(255,255,255,0.05)', 
+          drawBorder: false,
+          lineWidth: 1,
+        },
+        ticks: { 
+          color: '#6b7280', 
+          font: { size: 10, family: 'ui-monospace, monospace' },
+          padding: 8,
+        },
         border: { display: false },
         ...overrides.xScale,
       },
       y: {
-        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
-        ticks: { color: '#6b7280', font: { size: 10 } },
+        grid: { 
+          color: 'rgba(255,255,255,0.05)', 
+          drawBorder: false,
+          lineWidth: 1,
+        },
+        ticks: { 
+          color: '#6b7280', 
+          font: { size: 10, family: 'ui-monospace, monospace' },
+          padding: 8,
+        },
         border: { display: false },
         beginAtZero: true,
         ...overrides.yScale,
