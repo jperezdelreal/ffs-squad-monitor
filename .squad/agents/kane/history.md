@@ -153,3 +153,25 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `vitest.config.js` — coverage include extended
 
 **PR:** #108 (branch: squad/89-90-integration-tests)
+
+### 2026-03-14: Issue #92 — Performance benchmarks for API and SSE
+
+**What was done:**
+- Created 3 benchmark scripts measuring API response times and SSE connection performance
+- `scripts/benchmark-api.js`: p50/p95/p99 response times for 11 endpoints (100 iterations local, 20 for GitHub-dependent), concurrent request handling (10 simultaneous)
+- `scripts/benchmark-sse.js`: time-to-first-event, concurrent connections (50), memory per connection, keepalive reliability
+- `scripts/benchmark.js`: orchestrator that starts server on port 3002, runs both suites, evaluates against baselines, outputs JSON report
+
+**Key insights:**
+- Port 3002 used for benchmarks to avoid conflicts with other services on 3001
+- GitHub-dependent endpoints (repos, pulse, agents) need fewer iterations (20 vs 100) and higher thresholds due to real API calls
+- Express 5 server cold start is <3ms after initial startup
+- SSE supports 50 concurrent connections at ~19KB memory per connection
+- `/api/repos` and `/api/pulse` are the slowest endpoints (~2.5-3s) due to multiple GitHub API calls per request
+
+**Files created:**
+- `scripts/benchmark-api.js`
+- `scripts/benchmark-sse.js`
+- `scripts/benchmark.js`
+
+**PR:** #110 (branch: squad/92-perf-benchmarks)
