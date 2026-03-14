@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -19,6 +20,7 @@ import { useSSE } from './hooks/useSSE';
 import { useNotifications } from './hooks/useNotifications';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useStore } from './store/store';
+import { fadeIn, springPresets } from './lib/motion';
 
 function App() {
   const [activeView, setActiveView] = useState('activity');
@@ -123,7 +125,18 @@ function App() {
           />
           <StalenessAlert staleness={staleness} heartbeatAgeMs={heartbeatAgeMs} />
           <main id="main-content" className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
-            {renderView()}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeView}
+                variants={fadeIn}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={springPresets.default}
+              >
+                {renderView()}
+              </motion.div>
+            </AnimatePresence>
           </main>
         </div>
         <Settings />

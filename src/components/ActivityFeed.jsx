@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { getConfigSync } from '../services/config';
 import { ExportButton } from './ExportButton';
+import { staggerContainer, staggerItem, springPresets } from '../lib/motion';
 
 function getRepoColor(repoName) {
   const config = getConfigSync();
@@ -121,7 +123,13 @@ export function ActivityFeed() {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={springPresets.default}
+      className="space-y-4"
+    >
       {/* Filters Bar */}
       <div className="glass rounded-xl p-3 sm:p-4 border border-white/10">
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
@@ -177,26 +185,43 @@ export function ActivityFeed() {
             <p className="text-gray-400 text-sm">Activity feed will appear here once events are detected</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/5 max-h-[calc(100vh-20rem)] overflow-y-auto">
-            {filteredEvents.map((event, index) => (
-              <div 
-                key={event.id} 
-                className="p-4 hover:bg-white/5 transition-all duration-200 group animate-slide-up"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
+          <motion.div 
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+            className="divide-y divide-white/5 max-h-[calc(100vh-20rem)] overflow-y-auto"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredEvents.map((event) => (
+                <motion.div
+                  key={event.id}
+                  variants={staggerItem}
+                  initial="initial"
+                  animate="animate"
+                  exit={{ opacity: 0, x: -20 }}
+                  layout
+                  transition={springPresets.default}
+                  className="p-4 hover:bg-white/5 group"
+                >
                 <div className="flex items-start gap-4">
                   {/* Timeline Dot */}
                   <div className="flex flex-col items-center gap-1 pt-1">
-                    <div 
-                      className="w-3 h-3 rounded-full ring-4 ring-white/10 transition-all group-hover:ring-8"
+                    <motion.div
+                      whileHover={{ scale: 1.5 }}
+                      transition={springPresets.snappy}
+                      className="w-3 h-3 rounded-full ring-4 ring-white/10"
                       style={{ backgroundColor: getRepoColor(event.repo) }}
                     />
                   </div>
 
                   {/* Event Icon */}
-                  <div className="text-3xl transition-transform group-hover:scale-110">
+                  <motion.div 
+                    className="text-3xl"
+                    whileHover={{ scale: 1.2, rotate: 10 }}
+                    transition={springPresets.bouncy}
+                  >
                     {getEventIcon(event.type)}
-                  </div>
+                  </motion.div>
 
                   {/* Event Content */}
                   <div className="flex-1 min-w-0">
@@ -214,11 +239,12 @@ export function ActivityFeed() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

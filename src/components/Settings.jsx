@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/store'
+import { slideInRight, springPresets } from '../lib/motion'
 
 const ALERT_TYPE_LABELS = {
   agentBlocked: 'Agent blocked',
@@ -94,35 +96,52 @@ export function Settings() {
     }
   }, [show, closeAllPanels])
 
-  if (!show) return null
-
-  const pollingOptions = [30, 60, 120]
-
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300" />
+    <AnimatePresence>
+      {show && (
+        <>
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          />
 
-      {/* Panel */}
-      <div
-        ref={panelRef}
-        className="fixed left-72 top-0 bottom-0 w-96 z-50 glass border-r border-white/10 overflow-y-auto animate-slide-in-left"
-        style={{ animation: 'slideInLeft 0.25s ease-out' }}
-      >
+          {/* Panel */}
+          <motion.div
+            ref={panelRef}
+            variants={slideInRight}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={springPresets.snappy}
+            className="fixed left-72 top-0 bottom-0 w-96 z-50 glass border-r border-white/10 overflow-y-auto"
+          >
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <span className="text-xl">⚙️</span>
+              <motion.span 
+                className="text-xl"
+                animate={{ rotate: [0, 360] }}
+                transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+              >
+                ⚙️
+              </motion.span>
               <h2 className="text-lg font-bold text-white">Settings</h2>
             </div>
-            <button
+            <motion.button
               onClick={closeAllPanels}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              transition={springPresets.snappy}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
               aria-label="Close settings"
             >
               ✕
-            </button>
+            </motion.button>
           </div>
 
           {/* Notification Preferences */}
@@ -221,14 +240,9 @@ export function Settings() {
             onChange={(val) => updateSettings({ autoRefresh: val })}
           />
         </div>
-      </div>
-
-      <style>{`
-        @keyframes slideInLeft {
-          from { transform: translateX(-100%); opacity: 0; }
-          to   { transform: translateX(0);     opacity: 1; }
-        }
-      `}</style>
-    </>
+      </motion.div>
+      </>
+      )}
+    </AnimatePresence>
   )
 }

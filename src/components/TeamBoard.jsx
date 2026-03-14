@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
+import { staggerContainer, staggerItem, springPresets } from '../lib/motion';
 
 const BLOCK_THRESHOLDS = [
   { maxHours: 4, label: 'Recently blocked', color: 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300', dot: 'bg-yellow-400' },
@@ -106,7 +108,13 @@ export function TeamBoard() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={springPresets.default}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="glass rounded-xl p-6 border border-white/10">
         <div className="flex items-center justify-between">
@@ -142,38 +150,58 @@ export function TeamBoard() {
       )}
 
       {/* Agent Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...agents].sort((a, b) => {
-          const aBlocked = agentBlockedInfo[a.id] ? 1 : 0
-          const bBlocked = agentBlockedInfo[b.id] ? 1 : 0
-          return bBlocked - aBlocked
-        }).map((agent, index) => {
-          const blocked = agentBlockedInfo[agent.id]
-          return (
-          <div
-            key={agent.id}
-            className={`glass rounded-xl p-5 border transition-all duration-200 hover:scale-105 animate-slide-up ${
-              blocked
-                ? 'border-red-500/30 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20'
-                : agent.status === 'active' 
-                  ? 'border-emerald-500/30 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/20' 
-                  : 'border-white/10 hover:border-white/20'
-            }`}
-            style={{ animationDelay: `${index * 0.05}s` }}
-          >
+      <motion.div 
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <AnimatePresence mode="popLayout">
+          {[...agents].sort((a, b) => {
+            const aBlocked = agentBlockedInfo[a.id] ? 1 : 0
+            const bBlocked = agentBlockedInfo[b.id] ? 1 : 0
+            return bBlocked - aBlocked
+          }).map((agent) => {
+            const blocked = agentBlockedInfo[agent.id]
+            return (
+            <motion.div
+              key={agent.id}
+              variants={staggerItem}
+              layout
+              whileHover={{ scale: 1.05, y: -5 }}
+              transition={springPresets.default}
+              className={`glass rounded-xl p-5 border ${
+                blocked
+                  ? 'border-red-500/30 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20'
+                  : agent.status === 'active' 
+                    ? 'border-emerald-500/30 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/20' 
+                    : 'border-white/10 hover:border-white/20'
+              }`}
+            >
             <div className="flex items-start gap-3 mb-4">
-              <div className="text-5xl">{agent.emoji}</div>
+              <motion.div 
+                className="text-5xl"
+                whileHover={{ scale: 1.2, rotate: 10 }}
+                transition={springPresets.bouncy}
+              >
+                {agent.emoji}
+              </motion.div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-bold text-white truncate">{agent.name}</h3>
                 <p className="text-sm text-gray-400 truncate">{agent.role}</p>
               </div>
               <div className="relative">
-                <div className={`w-3 h-3 rounded-full ${blocked ? 'bg-red-500' : agent.status === 'active' ? 'bg-emerald-400' : 'bg-gray-600'}`} />
-                {agent.status === 'active' && !blocked && (
-                  <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                )}
-                {blocked && (
-                  <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500 animate-ping opacity-75" />
+                <motion.div 
+                  animate={agent.status === 'active' && !blocked ? { scale: [1, 1.2, 1] } : {}}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className={`w-3 h-3 rounded-full ${blocked ? 'bg-red-500' : agent.status === 'active' ? 'bg-emerald-400' : 'bg-gray-600'}`}
+                />
+                {(agent.status === 'active' || blocked) && (
+                  <motion.div 
+                    animate={{ scale: [1, 1.8, 1], opacity: [0.75, 0, 0.75] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className={`absolute inset-0 w-3 h-3 rounded-full ${blocked ? 'bg-red-500' : 'bg-emerald-400'}`}
+                  />
                 )}
               </div>
             </div>
@@ -225,30 +253,42 @@ export function TeamBoard() {
                 <p className="text-sm text-gray-500 italic text-center">Idle • No active tasks</p>
               </div>
             )}
-          </div>
+          </motion.div>
           );
         })}
-      </div>
+        </AnimatePresence>
+      </motion.div>
 
       {/* Workload Chart */}
       <div className="glass rounded-xl p-6 border border-white/10">
         <h3 className="text-lg font-bold text-white mb-6">Workload Distribution</h3>
-        <div className="space-y-4">
-          {workload.map((item, index) => (
-            <div 
-              key={item.agent} 
-              className="flex items-center gap-4 animate-slide-up"
-              style={{ animationDelay: `${index * 0.05}s` }}
+        <motion.div 
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+          className="space-y-4"
+        >
+          {workload.map((item) => (
+            <motion.div
+              key={item.agent}
+              variants={staggerItem}
+              className="flex items-center gap-4"
             >
               <div className="w-28 text-sm font-medium text-gray-300 truncate">{item.label}</div>
               <div className="flex-1 relative">
                 <div className="h-10 bg-white/5 rounded-lg overflow-hidden border border-white/10">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-500 ease-out relative"
-                    style={{ width: `${(item.count / maxWorkload) * 100}%` }}
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(item.count / maxWorkload) * 100}%` }}
+                    transition={{ ...springPresets.default, duration: 0.8 }}
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 relative"
                   >
-                    <div className="absolute inset-0 bg-white/10 animate-pulse" />
-                  </div>
+                    <motion.div 
+                      animate={{ opacity: [0.1, 0.3, 0.1] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="absolute inset-0 bg-white/10"
+                    />
+                  </motion.div>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-sm font-mono font-bold text-white drop-shadow-lg">
@@ -256,10 +296,10 @@ export function TeamBoard() {
                   </span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
