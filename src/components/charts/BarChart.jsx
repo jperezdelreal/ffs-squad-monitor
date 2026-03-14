@@ -26,11 +26,36 @@ export function BarChart({ data = [], title = '' }) {
       {
         label: title,
         data: data.map(d => d.value),
-        backgroundColor: colors.map(c => c + '80'),
+        backgroundColor: (context) => {
+          const chart = context.chart
+          const { ctx, chartArea } = chart
+          if (!chartArea) return colors.map(c => c + '80')
+          
+          // Create gradient for each bar
+          const dataIndex = context.dataIndex
+          const color = colors[dataIndex % colors.length]
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top)
+          gradient.addColorStop(0, color + '40')  // 25% opacity at bottom
+          gradient.addColorStop(1, color + 'CC')  // 80% opacity at top
+          return gradient
+        },
         borderColor: colors,
-        borderWidth: 1,
-        borderRadius: 4,
-        hoverBackgroundColor: colors.map(c => c + 'cc'),
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false,
+        hoverBackgroundColor: (context) => {
+          const chart = context.chart
+          const { ctx, chartArea } = chart
+          if (!chartArea) return colors.map(c => c + 'ff')
+          
+          const dataIndex = context.dataIndex
+          const color = colors[dataIndex % colors.length]
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top)
+          gradient.addColorStop(0, color + '99')  // 60% opacity at bottom
+          gradient.addColorStop(1, color + 'FF')  // 100% opacity at top
+          return gradient
+        },
+        hoverBorderWidth: 3,
       },
     ],
   }

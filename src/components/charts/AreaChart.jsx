@@ -24,15 +24,37 @@ export function AreaChart({ series = [], timeRange = '30d' }) {
 
   const datasets = series.map((s, i) => {
     const color = s.color || COLOR_LIST[i % COLOR_LIST.length]
+    
+    // Create gradient fill programmatically
+    const createGradient = (ctx, chartArea) => {
+      if (!chartArea) return color + '30'
+      const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+      gradient.addColorStop(0, color + 'CC')  // 80% opacity at top
+      gradient.addColorStop(0.5, color + '66')  // 40% opacity at mid
+      gradient.addColorStop(1, color + '0D')  // 5% opacity at bottom
+      return gradient
+    }
+
     return {
       label: s.label,
       data: s.data.map(d => d.value),
       borderColor: color,
-      backgroundColor: color + '30',
+      backgroundColor: (context) => {
+        const chart = context.chart
+        const { ctx, chartArea } = chart
+        if (!chartArea) return color + '30'
+        return createGradient(ctx, chartArea)
+      },
       fill: true,
-      tension: 0.35,
+      tension: 0.4,
       pointRadius: 0,
-      borderWidth: 2,
+      pointHoverRadius: 6,
+      pointHoverBackgroundColor: color,
+      pointHoverBorderColor: '#fff',
+      pointHoverBorderWidth: 2,
+      borderWidth: 2.5,
+      // Smooth animation on hover
+      hoverBorderWidth: 3,
     }
   })
 
