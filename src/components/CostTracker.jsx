@@ -24,25 +24,6 @@ export function CostTracker() {
 
   if (error || !usage) {
     return (
-      <div className="space-y-4 animate-fade-in">
-        <div className="glass rounded-xl p-8 border border-amber-500/30 bg-amber-500/10 text-center">
-          <div className="text-4xl mb-4">⚠️</div>
-          <h3 className="text-lg font-bold text-amber-400 mb-2">Cost data not available</h3>
-          <p className="text-sm text-gray-400 mb-4">
-            Unable to fetch GitHub Actions usage data. This may be due to missing permissions or network issues.
-          </p>
-          <motion.button
-            onClick={fetchUsage}
-            initial="rest"
-            whileHover="hover"
-            whileTap="tap"
-            variants={buttonPress}
-            className="px-4 py-2 bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors text-sm font-medium"
-          >
-            🔄 Retry
-          </motion.button>
-        </div>
-      </div>
       <ErrorState
         title="Cost data not available"
         message="Unable to fetch GitHub Actions usage data. This may be due to missing permissions or the backend being unreachable."
@@ -66,7 +47,7 @@ export function CostTracker() {
       </div>
 
       {/* GitHub Actions Usage */}
-      <div className="glass rounded-2xl p-8 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-transparent to-cyan-500/10 relative overflow-hidden">
+      <div className="glass-lg depth-floating rounded-2xl p-8 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-transparent to-cyan-500/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 animate-pulse" />
         <div className="relative z-10">
           <div className="text-center mb-6">
@@ -118,11 +99,11 @@ export function CostTracker() {
 
       {/* Per-repo breakdown (only from workflow_runs source) */}
       {usage.repos && usage.repos.length > 0 && (
-        <div className="glass rounded-xl p-6 border border-white/10">
+        <div className="glass depth-surface rounded-xl p-6 border border-white/10">
           <h3 className="text-lg font-bold text-white mb-6">Usage by Repository</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {usage.repos.map((repo) => (
-              <div key={repo.repo} className="glass rounded-lg p-4 border border-white/10 hover:border-cyan-500/30 transition-all">
+              <div key={repo.repo} className="glass depth-raised rounded-lg p-4 border border-white/10 hover:border-cyan-500/30 hover:shadow-glow-cyan-sm transition-all">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-2xl">{repo.emoji}</span>
                   <span className="text-sm font-semibold text-gray-300">{repo.label}</span>
@@ -136,10 +117,10 @@ export function CostTracker() {
       )}
 
       {/* Resource Cards */}
-      <div className="glass rounded-xl p-6 border border-white/10">
+      <div className="glass depth-surface rounded-xl p-6 border border-white/10">
         <h3 className="text-lg font-bold text-white mb-6">Resource Usage</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass rounded-lg p-4 border border-white/10">
+          <div className="glass depth-raised rounded-lg p-4 border border-white/10 hover:shadow-depth-floating transition-all">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">💾</span>
               <span className="text-sm font-semibold text-gray-400">Storage</span>
@@ -148,7 +129,7 @@ export function CostTracker() {
             <div className="text-xs text-emerald-400">GitHub Free Tier</div>
           </div>
 
-          <div className="glass rounded-lg p-4 border border-white/10">
+          <div className="glass depth-raised rounded-lg p-4 border border-white/10 hover:shadow-depth-floating transition-all">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">📡</span>
               <span className="text-sm font-semibold text-gray-400">Bandwidth</span>
@@ -157,7 +138,7 @@ export function CostTracker() {
             <div className="text-xs text-emerald-400">GitHub Pages</div>
           </div>
 
-          <div className="glass rounded-lg p-4 border border-white/10">
+          <div className="glass depth-raised rounded-lg p-4 border border-white/10 hover:shadow-depth-floating transition-all">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">⚡</span>
               <span className="text-sm font-semibold text-gray-400">Compute</span>

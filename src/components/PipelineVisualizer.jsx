@@ -143,23 +143,6 @@ export function PipelineVisualizer() {
 
   if (error) {
     return (
-      <div className="glass rounded-xl border border-red-500/20 p-8">
-        <div className="text-center">
-          <div className="text-5xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-white mb-2">Connection Error</h3>
-          <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <motion.button
-            onClick={fetchIssues}
-            initial="rest"
-            whileHover="hover"
-            whileTap="tap"
-            variants={buttonPress}
-            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-          >
-            Retry
-          </motion.button>
-        </div>
-      </div>
       <ErrorState
         title="Connection Error"
         message="Unable to load pipeline data. The backend might be unreachable."
@@ -175,7 +158,7 @@ export function PipelineVisualizer() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
-      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10">
+      <div className="glass depth-surface rounded-xl p-4 sm:p-6 border border-white/10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Pipeline Status</h2>
@@ -185,7 +168,7 @@ export function PipelineVisualizer() {
             <ExportButton endpoint="/api/export/issues?state=all" label="Export" />
             <button
               onClick={fetchIssues}
-              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 min-h-[44px]"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-glow-cyan transition-all flex items-center gap-2 min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

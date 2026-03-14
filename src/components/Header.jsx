@@ -19,7 +19,7 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
   }
 
   return (
-    <header className="glass border-b border-white/10 dark:border-white/10 light:border-black/10 px-3 sm:px-4 md:px-6 py-3 md:py-4 backdrop-blur-xl">
+    <header className="glass-lg depth-raised border-b border-white/10 dark:border-white/10 light:border-black/10 px-3 sm:px-4 md:px-6 py-3 md:py-4 backdrop-blur-xl">
       <div className="flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <motion.button

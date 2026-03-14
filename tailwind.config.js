@@ -24,6 +24,8 @@ export default {
           text: '#1e293b',
           muted: '#64748b',
         },
+        'accent-cyan': '#06b6d4',
+        'accent-blue': '#3b82f6',
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
@@ -66,6 +68,17 @@ export default {
       },
       backdropBlur: {
         xs: '2px',
+      },
+      boxShadow: {
+        'depth-surface': '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
+        'depth-raised': '0 4px 6px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.30)',
+        'depth-floating': '0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.38)',
+        'glow-cyan-sm': '0 0 10px rgba(6, 182, 212, 0.3)',
+        'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2)',
+        'glow-cyan-lg': '0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.3)',
+        'glow-blue-sm': '0 0 10px rgba(59, 130, 246, 0.3)',
+        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2)',
+        'glow-blue-lg': '0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)',
       },
     },
   },
