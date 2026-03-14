@@ -327,6 +327,39 @@ All GitHub data now flows through Express backend instead of direct browser call
 
 ---
 
+### 14. User Directives (2026-03-14)
+**By:** joperezd  
+**Date:** 2026-03-14  
+**Status:** ACTIVE  
+**Tier:** T0
+
+1. **Dashboard Independence:** ralph-watch.ps1 is NOT the primary data source. The dashboard must evolve freely without being constrained by existing monitoring scripts.
+
+2. **UI Quality Priority:** Current UI is suboptimal. Future development requires building a quality tool with excellent UX/design.
+
+3. **Creative Evolution:** Lead should continue evolving the dashboard with creative freedom in future roadmaps.
+
+**Rationale:** User captured vision for dashboard maturity — move beyond status observer to first-class monitoring product with great UX.
+
+---
+
+### 15. Ralph Refueling Loop (Continuous Evolution)
+**By:** joperezd  
+**Date:** 2026-03-14  
+**Status:** ACTIVE  
+**Tier:** T0
+
+When Ralph Go depletes the board (all issues closed), instead of idling, Ralph MUST:
+1. Check if "Define next roadmap" issue exists
+2. If none → create roadmap issue, continue working on it
+3. If exists → report "Roadmap issue open, waiting for Lead" and work on it
+
+**Why:** Creates a refuel loop ensuring autonomous evolution never stalls. Ralph continuously generates work when human directives are exhausted.
+
+**Related:** Rule #8 (Ralph Refueling Behavior) was precursor; this expands scope to full continuous evolution model.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

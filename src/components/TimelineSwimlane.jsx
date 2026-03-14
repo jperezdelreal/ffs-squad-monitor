@@ -214,18 +214,18 @@ export function TimelineSwimlane() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <span className="text-2xl">{'\u{1F3AC}'}</span> Timeline Swimlane
+          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+            <span className="text-xl sm:text-2xl">{'\u{1F3AC}'}</span> Timeline Swimlane
           </h2>
           <p className="text-sm text-gray-400 mt-1">Gantt-style agent activity over time</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div className="flex rounded-lg overflow-hidden border border-white/10">
             {TIME_RANGES.map(range => (
               <button
                 key={range.id}
                 onClick={() => setTimeRange(range.id)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1.5 text-xs font-medium transition-colors min-h-[44px] ${
                   timeRange === range.id
                     ? 'bg-cyan-500/20 text-cyan-300 border-r border-cyan-500/30'
                     : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border-r border-white/10 last:border-r-0'
@@ -235,10 +235,10 @@ export function TimelineSwimlane() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+          <div className="hidden sm:flex items-center gap-1 text-xs text-gray-500">
             <button
               onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
-              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors"
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
               title="Zoom out"
             >
               {'\u2212'}
@@ -246,7 +246,7 @@ export function TimelineSwimlane() {
             <span className="px-2 font-mono text-gray-400">{Math.round(zoom * 100)}%</span>
             <button
               onClick={() => setZoom(z => Math.min(4, z + 0.25))}
-              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors"
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
               title="Zoom in"
             >
               +
@@ -256,8 +256,8 @@ export function TimelineSwimlane() {
       </div>
 
       {/* Legend + Agent Filter */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-4 text-xs text-gray-400">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-400">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-emerald-500/50 border border-emerald-500/70" /> Completed
           </span>
@@ -268,13 +268,13 @@ export function TimelineSwimlane() {
             <span className="w-3 h-3 rounded-sm bg-rose-500/50 border border-rose-500/70" /> Blocked
           </span>
         </div>
-        <div className="h-4 w-px bg-white/10" />
-        <div className="flex items-center gap-2 text-xs">
+        <div className="hidden sm:block h-4 w-px bg-white/10" />
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           {agents.map(agent => (
             <button
               key={agent.id}
               onClick={() => toggleAgent(agent.id)}
-              className={`px-2 py-1 rounded-full border transition-colors ${
+              className={`px-2 py-1 rounded-full border transition-colors min-h-[44px] ${
                 hiddenAgents.has(agent.id)
                   ? 'bg-white/5 border-white/10 text-gray-600 line-through'
                   : 'bg-white/10 border-white/20 text-gray-300 hover:bg-white/15'

@@ -123,14 +123,14 @@ export function ActivityFeed() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Filters Bar */}
-      <div className="glass rounded-xl p-4 border border-white/10">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
+      <div className="glass rounded-xl p-3 sm:p-4 border border-white/10">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <label className="text-sm font-medium text-gray-400">Repository</label>
             <select
               value={filters.repo}
               onChange={(e) => setFilters({ ...filters, repo: e.target.value })}
-              className="bg-white/5 text-white rounded-lg px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
+              className="w-full sm:w-auto bg-white/5 text-white rounded-lg px-3 sm:px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all min-h-[44px]"
             >
               <option value="all">All Repos</option>
               {repos.map(repo => (
@@ -139,12 +139,12 @@ export function ActivityFeed() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <label className="text-sm font-medium text-gray-400">Event Type</label>
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="bg-white/5 text-white rounded-lg px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
+              className="w-full sm:w-auto bg-white/5 text-white rounded-lg px-3 sm:px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all min-h-[44px]"
             >
               <option value="all">All Types</option>
               {eventTypes.map(type => (
@@ -153,11 +153,11 @@ export function ActivityFeed() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 sm:ml-auto">
             <ExportButton endpoint="/api/export/issues?state=all" label="Export" />
             <button
               onClick={fetchEvents}
-              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

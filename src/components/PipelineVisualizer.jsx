@@ -166,17 +166,17 @@ export function PipelineVisualizer() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
-      <div className="glass rounded-xl p-6 border border-white/10">
-        <div className="flex items-center justify-between mb-4">
+      <div className="glass rounded-xl p-4 sm:p-6 border border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">Pipeline Status</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Pipeline Status</h2>
             <p className="text-sm text-gray-400">{repoCount} repositories tracked</p>
           </div>
           <div className="flex items-center gap-2">
             <ExportButton endpoint="/api/export/issues?state=all" label="Export" />
             <button
               onClick={fetchIssues}
-              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -185,7 +185,7 @@ export function PipelineVisualizer() {
             </button>
           </div>
         </div>
-        <div className="flex flex-wrap gap-4 text-xs">
+        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-gradient-to-br from-gray-600 to-gray-700 rounded" />
             <span className="text-gray-400">Pending</span>
@@ -204,7 +204,8 @@ export function PipelineVisualizer() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-gradient-to-br from-orange-600 to-red-700 rounded animate-pulse" />
-            <span className="text-gray-400">Bottleneck ({BOTTLENECK_THRESHOLD}+ issues)</span>
+            <span className="text-gray-400 hidden sm:inline">Bottleneck ({BOTTLENECK_THRESHOLD}+ issues)</span>
+            <span className="text-gray-400 sm:hidden">Bottleneck</span>
           </div>
         </div>
       </div>
@@ -224,14 +225,15 @@ export function PipelineVisualizer() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">
-                  <th className="text-left p-4 text-sm font-semibold text-gray-300 sticky left-0 bg-[#151920]/95 backdrop-blur-sm z-10">
+                  <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-semibold text-gray-300 sticky left-0 bg-[#151920]/95 backdrop-blur-sm z-10">
                     Repository
                   </th>
                   {STAGES.map(stage => (
-                    <th key={stage.id} className="text-center p-4 text-sm font-semibold text-gray-300 min-w-[140px]">
+                    <th key={stage.id} className="text-center p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-300 min-w-[100px] sm:min-w-[140px]">
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-2xl">{stage.emoji}</span>
-                        <span>{stage.name}</span>
+                        <span className="text-xl sm:text-2xl">{stage.emoji}</span>
+                        <span className="hidden sm:inline">{stage.name}</span>
+                        <span className="sm:hidden text-[10px]">{stage.name}</span>
                       </div>
                     </th>
                   ))}
