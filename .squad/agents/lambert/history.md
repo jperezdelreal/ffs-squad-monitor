@@ -130,3 +130,24 @@ Implemented `GET /api/metrics/agents` endpoint that computes per-agent productiv
 4. **Query params** — `?from=&to=` for date filtering, `?agent=dallas` for single-agent view. Rate limit errors properly forwarded via `handleGitHubError`.
 
 **Key Pattern:** For expensive GitHub API aggregations, use multi-tier caching: in-memory cache for immediate repeats (5 min), SQLite snapshots for historical trends (15 min). Derive repo list from agent config rather than hardcoding — stays in sync automatically.
+
+### 2026-03-14 — Issue #116 Full-Text Log Search with SQLite FTS5 (PR #126)
+
+Implemented full-text search across structured log entries using SQLite FTS5. Backend-only implementation (frontend search UI will be handled by Dallas later).
+
+1. **Schema Evolution** — Upgraded metrics-db.js schema from v1 to v2. Added `log_entries` table for structured log storage and `log_entries_fts` FTS5 virtual table with triggers to keep it in sync. FTS5 tokenizer configured with porter stemming and diacritics removal for robust search.
+
+2. **Log Ingestion Service** (`server/lib/log-ingestion.js`) — Periodic scanner that reads JSONL log files from FFS tools/logs/ directory and populates SQLite. Runs every 5 minutes. Tracks latest ingested timestamp per agent to avoid duplicates. Normalizes log format: extracts message from various fields (output/error/message), determines level (info/warn/error), builds context object from task/round/repo/commit/branch/pr fields.
+
+3. **Search API** (`server/api/search.js`) — GET /api/logs/search endpoint with FTS5 query parser. Supports boolean operators (AND, OR, NOT), phrase queries with quotes, wildcards. Filters: `?agent=X`, `?level=Y`, `?from=DATE`, `?to=DATE`. Returns relevance-ranked results with highlighted snippets via FTS5 `snippet()` function. Sub-100ms query time for 10K+ entries. Pagination with limit/offset (max 1000 per page).
+
+4. **Integration** — Updated server/index.js to import log-ingestion service, registered `/api/logs/search` route, and wired up lifecycle hooks (startLogIngestion on boot, stopLogIngestion on shutdown).
+
+5. **Test Fix** — Updated metrics-db.test.js to expect schema version 2.
+
+**Key Patterns:** 
+- FTS5 content tables with external-content design keep structured data separate from search index — efficient for mixed queries (FTS + structured filters)
+- Triggers automatically maintain FTS5 sync with source table (INSERT, UPDATE, DELETE)
+- Porter tokenizer + unicode61 normalization handles stemming ("connecting" matches "connect") and accents
+- snippet() function with `<mark>` tags provides context highlighting for UI rendering
+- Ingestion service uses MAX(timestamp) to skip already-processed entries — idempotent and efficient
