@@ -4,9 +4,10 @@ const NAV_ITEMS = [
   { id: 'activity', label: 'Activity Feed', icon: '📊', color: 'cyan' },
   { id: 'pipeline', label: 'Pipeline', icon: '🔄', color: 'purple' },
   { id: 'team', label: 'Team Board', icon: '👥', color: 'blue' },
+  { id: 'timeline', label: 'Timeline', icon: '🎬', color: 'indigo', badge: 'NEW' },
   { id: 'charts', label: 'Trend Charts', icon: '📈', color: 'emerald' },
   { id: 'cost', label: 'Cost Tracker', icon: '💰', color: 'green' },
-  { id: 'analytics', label: 'Analytics', icon: '📉', color: 'amber', badge: 'NEW' },
+  { id: 'analytics', label: 'Analytics', icon: '📉', color: 'amber' },
 ];
 
 export function Sidebar({ activeView, onViewChange }) {

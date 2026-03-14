@@ -9,6 +9,7 @@ import { TeamBoard } from './components/TeamBoard';
 import { CostTracker } from './components/CostTracker';
 import { TrendCharts } from './components/TrendCharts';
 import { Analytics } from './components/Analytics';
+import { TimelineSwimlane } from './components/TimelineSwimlane';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 
@@ -25,6 +26,8 @@ function App() {
         return <PipelineVisualizer />;
       case 'team':
         return <TeamBoard />;
+      case 'timeline':
+        return <TimelineSwimlane />;
       case 'charts':
         return <TrendCharts />;
       case 'cost':
