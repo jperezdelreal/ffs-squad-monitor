@@ -117,3 +117,55 @@
 **File paths:**
 - src/components/PipelineVisualizer.jsx - Bottleneck detection, avg time, STUCK badge
 - src/components/TeamBoard.jsx - Blocked-time tracking, severity indicators, sort-to-top
+
+### Issue #112: Mobile Responsive Layout with Tailwind Breakpoints (2026-03-14)
+
+**Architecture decisions:**
+- Implemented progressive disclosure pattern: critical UI always visible, secondary info shows on larger screens
+- Hamburger menu for sidebar on mobile (lg:hidden) with slide-in/slide-out animation
+- All touch targets sized to minimum 44x44px (Apple/Android accessibility guidelines)
+- Responsive breakpoints follow mobile-first approach: sm (640px), md (768px), lg (1024px), xl (1280px)
+
+**Key responsive patterns:**
+- Fixed positioning with transform transitions for mobile sidebar (`fixed lg:static`, `translate-x-full lg:translate-x-0`)
+- Mobile overlay to close sidebar on tap outside (`fixed inset-0 bg-black/60 z-40 lg:hidden`)
+- Conditional rendering by screen size: `hidden sm:block`, `hidden md:block`, `hidden lg:block`
+- Flexible layouts: `flex-col sm:flex-row` for stacked-to-horizontal transitions
+- Grid responsiveness: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
+- Horizontal scroll for wide tables: `overflow-x-auto` with `min-w-[800px]` on table element
+- Responsive spacing: `p-3 sm:p-4 md:p-6`, `space-y-3 sm:space-y-4 md:space-y-6`, `gap-2 sm:gap-3 md:gap-6`
+- Responsive text: `text-xs sm:text-sm`, `text-lg sm:text-xl md:text-2xl`
+
+**Mobile UX improvements:**
+- Header hamburger button (3-line icon) with proper tap target
+- Sidebar close button (X icon) visible only on mobile
+- NotificationBell always visible (critical alerts)
+- ConnectionStatus hidden on mobile (<640px), shown on sm+
+- HealthBadge hidden on small/mobile (<768px), shown on md+
+- DependencyHealth hidden on tablet (<1024px), shown on lg+
+- Buttons stretched to full width on mobile, auto width on desktop
+- Chart heights reduced on mobile: `h-48 sm:h-56 md:h-64`
+
+**Component updates:**
+- **App.jsx** - Added sidebarOpen state, handleViewChange closes sidebar, mobile overlay, responsive main padding
+- **Header.jsx** - Hamburger button, onMenuClick prop, progressive disclosure of status widgets, responsive layout
+- **Sidebar.jsx** - isOpen/onClose props, fixed-to-static positioning, close button, responsive padding/sizing
+- **TeamBoard.jsx** - Responsive grid (1→2→3→4 cols), flex-col→row header, responsive card sizing
+- **ActivityFeed.jsx** - Stacked filters on mobile, flex-col→row layout, responsive selects
+- **PipelineVisualizer.jsx** - Horizontal scroll table, responsive headers, condensed mobile view
+- **Analytics.jsx** - Responsive KPI grid, chart heights, button sizing
+- **TrendCharts.jsx** - Responsive time range selector, chart container sizing
+- **CostTracker.jsx** - Responsive typography and spacing
+- **TimelineSwimlane.jsx** - Responsive controls, zoom button tap targets
+
+**File paths:**
+- `src/App.jsx` - Mobile sidebar state and overlay
+- `src/components/Header.jsx` - Hamburger menu and progressive disclosure
+- `src/components/Sidebar.jsx` - Collapsible navigation
+- `src/components/TeamBoard.jsx` - Responsive agent grid
+- `src/components/ActivityFeed.jsx` - Responsive filters
+- `src/components/PipelineVisualizer.jsx` - Scrollable pipeline table
+- `src/components/Analytics.jsx` - Responsive analytics dashboard
+- `src/components/TrendCharts.jsx` - Responsive trend charts
+- `src/components/CostTracker.jsx` - Responsive cost display
+- `src/components/TimelineSwimlane.jsx` - Responsive timeline controls
