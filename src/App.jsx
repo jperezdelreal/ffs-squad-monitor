@@ -40,7 +40,21 @@ function App() {
   const showSettingsPanel = useStore((state) => state.showSettingsPanel)
   const showNotificationPanel = useStore((state) => state.showNotificationPanel)
   const toggleShortcutsPanel = useStore((state) => state.toggleShortcutsPanel)
+  const toggleSettingsPanel = useStore((state) => state.toggleSettingsPanel)
   const refreshAll = useStore((state) => state.refreshAll)
+
+  // Cmd+K / Ctrl+K handler for command palette
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen(prev => !prev)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const { shortcuts } = useKeyboardShortcuts({
     onViewChange: (view) => {
@@ -62,6 +76,10 @@ function App() {
   const handleViewChange = (view) => {
     setActiveView(view);
     setSidebarOpen(false);
+  };
+
+  const handleToggleTheme = () => {
+    document.documentElement.classList.toggle('light')
   };
 
   const renderView = () => {
@@ -147,6 +165,20 @@ function App() {
           isOpen={showShortcutsPanel}
           onClose={toggleShortcutsPanel}
           shortcuts={shortcuts}
+        />
+        <CommandPalette
+          isOpen={commandPaletteOpen}
+          onClose={() => setCommandPaletteOpen(false)}
+          onViewChange={handleViewChange}
+          onRefresh={refreshAll}
+          onToggleTheme={handleToggleTheme}
+          onOpenSettings={toggleSettingsPanel}
+          onOpenShortcuts={toggleShortcutsPanel}
+          onOpenExport={() => {
+            if (exportButtonRef.current) {
+              exportButtonRef.current.click()
+            }
+          }}
         />
       </div>
     </ErrorBoundary>
