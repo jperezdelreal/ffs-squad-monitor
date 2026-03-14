@@ -11,6 +11,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:gdd'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/1',
+    createdAt: '2026-03-01T10:00:00Z',
   },
   {
     number: 2,
@@ -19,6 +20,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:code'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/2',
+    createdAt: '2026-03-02T10:00:00Z',
   },
   {
     number: 3,
@@ -27,6 +29,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:deploy'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/3',
+    createdAt: '2026-03-03T10:00:00Z',
   },
   {
     number: 4,
@@ -35,6 +38,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/GameRepo',
     labels: ['pipeline:build', 'blocked-by:deps'],
     url: 'https://github.com/jperezdelreal/GameRepo/issues/4',
+    createdAt: '2026-03-04T10:00:00Z',
   },
   {
     number: 5,
@@ -43,6 +47,7 @@ const mockIssues = [
     repoGithub: 'jperezdelreal/SecondRepo',
     labels: ['pipeline:proposal'],
     url: 'https://github.com/jperezdelreal/SecondRepo/issues/5',
+    createdAt: '2026-03-05T10:00:00Z',
   },
 ]
 
