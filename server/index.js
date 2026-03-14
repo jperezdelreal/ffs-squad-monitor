@@ -24,6 +24,7 @@ import usageRoute from './api/usage.js';
 import healthRoute from './api/health.js';
 import { metricsRoute, metricsSummaryRoute, metricsAgentsRoute, metricsStatsRoute } from './api/metrics.js';
 import sseRoute from './api/sse.js';
+import { exportIssuesRoute, exportMetricsRoute, exportUsageRoute } from './api/export.js';
 
 const app = express();
 
@@ -54,6 +55,9 @@ app.get('/api/metrics/summary', metricsSummaryRoute);
 app.get('/api/metrics/agents', metricsAgentsRoute);
 app.get('/api/metrics/stats', metricsStatsRoute);
 app.get('/api/sse', sseRoute);
+app.get('/api/export/issues', exportIssuesRoute);
+app.get('/api/export/metrics', exportMetricsRoute);
+app.get('/api/export/usage', exportUsageRoute);
 
 /**
  * @openapi
@@ -119,7 +123,8 @@ app.listen(PORT, () => {
       '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
       '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/health',
       '/api/metrics', '/api/metrics/summary', '/api/metrics/agents', '/api/metrics/stats',
-      '/api/sse', '/api/docs', '/health',
+      '/api/sse', '/api/export/issues', '/api/export/metrics', '/api/export/usage',
+      '/api/docs', '/health',
     ],
   });
 
