@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { id: 'team', label: 'Team Board', icon: '👥', color: 'blue' },
   { id: 'charts', label: 'Trend Charts', icon: '📈', color: 'emerald' },
   { id: 'cost', label: 'Cost Tracker', icon: '💰', color: 'green' },
+  { id: 'analytics', label: 'Analytics', icon: '📉', color: 'amber', badge: 'NEW' },
 ];
 
 export function Sidebar({ activeView, onViewChange }) {
@@ -40,6 +41,11 @@ export function Sidebar({ activeView, onViewChange }) {
               )}
               <span className="text-2xl transition-transform group-hover:scale-110">{item.icon}</span>
               <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+              {item.badge && (
+                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30 uppercase tracking-wide">
+                  {item.badge}
+                </span>
+              )}
               {isActive && (
                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               )}
