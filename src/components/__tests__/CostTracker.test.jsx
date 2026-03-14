@@ -87,7 +87,7 @@ describe('CostTracker', () => {
       expect(screen.getByText('Cost data not available')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('🔄 Retry'))
+    fireEvent.click(screen.getByText('Retry'))
     await waitFor(() => {
       expect(screen.getByText('GITHUB ACTIONS USAGE')).toBeInTheDocument()
     })

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn, springPresets, buttonPress } from '../lib/motion';
 
@@ -13,16 +13,6 @@ export function ErrorState({
 }) {
   const [showErrorDetails, setShowErrorDetails] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  const retryTimerRef = useRef(null);
-
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-      }
-    };
-  }, []);
 
   const handleRetry = async () => {
     if (!retry) return;
@@ -30,7 +20,7 @@ export function ErrorState({
     try {
       await retry();
     } finally {
-      retryTimerRef.current = setTimeout(() => setIsRetrying(false), 500);
+      setTimeout(() => setIsRetrying(false), 500);
     }
   };
 

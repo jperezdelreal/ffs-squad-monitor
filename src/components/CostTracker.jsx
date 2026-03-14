@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
 import { SkeletonContainer, SkeletonGrid, SkeletonStatCard, Skeleton } from './Skeleton';
@@ -82,7 +81,7 @@ export function CostTracker() {
                   ? 'text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-yellow-500'
                   : 'text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 via-green-400 to-cyan-400'
               }`}>
-                <AnimatedCounter value={usedMinutes} duration={0.8} />
+                {usedMinutes}
               </div>
               <div className="text-left">
                 <div className="text-2xl text-gray-400 font-medium">/ {totalMinutes}</div>
@@ -123,25 +122,14 @@ export function CostTracker() {
           <h3 className="text-lg font-bold text-white mb-6">Usage by Repository</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {usage.repos.map((repo) => (
-              <motion.div 
-                key={repo.repo} 
-                initial="rest"
-                whileHover="hover"
-                whileTap="tap"
-                variants={cardHover}
-                className="glass rounded-lg p-4 border border-white/10 hover:border-cyan-500/30 transition-all"
-              >
+              <div key={repo.repo} className="glass rounded-lg p-4 border border-white/10 hover:border-cyan-500/30 transition-all">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-2xl">{repo.emoji}</span>
                   <span className="text-sm font-semibold text-gray-300">{repo.label}</span>
                 </div>
-                <div className="text-2xl font-black text-white mb-1">
-                  <AnimatedCounter value={repo.durationMinutes} /> min
-                </div>
-                <div className="text-xs text-gray-400">
-                  <AnimatedCounter value={repo.runs} /> workflow runs
-                </div>
-              </motion.div>
+                <div className="text-2xl font-black text-white mb-1">{repo.durationMinutes} min</div>
+                <div className="text-xs text-gray-400">{repo.runs} workflow runs</div>
+              </div>
             ))}
           </div>
         </div>
