@@ -118,7 +118,7 @@ export function Settings() {
             animate="animate"
             exit="exit"
             transition={springPresets.snappy}
-            className="fixed left-72 top-0 bottom-0 w-96 z-50 glass border-r border-white/10 overflow-y-auto"
+            className="fixed left-72 top-0 bottom-0 w-96 z-50 glass-lg depth-floating border-r border-white/10 overflow-y-auto"
           >
         <div className="p-6">
           {/* Header */}

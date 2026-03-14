@@ -24,7 +24,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
       transition={springPresets.snappy}
       className={`
         fixed lg:static inset-y-0 left-0 z-40
-        w-72 glass border-r border-white/10 dark:border-white/10 light:border-black/10 backdrop-blur-xl flex flex-col
+        w-72 glass-lg depth-raised border-r border-white/10 dark:border-white/10 light:border-black/10 backdrop-blur-xl flex flex-col
         ${!isOpen ? 'lg:translate-x-0' : ''}
       `}
       style={{ x: '0%' }}
@@ -59,10 +59,10 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={springPresets.snappy}
-              className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg group relative min-h-[44px] ${
+              className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg group relative min-h-[44px] transition-all duration-200 ${
                 isActive
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white dark:text-white light:text-gray-900 border border-cyan-500/30 shadow-lg shadow-cyan-500/10'
-                  : 'text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-black/5 border border-transparent'
+                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white dark:text-white light:text-gray-900 border border-cyan-500/30 shadow-glow-cyan-sm depth-raised'
+                  : 'text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-black/5 border border-transparent hover:shadow-depth-surface'
               }`}
             >
               {isActive && (

@@ -150,14 +150,14 @@ export function ActivityFeed() {
       className="space-y-4"
     >
       {/* Filters Bar */}
-      <div className="glass rounded-xl p-3 sm:p-4 border border-white/10">
+      <div className="glass depth-surface rounded-xl p-3 sm:p-4 border border-white/10">
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <label className="text-sm font-medium text-gray-400">Repository</label>
             <select
               value={filters.repo}
               onChange={(e) => setFilters({ ...filters, repo: e.target.value })}
-              className="w-full sm:w-auto bg-white/5 text-white rounded-lg px-3 sm:px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all min-h-[44px]"
+              className="w-full sm:w-auto bg-white/5 text-white rounded-lg px-3 sm:px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-glow-cyan-sm outline-none transition-all min-h-[44px]"
             >
               <option value="all">All Repos</option>
               {repos.map(repo => (
@@ -171,7 +171,7 @@ export function ActivityFeed() {
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="w-full sm:w-auto bg-white/5 text-white rounded-lg px-3 sm:px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all min-h-[44px]"
+              className="w-full sm:w-auto bg-white/5 text-white rounded-lg px-3 sm:px-4 py-2 text-sm border border-white/10 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:shadow-glow-cyan-sm outline-none transition-all min-h-[44px]"
             >
               <option value="all">All Types</option>
               {eventTypes.map(type => (
@@ -184,7 +184,7 @@ export function ActivityFeed() {
             <ExportButton endpoint="/api/export/issues?state=all" label="Export" />
             <button
               onClick={fetchEvents}
-              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 min-h-[44px]"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:shadow-glow-cyan transition-all flex items-center gap-2 min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -196,7 +196,7 @@ export function ActivityFeed() {
       </div>
 
       {/* Activity Timeline */}
-      <div className="glass rounded-xl border border-white/10 overflow-hidden">
+      <div className="glass depth-raised rounded-xl border border-white/10 overflow-hidden">
         <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-semibold text-white">Activity Stream</h3>
@@ -231,7 +231,7 @@ export function ActivityFeed() {
                   exit={{ opacity: 0, x: -20 }}
                   layout
                   transition={springPresets.default}
-                  className={`p-4 hover:bg-white/5 group relative ${isNew ? 'bg-cyan-500/5' : ''}`}
+                  className={`p-4 hover:bg-white/5 hover:shadow-depth-surface transition-all group relative ${isNew ? 'bg-cyan-500/5' : ''}`}
                 >
                 <motion.div variants={cardHover}>
                   {isNew && (
@@ -287,6 +287,7 @@ export function ActivityFeed() {
                   </div>
                 </div>
               </motion.div>
+                </motion.div>
                 );
               })}
             </AnimatePresence>

@@ -50,7 +50,7 @@ export function ShortcutsOverlay({ isOpen, onClose, shortcuts }) {
       />
       <div
         ref={panelRef}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl glass border border-white/10 backdrop-blur-xl rounded-lg shadow-2xl"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl glass-lg depth-floating border border-white/10 backdrop-blur-xl rounded-lg shadow-2xl"
         style={{
           animation: 'fadeInScale 250ms ease-out',
         }}
