@@ -12,6 +12,13 @@ const ALERT_TYPE_LABELS = {
   sprintMilestone: 'Sprint milestone',
 }
 
+const pollingOptions = [30, 60, 120, 300]
+const densityOptions = [
+  { value: 'compact', label: 'Compact', icon: '▪️' },
+  { value: 'comfortable', label: 'Comfortable', icon: '▫️' },
+  { value: 'spacious', label: 'Spacious', icon: '▫️▫️' },
+]
+
 function Toggle({ checked, onChange, label }) {
   return (
     <label className="flex items-center justify-between gap-3 py-2 cursor-pointer group">
@@ -69,8 +76,10 @@ export function Settings() {
   const panelRef = useRef(null)
   const show = useStore(s => s.showSettingsPanel)
   const settings = useStore(s => s.settings)
+  const density = useStore(s => s.density)
   const updateSettings = useStore(s => s.updateSettings)
   const updateAlertType = useStore(s => s.updateAlertType)
+  const setDensity = useStore(s => s.setDensity)
   const closeAllPanels = useStore(s => s.closeAllPanels)
 
   // Close on Escape
@@ -217,6 +226,27 @@ export function Settings() {
 
           {/* Display Preferences */}
           <SectionHeader>Display Preferences</SectionHeader>
+          
+          <div className="py-2">
+            <span className="text-sm text-gray-300 block mb-2">Density</span>
+            <div className="flex gap-2">
+              {densityOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setDensity(opt.value)}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    density === opt.value
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <div className="mb-1">{opt.icon}</div>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="py-2">
             <span className="text-sm text-gray-300 block mb-2">Polling interval</span>
             <div className="flex gap-2">
