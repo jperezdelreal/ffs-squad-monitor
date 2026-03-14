@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useStore } from '../store/store'
+import { SkeletonContainer, SkeletonTimelineBar } from './Skeleton'
 
 const TIME_RANGES = [
   { id: '24h', label: 'Last 24h', ms: 24 * 60 * 60 * 1000 },
@@ -191,9 +192,9 @@ export function TimelineSwimlane() {
     return (
       <div className="space-y-6" data-testid="timeline-loading">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="glass rounded-xl p-6 animate-pulse">
-            <div className="h-20 bg-white/5 rounded-xl" />
-          </div>
+          <SkeletonContainer key={i}>
+            <SkeletonTimelineBar />
+          </SkeletonContainer>
         ))}
       </div>
     )

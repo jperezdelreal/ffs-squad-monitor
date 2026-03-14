@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react'
 import { TrendLine, BarChart, AreaChart } from './charts'
 import { useStore } from '../store/store'
+import { SkeletonChart } from './Skeleton'
 
 const TIME_RANGES = ['7d', '30d', '90d']
 
@@ -82,9 +83,7 @@ export function TrendCharts() {
     return (
       <div className="space-y-6">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="glass rounded-xl p-6 animate-pulse">
-            <div className="h-64 bg-white/5 rounded-xl" />
-          </div>
+          <SkeletonChart key={i} />
         ))}
       </div>
     )

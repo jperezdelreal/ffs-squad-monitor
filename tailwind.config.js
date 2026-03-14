@@ -33,6 +33,7 @@ export default {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'glow': 'glow 2s ease-in-out infinite',
+        'shimmer': 'shimmer 2s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -46,6 +47,10 @@ export default {
         glow: {
           '0%, 100%': { boxShadow: '0 0 5px currentColor' },
           '50%': { boxShadow: '0 0 20px currentColor' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
       },
       backdropBlur: {

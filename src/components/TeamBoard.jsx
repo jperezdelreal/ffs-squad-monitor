@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/store';
 import { ExportButton } from './ExportButton';
 import { staggerContainer, staggerItem, springPresets } from '../lib/motion';
+import { SkeletonContainer, SkeletonGrid, SkeletonAgentCard, SkeletonText } from './Skeleton';
 
 const BLOCK_THRESHOLDS = [
   { maxHours: 4, label: 'Recently blocked', color: 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300', dot: 'bg-yellow-400' },
@@ -94,16 +95,10 @@ export function TeamBoard() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="glass rounded-xl p-6 animate-pulse">
-          <div className="h-8 bg-white/5 rounded w-1/4 mb-6" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-40 bg-white/5 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
+      <SkeletonContainer>
+        <SkeletonText lines={1} className="w-1/4 mb-6 h-8" />
+        <SkeletonGrid cols={4} rows={2} itemComponent={SkeletonAgentCard} />
+      </SkeletonContainer>
     );
   }
 
