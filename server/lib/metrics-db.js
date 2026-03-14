@@ -13,7 +13,7 @@ const RETENTION_DAYS = 30
 
 let db = null
 
-const SCHEMA_VERSION = 2
+const SCHEMA_VERSION = 3
 
 const MIGRATIONS = [
   `CREATE TABLE IF NOT EXISTS metrics_snapshots (
@@ -78,6 +78,22 @@ const MIGRATIONS = [
     INSERT INTO log_entries_fts(rowid, message, context, agent, level, timestamp)
     VALUES (new.id, new.message, new.context, new.agent, new.level, new.timestamp);
   END`,
+  // Token usage tracking (schema v3)
+  `CREATE TABLE IF NOT EXISTS token_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    agent TEXT,
+    model TEXT NOT NULL,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    total_tokens INTEGER GENERATED ALWAYS AS (input_tokens + output_tokens) STORED,
+    cost_usd REAL NOT NULL DEFAULT 0,
+    run_id TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_token_usage_timestamp ON token_usage (timestamp DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_token_usage_agent ON token_usage (agent)`,
+  `CREATE INDEX IF NOT EXISTS idx_token_usage_model ON token_usage (model)`,
 ]
 
 export function getDb() {
@@ -449,6 +465,112 @@ export function searchLogs(options = {}) {
   }))
 
   return { results, total, hasMore, limit, offset }
+}
+
+// --- Token Usage ---
+
+export function insertTokenUsage(entry) {
+  const db = getDb()
+  const stmt = db.prepare(`
+    INSERT INTO token_usage (timestamp, agent, model, input_tokens, output_tokens, cost_usd, run_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `)
+  return stmt.run(
+    entry.timestamp || new Date().toISOString(),
+    entry.agent || null,
+    entry.model,
+    entry.inputTokens || 0,
+    entry.outputTokens || 0,
+    entry.costUsd || 0,
+    entry.runId || null
+  )
+}
+
+export function bulkInsertTokenUsage(entries) {
+  const db = getDb()
+  return db.transaction(() => {
+    const stmt = db.prepare(`
+      INSERT INTO token_usage (timestamp, agent, model, input_tokens, output_tokens, cost_usd, run_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `)
+    for (const entry of entries) {
+      stmt.run(
+        entry.timestamp || new Date().toISOString(),
+        entry.agent || null,
+        entry.model,
+        entry.inputTokens || 0,
+        entry.outputTokens || 0,
+        entry.costUsd || 0,
+        entry.runId || null
+      )
+    }
+  })()
+}
+
+export function queryTokenUsage({ from, to, agent } = {}) {
+  const db = getDb()
+  let query = 'SELECT id, timestamp, agent, model, input_tokens, output_tokens, total_tokens, cost_usd, run_id FROM token_usage WHERE 1=1'
+  const params = []
+
+  if (from) {
+    query += ' AND timestamp >= ?'
+    params.push(from)
+  }
+  if (to) {
+    query += ' AND timestamp <= ?'
+    params.push(to)
+  }
+  if (agent) {
+    query += ' AND agent = ?'
+    params.push(agent)
+  }
+
+  query += ' ORDER BY timestamp DESC'
+  return db.prepare(query).all(...params).map(row => ({
+    id: row.id,
+    timestamp: row.timestamp,
+    agent: row.agent,
+    model: row.model,
+    inputTokens: row.input_tokens,
+    outputTokens: row.output_tokens,
+    totalTokens: row.total_tokens,
+    costUsd: row.cost_usd,
+    runId: row.run_id,
+  }))
+}
+
+export function getTokenUsageSummary({ from, to, agent } = {}) {
+  const db = getDb()
+  let query = `SELECT
+    COUNT(*) as requests,
+    COALESCE(SUM(input_tokens), 0) as totalInput,
+    COALESCE(SUM(output_tokens), 0) as totalOutput,
+    COALESCE(SUM(total_tokens), 0) as totalTokens,
+    COALESCE(SUM(cost_usd), 0) as totalCost
+    FROM token_usage WHERE 1=1`
+  const params = []
+
+  if (from) {
+    query += ' AND timestamp >= ?'
+    params.push(from)
+  }
+  if (to) {
+    query += ' AND timestamp <= ?'
+    params.push(to)
+  }
+  if (agent) {
+    query += ' AND agent = ?'
+    params.push(agent)
+  }
+
+  const row = db.prepare(query).get(...params)
+  return {
+    requests: row.requests,
+    totalInputTokens: row.totalInput,
+    totalOutputTokens: row.totalOutput,
+    totalTokens: row.totalTokens,
+    totalCostUsd: Math.round(row.totalCost * 1_000_000) / 1_000_000,
+  }
 }
 
 // --- Lifecycle ---

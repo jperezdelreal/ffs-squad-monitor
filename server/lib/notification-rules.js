@@ -1,4 +1,5 @@
 import { logger } from './logger.js'
+import { getTokenUsageSummary } from './metrics-db.js'
 
 const log = logger.child({ component: 'notification-rules' })
 
@@ -221,6 +222,31 @@ export function checkSprintMilestone(currentIssues, previousIssues, milestones =
 }
 
 /**
+ * Rule: Token budget — fires when daily LLM spend exceeds a threshold.
+ * @param {number} dailyBudgetUsd - Daily budget threshold in USD (default $5)
+ * @returns {Array<Object>} notifications
+ */
+export function checkTokenBudget(dailyBudgetUsd = 5) {
+  const today = new Date().toISOString().slice(0, 10)
+  let summary
+  try {
+    summary = getTokenUsageSummary({ from: `${today}T00:00:00.000Z`, to: `${today}T23:59:59.999Z` })
+  } catch {
+    return []
+  }
+
+  if (!summary || summary.totalCostUsd <= dailyBudgetUsd) return []
+
+  const pct = Math.round((summary.totalCostUsd / dailyBudgetUsd) * 100)
+  return [createNotification(
+    'token-budget',
+    summary.totalCostUsd > dailyBudgetUsd * 2 ? SEVERITY.CRITICAL : SEVERITY.WARNING,
+    'LLM token budget exceeded',
+    `Daily LLM spend $${summary.totalCostUsd.toFixed(2)} exceeds $${dailyBudgetUsd} budget (${pct}%)`,
+  )]
+}
+
+/**
  * All notification rules. Each is a pure function:
  * (currentData, previousData) => notification[]
  */
@@ -254,5 +280,9 @@ export const RULES = [
     name: 'sprint-milestone',
     evaluate: (current, previous) =>
       checkSprintMilestone(current.issues, previous.issues),
+  },
+  {
+    name: 'token-budget',
+    evaluate: () => checkTokenBudget(),
   },
 ]

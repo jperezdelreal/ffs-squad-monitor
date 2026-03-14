@@ -11,6 +11,10 @@ vi.mock('../logger.js', () => ({
   },
 }))
 
+vi.mock('../metrics-db.js', () => ({
+  getTokenUsageSummary: vi.fn(() => ({ requests: 0, totalInputTokens: 0, totalOutputTokens: 0, totalTokens: 0, totalCostUsd: 0 })),
+}))
+
 import {
   checkAgentBlocked,
   checkHeartbeatStale,
@@ -18,9 +22,12 @@ import {
   checkRateLimitWarning,
   checkIssueSpike,
   checkSprintMilestone,
+  checkTokenBudget,
   SEVERITY,
   RULES,
 } from '../notification-rules.js'
+
+import { getTokenUsageSummary } from '../metrics-db.js'
 
 describe('SEVERITY', () => {
   it('exports expected severity levels', () => {
@@ -277,9 +284,42 @@ describe('checkSprintMilestone', () => {
   })
 })
 
+describe('checkTokenBudget', () => {
+  beforeEach(() => {
+    vi.mocked(getTokenUsageSummary).mockReset()
+  })
+
+  it('returns empty when spend is under budget', () => {
+    getTokenUsageSummary.mockReturnValue({ totalCostUsd: 2.50 })
+    expect(checkTokenBudget(5)).toEqual([])
+  })
+
+  it('fires warning when spend exceeds budget', () => {
+    getTokenUsageSummary.mockReturnValue({ totalCostUsd: 7.50 })
+    const result = checkTokenBudget(5)
+    expect(result).toHaveLength(1)
+    expect(result[0].type).toBe('token-budget')
+    expect(result[0].severity).toBe('warning')
+    expect(result[0].body).toContain('$7.50')
+    expect(result[0].body).toContain('$5')
+  })
+
+  it('fires critical when spend exceeds 2x budget', () => {
+    getTokenUsageSummary.mockReturnValue({ totalCostUsd: 12.00 })
+    const result = checkTokenBudget(5)
+    expect(result).toHaveLength(1)
+    expect(result[0].severity).toBe('critical')
+  })
+
+  it('returns empty when db throws', () => {
+    getTokenUsageSummary.mockImplementation(() => { throw new Error('db error') })
+    expect(checkTokenBudget()).toEqual([])
+  })
+})
+
 describe('RULES', () => {
   it('exports all expected rules', () => {
-    expect(RULES).toHaveLength(6)
+    expect(RULES).toHaveLength(7)
     const names = RULES.map(r => r.name)
     expect(names).toContain('agent-blocked')
     expect(names).toContain('heartbeat-stale')
@@ -287,6 +327,7 @@ describe('RULES', () => {
     expect(names).toContain('rate-limit')
     expect(names).toContain('issue-spike')
     expect(names).toContain('sprint-milestone')
+    expect(names).toContain('token-budget')
   })
 
   it('each rule has an evaluate function', () => {
