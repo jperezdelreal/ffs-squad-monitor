@@ -241,3 +241,63 @@ Cannot use `gh pr review --approve` when authenticated as PR author. Posted appr
 - Deferred: TypeScript migration, multi-squad support, plugin architecture, WebSockets
 
 **Decision Document:** `.squad/decisions/inbox/ripley-phase2-pipeline.md`
+
+### 2026-03-15: Sprint 4 Planning - UI/UX 2026 Transformation
+
+**Founder Directive:** "Le pediría al lead a centrar los siguientes esfuerzos en su totalidad únicamente en que la UI y UX sea de 2026."
+Translation: ALL future effort must focus EXCLUSIVELY on making the UI/UX feel like 2026.
+
+**Decision:** Defined Sprint 4 with 12 issues (#140-#151) focused entirely on UI/UX modernization. Zero backend work. All issues assigned to Dallas (Frontend Dev).
+
+**Current State Analysis:**
+- Strong foundation: React 18.3, Zustand, Tailwind CSS 4.2, SSE streaming, 227+ tests
+- UX gaps identified: Basic CSS transitions, simple loading spinners, static charts, no command palette, flat micro-interactions, basic glassmorphism, utilitarian empty states, mobile adequate but not exceptional
+
+**Research Insights - 2026 UI Trends:**
+- Glassmorphism 2.0 with layered translucency
+- Framer Motion for physics-based animations
+- Skeleton screens instead of spinners
+- Command palette (⌘K) pattern from Linear/Vercel/Raycast
+- Real-time data feels "alive" with pulsing indicators
+- Interactive animated charts with smooth transitions
+- Micro-interactions with haptic-like visual feedback
+- Progressive disclosure and focus mode patterns
+
+**Issues Created:**
+
+| Priority | Count | Issues |
+|----------|-------|--------|
+| P0 | 3 | #140 Framer Motion, #141 Skeleton Screens, #144 Micro-interactions |
+| P1 | 6 | #142 Chart Redesign, #143 Command Palette, #146 Depth/Colors, #147 Empty States, #148 Pulse Indicators, #150 Mobile Polish |
+| P2 | 3 | #145 Typography, #149 Toast System, #151 Focus Mode |
+
+**Implementation Strategy:**
+- Phase 1: Foundation (P0) - Motion, loading, interactions
+- Phase 2: Core UX (P1) - Command palette, charts, depth, states, mobile
+- Phase 3: Polish (P2) - Typography, toasts, focus mode
+
+**New Dependencies:**
+- Framer Motion (animation library)
+- React Hot Toast (optional, for toast system)
+
+**Success Metrics:**
+1. Framer Motion integrated across all views
+2. Zero loading spinners (all skeleton screens)
+3. Charts animate smoothly on data updates
+4. Command palette functional with fuzzy search
+5. Every interaction has purposeful micro-animation
+6. Mobile tested on iOS/Android
+7. Empty/error states are delightful
+8. Real-time data feels "alive"
+9. User feedback: "Feels like 2026 product"
+
+**Out of Scope:** Backend changes, new features beyond UX, TypeScript migration, testing infrastructure changes, Docker/deployment, multi-squad support.
+
+**Key Learning:** When founder gives clear strategic directive (UI/UX only), Lead must align entire sprint around that singular focus. No split attention between backend/frontend. This creates clarity for team and accelerates execution.
+
+**Files Created:**
+- `project-state.json` - Phase: sprinting, Sprint: 4, Focus: UI/UX 2026
+- `.squad/decisions/inbox/ripley-ux-2026-plan.md` - Full decision document
+- Created `sprint:4` label in repository
+
+**Next:** Dallas begins with P0 foundation issues (#140, #141, #144)
