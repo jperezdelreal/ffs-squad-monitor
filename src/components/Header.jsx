@@ -3,9 +3,10 @@ import { HealthBadge } from './HealthBadge'
 import { ConnectionStatus } from './ConnectionStatus'
 import { DependencyHealth } from './DependencyHealth'
 import { NotificationBell } from './NotificationHistory'
+import { ExportButton } from './ExportButton'
 import { useTheme } from '../hooks/useTheme'
 
-export function Header({ lastUpdate, isConnected, healthScore, healthLevel, healthBreakdown, sseStatus, onSSEReconnect, onMenuClick }) {
+export function Header({ lastUpdate, isConnected, healthScore, healthLevel, healthBreakdown, sseStatus, onSSEReconnect, onMenuClick, exportButtonRef }) {
   const { theme, toggleTheme } = useTheme()
   const getTimeSince = () => {
     if (!lastUpdate) return 'Never'
@@ -47,6 +48,9 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
               lastUpdate={lastUpdate}
               onReconnect={onSSEReconnect}
             />
+          </div>
+          <div className="hidden md:block" ref={exportButtonRef}>
+            <ExportButton endpoint="/api/events" label="Export" />
           </div>
           <button
             onClick={toggleTheme}
