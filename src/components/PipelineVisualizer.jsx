@@ -158,7 +158,7 @@ export function PipelineVisualizer() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
-      <div className="glass depth-surface rounded-xl p-4 sm:p-6 border border-white/10">
+      <div className="glass depth-surface rounded-xl p-4 sm:p-6 border border-white/10 snap-start">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Pipeline Status</h2>
@@ -212,8 +212,8 @@ export function PipelineVisualizer() {
           </div>
         </div>
       ) : (
-        <div className="glass rounded-xl border border-white/10 overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="glass rounded-xl border border-white/10 overflow-hidden snap-start">
+          <div className="overflow-x-auto touch-pan-x">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">

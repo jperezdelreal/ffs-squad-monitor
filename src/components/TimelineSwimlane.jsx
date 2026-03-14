@@ -180,6 +180,28 @@ export function TimelineSwimlane() {
     setIsDragging(false)
   }, [])
 
+  // Touch event handlers for mobile drag support
+  const handleTouchStart = useCallback((e) => {
+    if (!timelineRef.current) return
+    setIsDragging(true)
+    dragRef.current = {
+      startX: e.touches[0].pageX - timelineRef.current.offsetLeft,
+      scrollLeft: timelineRef.current.scrollLeft,
+    }
+  }, [])
+
+  const handleTouchMove = useCallback((e) => {
+    if (!isDragging || !timelineRef.current) return
+    e.preventDefault()
+    const x = e.touches[0].pageX - timelineRef.current.offsetLeft
+    const walk = (x - dragRef.current.startX) * 1.5
+    timelineRef.current.scrollLeft = dragRef.current.scrollLeft - walk
+  }, [isDragging])
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
   const totalTasks = useMemo(() => {
     let count = 0
     for (const [, tasks] of tasksByAgent) count += tasks.length
@@ -322,12 +344,15 @@ export function TimelineSwimlane() {
         {/* Swimlane rows */}
         <div
           ref={timelineRef}
-          className={`overflow-x-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`overflow-x-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} touch-pan-x`}
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {visibleAgents.length === 0 ? (
             <div className="p-8 text-center text-sm text-gray-500" data-testid="timeline-no-agents">

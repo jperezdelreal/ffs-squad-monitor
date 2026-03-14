@@ -196,7 +196,7 @@ export function ActivityFeed() {
       </div>
 
       {/* Activity Timeline */}
-      <div className="glass depth-raised rounded-xl border border-white/10 overflow-hidden">
+      <div className="glass depth-raised rounded-xl border border-white/10 overflow-hidden snap-start">
         <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-semibold text-white">Activity Stream</h3>
@@ -288,7 +288,6 @@ export function ActivityFeed() {
                 </div>
               </motion.div>
                 </motion.div>
-            </motion.div>
                 );
               })}
             </AnimatePresence>

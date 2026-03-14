@@ -166,7 +166,7 @@ export function TeamBoard() {
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 snap-start"
       >
         <AnimatePresence mode="popLayout">
           {[...agents].sort((a, b) => {
