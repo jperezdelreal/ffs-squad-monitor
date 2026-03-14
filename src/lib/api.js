@@ -157,3 +157,15 @@ export async function fetchHealth() {
     return { error: true, message: error.message };
   }
 }
+
+export async function fetchMetrics(channel, { from, to, interval } = {}) {
+  try {
+    const params = new URLSearchParams({ channel })
+    if (from) params.set('from', from)
+    if (to) params.set('to', to)
+    if (interval) params.set('interval', interval)
+    return await safeFetch(`/api/metrics?${params}`, { cacheTTL: 60_000 });
+  } catch (error) {
+    return { error: true, message: error.message };
+  }
+}
