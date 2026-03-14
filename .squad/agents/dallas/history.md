@@ -150,3 +150,69 @@
 - All 544 tests pass after responsive changes
 - No new test additions required (visual/layout changes only)
 - Responsive behavior verified manually at sm/md/lg breakpoints
+
+### Issue #144: Loading States Overhaul — Skeleton Screens with Shimmer Animation (2026-03-14)
+
+**Architecture decisions:**
+- Created reusable Skeleton component library in `src/components/Skeleton.jsx`
+- Shimmer effect uses CSS gradient with `animate-shimmer` keyframe (200% background position sweep)
+- All skeleton components use `aria-hidden="true"` for accessibility
+- Content-aware skeletons match the exact shape and layout of final content
+- Smooth fade-in transition (`animate-fade-in`) when real data replaces skeleton
+
+**Component primitives:**
+- `Skeleton` - Base with shimmer/pulse animation, variant support (default/text/card/circle/button)
+- `SkeletonText` - Text line placeholders with auto-width on last line
+- `SkeletonCard` - Glass card container with default content or custom children
+- `SkeletonFeedItem` - Avatar + two text lines for ActivityFeed
+- `SkeletonList` - Repeating list of skeleton items (default 5)
+- `SkeletonChart` - Chart placeholder with title + large content area
+- `SkeletonAgentCard` - Agent avatar + name + status for TeamBoard
+- `SkeletonGrid` - Responsive grid (1/2/3/4/6/8 cols) with custom item component
+- `SkeletonTimelineBar` - Timeline swimlane bar with avatar + bar
+- `SkeletonTableRow` - Table row with configurable column count
+- `SkeletonStatCard` - Stat card with title + value + description
+- `SkeletonContainer` - Wrapper with glass effect and spacing
+
+**Shimmer animation:**
+- Added `animate-shimmer` keyframe to Tailwind config
+- Gradient background: `from-white/5 via-white/10 to-white/5`
+- Background size: `200%` horizontal
+- Animation: 2s infinite ease-in-out sweep from -200% to +200%
+- Fallback: `animate-pulse` when shimmer disabled
+
+**Components updated:**
+- ActivityFeed - SkeletonContainer + SkeletonList (5 feed items)
+- TeamBoard - SkeletonGrid (4×2 agent cards)
+- PipelineVisualizer - SkeletonGrid (7×6 cells)
+- CostTracker - SkeletonStatCard grid (2×2)
+- Analytics - SkeletonChart ×4
+- TrendCharts - SkeletonChart ×3
+- TimelineSwimlane - SkeletonTimelineBar ×3
+- DependencyHealth - Already has minimal pulsing dot (kept as-is)
+
+**Key patterns:**
+- Import skeleton primitives at component level: `import { SkeletonX } from './Skeleton'`
+- Replace loading div blocks with semantic skeleton components
+- Skeletons render during `loading && !data.length` state
+- Real content uses `animate-fade-in` for smooth transition
+- Zero spinners or "Loading..." text remaining in UI
+
+**Testing:**
+- Created comprehensive test suite: `Skeleton.test.jsx` with 25 tests
+- 100% coverage of all skeleton primitives
+- Tests verify shimmer animation, variants, custom classes, and layout
+- All existing component tests pass (570 total)
+- Build succeeds with no bundle size issues
+
+**File paths:**
+- `src/components/Skeleton.jsx` - Skeleton component library (new)
+- `src/components/__tests__/Skeleton.test.jsx` - Test suite (new)
+- `tailwind.config.js` - Added shimmer keyframe animation
+- `src/components/ActivityFeed.jsx` - Updated loading state
+- `src/components/TeamBoard.jsx` - Updated loading state
+- `src/components/PipelineVisualizer.jsx` - Updated loading state
+- `src/components/CostTracker.jsx` - Updated loading state
+- `src/components/Analytics.jsx` - Updated loading state
+- `src/components/TrendCharts.jsx` - Updated loading state
+- `src/components/TimelineSwimlane.jsx` - Updated loading state
