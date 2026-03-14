@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -14,6 +15,14 @@ export default {
           hover: '#1e2733',
           text: '#e4e7eb',
           muted: '#9ca3af',
+        },
+        'ops-light': {
+          bg: '#f8fafc',
+          surface: '#ffffff',
+          border: '#e2e8f0',
+          hover: '#f1f5f9',
+          text: '#1e293b',
+          muted: '#64748b',
         },
       },
       fontFamily: {

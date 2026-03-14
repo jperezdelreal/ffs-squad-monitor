@@ -11,6 +11,12 @@
     -moz-osx-font-smoothing: grayscale;
     background: #0a0e14;
     color: #e4e7eb;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .light body {
+    background: #f8fafc;
+    color: #1e293b;
   }
 
   #root {
@@ -38,6 +44,22 @@
 
   *::-webkit-scrollbar-thumb:hover {
     background: #4b5563;
+  }
+
+  .light * {
+    scrollbar-color: #cbd5e1 #e2e8f0;
+  }
+
+  .light *::-webkit-scrollbar-track {
+    background: #e2e8f0;
+  }
+
+  .light *::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+  }
+
+  .light *::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
 }
 
@@ -83,5 +105,10 @@
     background: rgba(21, 25, 32, 0.6);
     backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .light .glass {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 }
