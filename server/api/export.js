@@ -7,6 +7,7 @@ import { logger } from '../lib/logger.js'
 import { listLogFiles, readLogEntries } from './logs.js'
 import { getHeartbeatResponse } from './heartbeat.js'
 import archiver from 'archiver'
+import path from 'path'
 
 const VALID_FORMATS = ['csv', 'json']
 const VALID_STATES = ['open', 'closed', 'all']
@@ -306,6 +307,8 @@ export async function exportArchiveRoute(req, res) {
     const logFiles = listLogFiles()
     const allLogs = []
     for (const f of logFiles) {
+      // Sanitize filename to prevent path traversal
+      const safeFilename = path.basename(f.file)
       const entries = readLogEntries(f.agent, f.date)
       // Filter by date range if specified
       const filtered = entries.filter(entry => {
@@ -374,7 +377,7 @@ export async function exportArchiveRoute(req, res) {
     if (handleGitHubError(res, err)) return
     logger.error('Archive export failed', { error: err.message })
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Failed to export archive' })
+      res.status(500).json({ error: true, message: 'Failed to export archive' })
     }
   }
 }
