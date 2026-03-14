@@ -25,7 +25,7 @@ FFS runs autonomous agents via `ralph-watch.ps1` in the FirstFrameStudios repo. 
 
 ffs-squad-monitor solves this by providing a **mission control dashboard** for the FFS squad.
 
-## Core Features (Implemented in Sprint 0)
+## Core Features (Implemented)
 
 ### 1. Heartbeat Monitor
 - Reads `tools/.ralph-heartbeat.json` from the FirstFrameStudios repo
@@ -74,40 +74,49 @@ ffs-squad-monitor solves this by providing a **mission control dashboard** for t
 **API:** `GET /api/workflows`
 
 ### 7. Dashboard UI
-- Dark sci-fi "mission control" theme inspired by Alien (1979)
-- Responsive layout (grid-based)
-- Component-based architecture (vanilla JS modules)
-- Real data integration (no mock data)
-- Connection status indicator
+- Modern glassmorphism theme with dark mode
+- Responsive layout (mobile-friendly with adaptive sidebar)
+- React component architecture with JSX
+- Real data integration (GitHub API with authentication)
+- Connection status indicator with SSE support
 - Settings panel for configuration
 
 ## Technical Architecture
 
 ### Tech Stack
-- **Frontend:** Vanilla JavaScript (ES modules), CSS (custom dark theme)
+- **Frontend:** React with JSX, Tailwind CSS, Zustand state management
 - **Dev Server & Build:** Vite
-- **Backend:** Node.js middleware (embedded in `vite.config.js`)
-- **Data Sources:** JSON files, JSONL logs, GitHub API
-- **Deployment:** Static site (Vite build output) + Node.js server
+- **Backend:** Express server (port 3001)
+- **Data Sources:** GitHub API, metrics database, SSE streams
+- **Testing:** Vitest with 97%+ test coverage
+- **Deployment:** Docker containerization, GitHub Actions CI/CD
 
 ### Current Structure
 ```
-package.json          — Vite config, dependencies
-vite.config.js        — 26KB file containing ALL backend API middleware
+package.json          — Dependencies and scripts
+vite.config.js        — Vite configuration
+server/
+  index.js            — Express API server (port 3001)
+  lib/metrics-db.js   — Metrics database layer
 src/
-  index.html          — Dashboard layout
-  monitor.js          — Entry point, scheduler initialization
-  styles.css          — 25KB dark theme
-  components/         — UI components (10 modules)
-  lib/                — Core utilities (api.js, scheduler.js, util.js)
+  index.html          — Root HTML template
+  main.jsx            — React entry point
+  App.jsx             — Root React component
+  index.css           — Tailwind CSS imports
+  components/         — React UI components (17 .jsx modules)
+  hooks/              — Custom React hooks (useMetrics, useSSE, usePolling)
+  lib/                — Core utilities (api, health, notifications, scheduler)
+  services/           — Backend services (github, config, mockData)
+  store/              — Zustand state management
 ```
 
-### API Middleware (in vite.config.js)
-All backend logic is currently embedded in `vite.config.js` as Vite middleware:
-- `/api/heartbeat` — reads ralph-heartbeat.json
+### API Endpoints (Express server on port 3001)
+All backend logic runs on the Express server:
+- `/api/heartbeat` — agent heartbeat status
 - `/api/logs` — SSE stream of structured logs
 - `/api/timeline` — agent activity timeline data
 - `/api/agents` — agent roster and metadata
+- `/api/metrics` — historical metrics and analytics
 - `/api/board` — cross-repo issue aggregation
 - `/api/pulse` — studio statistics
 - `/api/workflows` — GitHub Actions status

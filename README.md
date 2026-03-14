@@ -158,7 +158,11 @@ The token is **never exposed to the frontend** — all GitHub API calls go throu
 
 ## Status
 
-🚧 **Sprint 0** — Project scaffolding. Core features are planned but not yet implemented.
+✅ **v0.1.0** — Production-ready React dashboard with Express backend, GitHub API integration, SSE streaming, 97%+ test coverage, and Docker deployment.
+
+**Completed Sprints:**
+- Sprint 0: Core vanilla JS implementation (legacy, removed)
+- Sprint 1: React redesign with modern architecture, real data integration, component tests
 
 ## License
 

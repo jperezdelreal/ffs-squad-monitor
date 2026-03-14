@@ -8,10 +8,11 @@ This is a **read-only observer** — it doesn't control agents, just displays th
 
 ## Tech Stack
 
+- **React** — component-based UI with JSX
 - **Vite** — fast dev server and build tool
-- **Vanilla JavaScript** — minimal dependencies, component-based architecture
-- **CSS** — custom styling (no framework)
-- **Vite plugin middleware** — custom API endpoints for backend data
+- **Tailwind CSS** — utility-first styling framework
+- **Zustand** — lightweight state management
+- **Express** — backend API server (port 3001)
 - **`gh` CLI** — GitHub API integration for fetching squad data
 - **Default branch:** `main`
 
@@ -20,34 +21,39 @@ This is a **read-only observer** — it doesn't control agents, just displays th
 ```
 ffs-squad-monitor/
 ├── src/
-│   ├── monitor.js         # Main entry point
-│   ├── components/        # UI components (widgets, panels, cards)
-│   ├── lib/
-│   │   ├── api.js        # Client-side API calls to backend
-│   │   ├── scheduler.js  # Polling scheduler for live updates
-│   │   └── util.js       # Utility functions
-│   ├── index.html        # Main HTML template
-│   └── styles.css        # Global styles
-├── vite.config.js        # Vite config with middleware for API endpoints
+│   ├── main.jsx           # React entry point
+│   ├── App.jsx            # Root React component
+│   ├── components/        # React components (all .jsx files)
+│   ├── hooks/             # Custom React hooks (useMetrics, useSSE, usePolling)
+│   ├── lib/               # Core utilities (api, health, notifications, scheduler)
+│   ├── services/          # Backend services (github.js, config.js, mockData.js)
+│   ├── store/             # Zustand state management
+│   └── index.css          # Tailwind CSS imports
+├── server/                # Express backend (port 3001)
+│   ├── index.js           # API routes
+│   └── lib/               # Backend utilities (metrics-db.js)
+├── index.html             # Root HTML template
+├── vite.config.js         # Vite config
 ├── package.json
-└── .squad/               # Squad AI workflow
+└── .squad/                # Squad AI workflow
 ```
 
 ## Key Architecture
 
 ### Components (src/components/)
-Reusable UI components that render specific dashboard widgets:
-- Heartbeat monitor widget
-- Agent activity log panel
-- Round statistics panel
-- Dashboard layout and navigation
-
-Each component is a JavaScript module that returns DOM elements or renders to a target container.
+React components that render dashboard widgets:
+- **Header.jsx** — Connection status, heartbeat, staleness alerts
+- **ActivityFeed.jsx** — Real-time agent activity stream
+- **PipelineVisualizer.jsx** — Task pipeline visualization
+- **TeamBoard.jsx** — Cross-repo team status
+- **CostTracker.jsx** — Token usage and cost metrics
+- **Analytics.jsx** — Dashboard analytics and trends
+- Plus: Sidebar, Settings, ErrorBoundary, and utility components
 
 ### API Layer (src/lib/api.js)
-Client-side API calls to backend endpoints provided by Vite middleware:
-- Fetch heartbeat status
-- Tail structured logs
+Client-side API calls to Express backend (port 3001):
+- Fetch metrics, heartbeat status, logs
+- Server-Sent Events (SSE) for real-time updates
 - Retrieve round statistics
 - Query GitHub data via `gh` CLI
 
@@ -83,11 +89,11 @@ Tracks scheduler rounds:
 
 ## Design Philosophy
 
-**Minimal dependencies:** Keep it simple — vanilla JS, no React/Vue/Svelte. Easy to read, extend, debug.
+**React-based architecture:** Component-based UI with JSX, modern React patterns (hooks, state management with Zustand), Tailwind CSS for styling.
 
-**Component-based:** Modular UI components that compose into dashboard. Single responsibility per component.
+**Component-based:** Modular React components that compose into dashboard. Single responsibility per component. Well-tested with Vitest.
 
-**Polling over WebSockets:** Simple scheduler that polls backend at intervals. No WebSocket complexity for MVP.
+**SSE + Polling:** Server-Sent Events for real-time updates, polling fallback for reliability. Express backend on port 3001.
 
 **Read-only observer:** No control plane — just visualizes FFS squad state.
 
