@@ -27,6 +27,7 @@ import { metricsRoute, metricsSummaryRoute, metricsAgentsRoute, metricsStatsRout
 import sseRoute from './api/sse.js';
 import { exportIssuesRoute, exportMetricsRoute, exportUsageRoute } from './api/export.js';
 import searchLogsRoute from './api/search.js';
+import tokensRoute from './api/tokens.js';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.get('/api/repos', reposRoute);
 app.get('/api/config', configRoute);
 app.get('/api/events', eventsRoute);
 app.get('/api/usage', usageRoute);
+app.get('/api/usage/tokens', tokensRoute);
 app.get('/api/health', healthRoute);
 app.get('/api/metrics', metricsRoute);
 app.get('/api/metrics/summary', metricsSummaryRoute);
@@ -124,7 +126,7 @@ app.listen(PORT, () => {
     endpoints: [
       '/api/heartbeat', '/api/logs/files', '/api/logs/stream', '/api/logs',
       '/api/timeline', '/api/issues', '/api/pulse', '/api/agents',
-      '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/health',
+      '/api/repos', '/api/config', '/api/events', '/api/usage', '/api/usage/tokens', '/api/health',
       '/api/metrics', '/api/metrics/summary', '/api/metrics/agents', '/api/metrics/stats',
       '/api/sse', '/api/export/issues', '/api/export/metrics', '/api/export/usage',
       '/api/docs', '/health',
