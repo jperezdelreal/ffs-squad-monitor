@@ -151,3 +151,33 @@ Implemented full-text search across structured log entries using SQLite FTS5. Ba
 - Porter tokenizer + unicode61 normalization handles stemming ("connecting" matches "connect") and accents
 - snippet() function with `<mark>` tags provides context highlighting for UI rendering
 - Ingestion service uses MAX(timestamp) to skip already-processed entries — idempotent and efficient
+
+### 2026-03-14 — Issue #117 Performance Monitoring Middleware (PR #136)
+
+Implemented backend infrastructure for real-time performance monitoring with metrics API endpoint.
+
+1. **Performance Tracker** (`server/lib/performance-tracker.js`) — In-memory rolling window tracker (5 min) that records:
+   - Request timing per endpoint (histogram for percentile calculation)
+   - Total requests and errors (status >= 400)
+   - SSE connection count
+   - SQLite query times
+   - Calculates p50/p95/p99 percentiles, throughput, error rate
+
+2. **Performance Middleware** — Express middleware registered early in pipeline (after cors/json, before requestLogger). Hooks into `res.on('finish')` to record timing and status per request.
+
+3. **Performance API** (`server/api/performance.js`) — `GET /api/metrics/performance` endpoint returns live metrics with comprehensive OpenAPI docs. Response includes response time percentiles, throughput, error rate, SSE connections, SQLite query stats, and per-endpoint breakdown.
+
+4. **Integration Points:**
+   - `event-bus.js` — Calls `performanceTracker.setSseConnectionCount()` on connection add/remove
+   - `metrics-db.js` — Added `timedQuery()` wrapper that records SQLite query duration for all queries
+   - `snapshot-service.js` — Added `snapshotPerformance()` function called every 5 minutes to persist metrics to SQLite
+
+5. **Performance Alerts** — Publishes to event-bus `alerts` channel when p95 exceeds threshold (default 1000ms, configurable via `PERF_THRESHOLD_MS` env var).
+
+6. **Tests** — Full test coverage:
+   - `performance-tracker.test.js` — Tests percentile calculation, rolling window, error tracking, endpoint breakdown, SQLite timing
+   - Updated `event-bus.test.js` and `snapshot-service.test.js` with performance-tracker mocks
+
+**Pattern:** For performance instrumentation, use middleware + singleton tracker with rolling window. Keep metrics in-memory with periodic snapshots for historical trends. Event-bus alerts enable proactive monitoring.
+
+**Frontend:** Dallas will implement the UI component to visualize these metrics in a dashboard.
