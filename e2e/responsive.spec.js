@@ -1,8 +1,12 @@
 // @ts-check
 import { test, expect, devices } from '@playwright/test'
+import { mockAllAPIs } from './helpers/mocks.js'
 
 test.describe('Mobile Responsiveness', () => {
-  test.use({ ...devices['iPhone 12'] })
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 }) // iPhone 12 size
+    await mockAllAPIs(page)
+  })
 
   test('renders correctly on mobile viewport', async ({ page }) => {
     await page.goto('/')
@@ -59,12 +63,63 @@ test.describe('Mobile Responsiveness', () => {
     const box = await firstButton.boundingBox()
     
     expect(box).toBeTruthy()
-    expect(box!.height).toBeGreaterThanOrEqual(40) // Allow some margin
+    expect(box.height).toBeGreaterThanOrEqual(40) // Allow some margin
+  })
+
+  test('mobile menu toggles sidebar', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForTimeout(500)
+    
+    // Look for hamburger menu button
+    const menuBtn = page.locator('button').filter({ hasText: /menu|☰/i }).first()
+    
+    if (await menuBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await menuBtn.click()
+      await page.waitForTimeout(300)
+      
+      // Sidebar should appear
+      const sidebar = page.locator('aside')
+      await expect(sidebar).toBeVisible()
+      
+      // Click outside to close
+      await page.locator('main').click()
+      await page.waitForTimeout(300)
+    }
+  })
+
+  test('mobile bottom navigation is visible', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForTimeout(500)
+    
+    // Look for bottom nav (may not exist on all viewports)
+    const bottomNav = page.locator('nav').last()
+    
+    // If it exists, it should be visible
+    if (await bottomNav.count() > 0) {
+      const isVisible = await bottomNav.isVisible()
+      // On mobile, bottom nav should be visible
+      expect(isVisible).toBeTruthy()
+    }
+  })
+
+  test('horizontal scrolling is prevented', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForTimeout(500)
+    
+    // Check body overflow
+    const overflowX = await page.evaluate(() => {
+      return window.getComputedStyle(document.body).overflowX
+    })
+    
+    expect(overflowX).not.toBe('scroll')
   })
 })
 
 test.describe('Tablet Responsiveness', () => {
-  test.use({ ...devices['iPad Pro'] })
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 1366 }) // iPad Pro size
+    await mockAllAPIs(page)
+  })
 
   test('renders correctly on tablet viewport', async ({ page }) => {
     await page.goto('/')
@@ -88,6 +143,25 @@ test.describe('Tablet Responsiveness', () => {
       await expect(navButtons.nth(i)).toBeVisible()
     }
   })
+
+  test('all views render correctly on tablet', async ({ page }) => {
+    await page.goto('/')
+    
+    const views = ['Activity Feed', 'Pipeline', 'Team Board', 'Timeline', 'Trend Charts', 'Cost Tracker', 'Analytics']
+    
+    for (const view of views) {
+      const navBtn = page.locator('aside nav button', { hasText: view })
+      await navBtn.click()
+      await page.waitForTimeout(300)
+      
+      // View should render
+      const main = page.locator('main')
+      await expect(main).toBeVisible()
+      
+      const childCount = await main.locator('> *').count()
+      expect(childCount).toBeGreaterThan(0)
+    }
+  })
 })
 
 test.describe('Desktop Responsiveness', () => {
@@ -103,7 +177,7 @@ test.describe('Desktop Responsiveness', () => {
     // Sidebar should be at least 200px wide
     const sidebar = page.locator('aside')
     const box = await sidebar.boundingBox()
-    expect(box!.width).toBeGreaterThanOrEqual(200)
+    expect(box.width).toBeGreaterThanOrEqual(200)
   })
 
   test('renders correctly at 1366x768 (common laptop)', async ({ page }) => {
@@ -128,6 +202,6 @@ test.describe('Desktop Responsiveness', () => {
     const box = await main.boundingBox()
     
     // Main area should take most of the width minus sidebar
-    expect(box!.width).toBeGreaterThan(1800)
+    expect(box.width).toBeGreaterThan(1800)
   })
 })

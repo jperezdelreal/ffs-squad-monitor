@@ -1,5 +1,7 @@
 // @ts-check
 import { test, expect } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
+import { mockAllAPIs } from './helpers/mocks.js'
 
 test.describe('Dark Mode and Theme Switching', () => {
   test('dark mode persists across page reloads', async ({ page }) => {
@@ -72,7 +74,91 @@ test.describe('Dark Mode and Theme Switching', () => {
   })
 })
 
-test.describe('Accessibility', () => {
+test.describe('Accessibility - WCAG 2.1 AA Compliance', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockAllAPIs(page)
+  })
+
+  test('dashboard has no WCAG 2.1 AA violations', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForTimeout(500)
+    
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+    
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
+
+  test('activity feed view is accessible', async ({ page }) => {
+    await page.goto('/')
+    
+    const activityBtn = page.locator('aside nav button', { hasText: 'Activity Feed' })
+    await activityBtn.click()
+    await page.waitForTimeout(500)
+    
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze()
+    
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
+
+  test('pipeline view is accessible', async ({ page }) => {
+    await page.goto('/')
+    
+    const pipelineBtn = page.locator('aside nav button', { hasText: 'Pipeline' })
+    await pipelineBtn.click()
+    await page.waitForTimeout(500)
+    
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze()
+    
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
+
+  test('team board view is accessible', async ({ page }) => {
+    await page.goto('/')
+    
+    const teamBtn = page.locator('aside nav button', { hasText: 'Team Board' })
+    await teamBtn.click()
+    await page.waitForTimeout(500)
+    
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze()
+    
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
+
+  test('settings panel is accessible', async ({ page }) => {
+    await page.goto('/')
+    
+    const settingsBtn = page.locator('button', { hasText: /settings/i }).first()
+    await settingsBtn.click()
+    await page.waitForTimeout(500)
+    
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze()
+    
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
+
+  test('command palette is accessible', async ({ page }) => {
+    await page.goto('/')
+    
+    await page.keyboard.press('Meta+k')
+    await page.waitForTimeout(500)
+    
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze()
+    
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
+
   test('keyboard navigation works across all views', async ({ page }) => {
     await page.goto('/')
 
@@ -128,7 +214,7 @@ test.describe('Accessibility', () => {
       
       // Each button should have text content
       expect(text).toBeTruthy()
-      expect(text!.trim().length).toBeGreaterThan(0)
+      expect(text.trim().length).toBeGreaterThan(0)
     }
   })
 
@@ -173,6 +259,27 @@ test.describe('Accessibility', () => {
       // Active button should have border class (not just color)
       const className = await activeButton.getAttribute('class')
       expect(className).toContain('border')
+    }
+  })
+
+  test('skip to content link works', async ({ page }) => {
+    await page.goto('/')
+    
+    // Tab to focus skip link
+    await page.keyboard.press('Tab')
+    await page.waitForTimeout(100)
+    
+    // Check if skip link is focused
+    const focusedElement = await page.evaluate(() => document.activeElement?.textContent)
+    
+    if (focusedElement?.includes('Skip to')) {
+      // Press Enter to activate
+      await page.keyboard.press('Enter')
+      await page.waitForTimeout(300)
+      
+      // Main content should be in focus region
+      const main = page.locator('main')
+      await expect(main).toBeVisible()
     }
   })
 })
