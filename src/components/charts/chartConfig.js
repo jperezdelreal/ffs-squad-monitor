@@ -1,5 +1,5 @@
 /**
- * Shared Chart.js configuration — dark theme matching glassmorphism design.
+ * Shared Chart.js configuration — theme-adaptive colors and animations.
  * Registers only the Chart.js components we need for tree-shaking.
  */
 import {
@@ -44,37 +44,58 @@ export const COLOR_LIST = [
   CHART_COLORS.rose,
 ]
 
-const glassmorphismTooltip = {
-  backgroundColor: 'rgba(15, 19, 26, 0.95)',
-  titleColor: '#f3f4f6',
-  bodyColor: '#d1d5db',
-  borderColor: 'rgba(255, 255, 255, 0.15)',
-  borderWidth: 1.5,
-  cornerRadius: 12,
-  padding: 14,
-  boxPadding: 6,
-  usePointStyle: true,
-  titleFont: {
-    size: 12,
-    weight: 'bold',
-    family: 'Inter, system-ui, sans-serif',
-  },
-  bodyFont: {
-    size: 11,
-    family: 'ui-monospace, monospace',
-  },
-  caretSize: 8,
-  caretPadding: 10,
-  displayColors: true,
-  boxWidth: 12,
-  boxHeight: 12,
-  // Glass backdrop effect
-  callbacks: {
-    labelTextColor: () => '#d1d5db',
-  },
+function getTheme() {
+  return document.documentElement.classList.contains('light') ? 'light' : 'dark'
+}
+
+function getThemedColors() {
+  const theme = getTheme()
+  return {
+    text: theme === 'light' ? '#0d1117' : '#f0f6fc',
+    textMuted: theme === 'light' ? '#57606a' : '#8b949e',
+    grid: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+    tooltipBg: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(13, 17, 23, 0.95)',
+    tooltipBorder: theme === 'light' ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.15)',
+    tooltipTitle: theme === 'light' ? '#0d1117' : '#f0f6fc',
+    tooltipBody: theme === 'light' ? '#57606a' : '#8b949e',
+  }
+}
+
+const buildGlassmorphismTooltip = () => {
+  const colors = getThemedColors()
+  return {
+    backgroundColor: colors.tooltipBg,
+    titleColor: colors.tooltipTitle,
+    bodyColor: colors.tooltipBody,
+    borderColor: colors.tooltipBorder,
+    borderWidth: 1.5,
+    cornerRadius: 12,
+    padding: 14,
+    boxPadding: 6,
+    usePointStyle: true,
+    titleFont: {
+      size: 12,
+      weight: 'bold',
+      family: 'Inter, system-ui, sans-serif',
+    },
+    bodyFont: {
+      size: 11,
+      family: 'ui-monospace, monospace',
+    },
+    caretSize: 8,
+    caretPadding: 10,
+    displayColors: true,
+    boxWidth: 12,
+    boxHeight: 12,
+    callbacks: {
+      labelTextColor: () => colors.tooltipBody,
+    },
+  }
 }
 
 export function buildBaseOptions(overrides = {}) {
+  const colors = getThemedColors()
+  
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -120,7 +141,7 @@ export function buildBaseOptions(overrides = {}) {
     },
     plugins: {
       tooltip: { 
-        ...glassmorphismTooltip,
+        ...buildGlassmorphismTooltip(),
         animation: {
           duration: 250,
         },
@@ -133,7 +154,7 @@ export function buildBaseOptions(overrides = {}) {
         display: overrides.showLegend ?? false,
         position: 'top',
         labels: {
-          color: '#9ca3af',
+          color: colors.textMuted,
           usePointStyle: true,
           pointStyle: 'circle',
           padding: 16,
@@ -183,12 +204,12 @@ export function buildBaseOptions(overrides = {}) {
     scales: {
       x: {
         grid: { 
-          color: 'rgba(255,255,255,0.05)', 
+          color: colors.grid,
           drawBorder: false,
           lineWidth: 1,
         },
         ticks: { 
-          color: '#6b7280', 
+          color: colors.textMuted,
           font: { size: 10, family: 'ui-monospace, monospace' },
           padding: 8,
         },
@@ -197,12 +218,12 @@ export function buildBaseOptions(overrides = {}) {
       },
       y: {
         grid: { 
-          color: 'rgba(255,255,255,0.05)', 
+          color: colors.grid,
           drawBorder: false,
           lineWidth: 1,
         },
         ticks: { 
-          color: '#6b7280', 
+          color: colors.textMuted,
           font: { size: 10, family: 'ui-monospace, monospace' },
           padding: 8,
         },

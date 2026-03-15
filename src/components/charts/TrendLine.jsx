@@ -4,6 +4,7 @@ import './chartConfig.js'
 import { buildBaseOptions, CHART_COLORS } from './chartConfig.js'
 import { detectAnomalies, createAnomalyAnnotations, exportChartAsPNG, exportChartAsCSV } from './chartEnhancements.js'
 import { EmptyState, EmptyStateIllustrations } from '../EmptyState'
+import { useThemeObserver } from '../../hooks/useThemeObserver'
 
 export function TrendLine({ 
   data = [], 
@@ -15,6 +16,7 @@ export function TrendLine({
   chartTitle = 'chart',
 }) {
   const chartRef = useRef(null)
+  const theme = useThemeObserver()
 
   if (!data.length) {
     return (
