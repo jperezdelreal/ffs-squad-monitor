@@ -422,6 +422,32 @@ When Ralph Go depletes the board (all issues closed), instead of idling, Ralph M
 
 ---
 
+### 19. Integration Test Organization (2026-03-15)
+**Author:** Kane (Tester)  
+**Date:** 2026-03-15  
+**Context:** Issue #138 - Expand test suite with integration tests  
+**Status:** COMPLETED
+
+Integration tests should be organized in a dedicated `src/__tests__/integration/` directory, separate from unit tests but within the source tree.
+
+**Rationale:**
+1. **Discoverability:** Keeping integration tests within `src/` maintains proximity to source code
+2. **Test Type Clarity:** Separate `/integration/` subdirectory distinguishes integration tests from unit tests
+3. **Vitest Compatibility:** Vitest automatically discovers tests in `__tests__/` directories regardless of depth
+4. **Pattern Consistency:** Mirrors existing unit test patterns (`src/lib/__tests__/util.test.js`)
+5. **Easy Filtering:** Can run specific test types via glob patterns
+
+**Test Suites Created:**
+- `src/__tests__/integration/sse-reconnection.test.js` (9 tests)
+- `src/__tests__/integration/event-coalescing.test.js` (12 tests)
+- `src/__tests__/integration/cross-feature-pipeline.test.js` (11 tests)
+- `src/__tests__/integration/state-machine.test.js` (11 tests)
+- `src/__tests__/integration/metrics-aggregation.test.js` (19 tests)
+
+**Impact:** Clear separation between unit and integration tests. Integration tests now cover SSE reconnection, event coalescing, cross-feature pipelines, state machine transitions, and metrics aggregation. 704 total tests, ≥80% coverage maintained.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
