@@ -9,6 +9,45 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Issue #166 / PR #181: Dark/Light Mode Polish (2026-03-15)
+
+**Theme Architecture:**
+- Prevent FOUC with inline `<script>` in index.html that loads theme before React renders
+- Use universal `*` CSS selector for 300ms transitions on theme properties (background, border, color, box-shadow, fill, stroke)
+- Disable transitions on initial load with `.no-transitions` class, remove after 100ms via useEffect
+- Update meta theme-color dynamically based on theme (#050810 dark, #fafbfc light) for mobile browsers
+- Observe theme changes via MutationObserver (useThemeObserver hook) to trigger chart re-renders
+
+**Color Refinement:**
+- Dark mode: Deeper backgrounds (#050810 vs #0a0e14), brighter text (#f0f6fc vs #e4e7eb) for better contrast
+- Light mode: Softer background (#fafbfc vs #f8fafc), refined border colors (#d0d7de vs #e2e8f0)
+- Added brighter accent variants (accent-cyan-bright, accent-blue-bright) for light mode highlights
+- Light-specific shadow utilities (depth-surface-light, depth-raised-light, depth-floating-light)
+
+**Animation:**
+- Replace iconSpin with key-based animation (key={theme}) that rotates and fades on theme toggle
+- Icon animation: initial={{ rotate: -90, opacity: 0 }}, animate={{ rotate: 0, opacity: 1 }}, 300ms duration
+- Smooth enough to feel premium but fast enough not to delay interaction
+
+**Chart Theme Adaptation:**
+- chartConfig.js detects theme via document.documentElement.classList.contains('light')
+- getThemedColors() returns adaptive text/grid/tooltip colors based on current theme
+- Force chart re-render on theme change by adding key={theme-${data.length}} to Line component
+- Tooltip background/text/border adapt automatically via buildGlassmorphismTooltip()
+
+**Testing Patterns:**
+- Build succeeded, existing test failures unrelated to theme changes (ActivityFeed ref issues)
+- Manual testing required to verify smooth transitions and color accuracy
+
+**File paths:**
+- index.html - FOUC prevention script + transition styles
+- src/hooks/useTheme.js - Enhanced with meta theme-color updates and transition control
+- src/hooks/useThemeObserver.js - MutationObserver for theme changes
+- tailwind.config.js - Refined color palettes + light-specific shadows
+- src/components/Header.jsx - Animated theme toggle icon
+- src/components/charts/chartConfig.js - Theme-adaptive chart colors (already done in previous commit)
+- src/components/charts/TrendLine.jsx - useThemeObserver integration (already done in previous commit)
+
 ### Issue #170 / PR #182: Advanced Filtering System (2026-03-15)
 
 **Architecture:**
