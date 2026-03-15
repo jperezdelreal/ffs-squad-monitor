@@ -106,8 +106,8 @@ export function TeamBoard() {
     );
   }
 
-  // Show empty state if no agents at all
-  if (!loading && agents.length === 0) {
+  // Show empty state if no agents at all AND no error
+  if (!loading && !error && agents.length === 0) {
     return (
       <EmptyState
         icon={<EmptyStateIllustrations.NoAgents />}

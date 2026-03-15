@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { useStore } from '../../store/store'
 
 vi.mock('react-chartjs-2', () => ({
   Line: (props) => <div data-testid="mock-line-chart" data-label={props.data?.datasets?.[0]?.label} />,
@@ -16,26 +17,38 @@ vi.mock('chartjs-adapter-date-fns', () => ({}))
 
 import { TrendCharts } from '../TrendCharts'
 
-const mockResponse = (data = []) => ({
-  ok: true,
-  json: () => Promise.resolve({ channel: 'issues', data, count: data.length }),
-})
+const mockData = [
+  { timestamp: '2026-03-10T00:00:00Z', channel: 'issues', data: { total: 10, open: 4, closed: 6 } },
+]
 
 describe('TrendCharts', () => {
-  beforeEach(() => { vi.restoreAllMocks() })
+  beforeEach(() => { 
+    vi.restoreAllMocks()
+    useStore.setState({
+      metricsIssues: [],
+      metricsAgents: [],
+      metricsActions: [],
+      metricsLoading: false,
+      metricsError: null,
+      metricsTimeRange: '7d',
+      fetchAllMetrics: vi.fn(),
+    })
+  })
   afterEach(() => { vi.restoreAllMocks() })
 
   it('shows loading state initially', () => {
-    global.fetch = vi.fn(() => new Promise(() => {}))
+    useStore.setState({ metricsLoading: true })
     const { container } = render(<TrendCharts />)
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(container.querySelector('[class*="animate-shimmer"]')).toBeInTheDocument()
   })
 
   it('renders charts after data loads', async () => {
-    const data = [
-      { timestamp: '2026-03-10T00:00:00Z', channel: 'issues', data: { total: 10, open: 4, closed: 6 } },
-    ]
-    global.fetch = vi.fn(() => Promise.resolve(mockResponse(data)))
+    useStore.setState({
+      metricsIssues: mockData,
+      metricsAgents: [],
+      metricsActions: [],
+      metricsLoading: false,
+    })
     render(<TrendCharts />)
     await waitFor(() => {
       expect(screen.getByText('Trend Analytics')).toBeInTheDocument()
@@ -46,8 +59,10 @@ describe('TrendCharts', () => {
   })
 
   it('shows error banner on fetch failure', async () => {
-    global.fetch = vi.fn(() => Promise.reject(new Error('Network error')))
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    useStore.setState({
+      metricsError: 'Network error',
+      metricsLoading: false,
+    })
     render(<TrendCharts />)
     await waitFor(() => {
       expect(screen.getByText(/Metrics Error/)).toBeInTheDocument()
@@ -55,7 +70,6 @@ describe('TrendCharts', () => {
   })
 
   it('renders time range buttons', async () => {
-    global.fetch = vi.fn(() => Promise.resolve(mockResponse([])))
     render(<TrendCharts />)
     await waitFor(() => { expect(screen.getByText('7d')).toBeInTheDocument() })
     expect(screen.getByText('30d')).toBeInTheDocument()
@@ -63,12 +77,13 @@ describe('TrendCharts', () => {
   })
 
   it('refresh button triggers refetch', async () => {
-    global.fetch = vi.fn(() => Promise.resolve(mockResponse([])))
+    const mockFetch = vi.fn()
+    useStore.setState({ fetchAllMetrics: mockFetch })
     render(<TrendCharts />)
     await waitFor(() => { expect(screen.getByText(/Refresh/)).toBeInTheDocument() })
     fireEvent.click(screen.getByText(/Refresh/))
     await waitFor(() => {
-      expect(global.fetch.mock.calls.length).toBeGreaterThanOrEqual(3)
+      expect(mockFetch).toHaveBeenCalled()
     })
   })
 })

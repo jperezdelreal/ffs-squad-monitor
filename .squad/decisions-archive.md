@@ -1,6 +1,6 @@
 # Archived Decisions
 
-Decisions archived from decisions.md on 2026-03-13 (older than 14 days).
+Decisions archived from decisions.md on 2026-03-15 (space management).
 
 ---
 
@@ -97,3 +97,37 @@ server/
 - CI passes on branches without test files
 - Test command behavior remains consistent across all npm test variants
 - No breaking changes to existing test files
+
+---
+
+### 4. PR Review Patterns & Standards (Ripley Lead - P1) [ARCHIVED 2026-03-15]
+
+**Date:** 2026-03-12  
+**Status:** Established  
+**Context:** PRs #27, #29, #30 — First formal review session
+
+**Decision 1a: Error Handling Pattern (PR #27)**
+- API functions return `{error: true, message}` instead of `null` on failure
+- Components check `data?.error` and call dedicated `renderXError()` functions
+- Global retry functions exposed as `window.__retryX()` for onclick handlers
+- Connection state uses 3-tier model: operational/degraded/offline
+
+**Decision 1b: Test Coverage Standards (PR #29)**
+- Minimum 80% coverage enforced via vitest.config.js thresholds
+- Tests focus on edge cases (null/undefined, boundaries, cleanup)
+- Test organization: `__tests__/` subdirectories next to source files
+- CI must run tests + coverage on all PRs
+
+**Decision 1c: Content-Aware Triage Heuristic (PR #30)**
+- Issue body ≥100 characters with: acceptance criteria OR checklist OR structured sections OR requirements
+- Eliminates manual triage bottleneck for well-defined issues
+
+---
+
+### 5. Error Handling Architecture (Dallas - Frontend) [ARCHIVED 2026-03-15]
+
+**Date:** 2026-03-12  
+**Status:** Implemented  
+**Issue:** #23
+
+Implemented comprehensive error handling with 3-state connection tracking and component-level retry mechanisms. All components in `src/components/` received error states with retry buttons. Dashboard resilience: stays functional if backend is down.

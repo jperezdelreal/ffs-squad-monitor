@@ -175,3 +175,86 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `scripts/benchmark.js`
 
 **PR:** #110 (branch: squad/92-perf-benchmarks)
+
+### 2026-03-15: Issue #138 — Expand test suite with integration tests
+
+**What was done:**
+- Created 5 integration test suites with 62 tests total covering SSE, EventBus, state management, and metrics
+- Expanded E2E tests from 7 to 39 scenarios covering performance, responsiveness, accessibility, and error handling
+- Created load test script simulating 100 concurrent sessions for 1 minute
+- Achieved 704 total tests (644 passing), exceeding the 600+ target
+
+**Integration tests created:**
+1. `src/__tests__/integration/sse-reconnection.test.js` (9 tests)
+   - Exponential backoff: 1s → 2s → 4s → 8s → max 30s
+   - Fallback to polling after 3 consecutive failures
+   - Recovery from polling back to SSE after 60s
+   - Last-Event-ID replay mechanism
+   - Connection cleanup on unmount
+
+2. `src/__tests__/integration/event-coalescing.test.js` (12 tests)
+   - EventBus debouncing with 1000ms window
+   - Only last event in window is emitted
+   - Per-channel independent debouncing
+   - Handles 100 concurrent events without data loss
+   - Event metadata (id, timestamp, type, channel) preserved
+
+3. `src/__tests__/integration/cross-feature-pipeline.test.js` (11 tests)
+   - End-to-end: SSE event → useSSE hook → Zustand store → UI update
+   - Multi-channel updates (heartbeat, events, issues, usage)
+   - Incremental updates (snapshot, new, update events)
+   - Recovery from connection loss without data loss
+   - Store consistency during rapid updates
+
+4. `src/__tests__/integration/state-machine.test.js` (11 tests)
+   - Complete state cycle: disconnected → connecting → streaming → reconnecting → polling → connecting
+   - State persistence in Zustand store (sseStatus)
+   - Rapid state transitions
+   - Manual reconnect function
+   - State maintained during active data flow
+
+5. `src/__tests__/integration/metrics-aggregation.test.js` (19 tests)
+   - Multiple concurrent sessions generating metrics
+   - SQLite metrics_snapshots table with channel/timestamp indexing
+   - Time-series aggregation and time-range queries
+   - Hourly rollup calculations using SQLite date functions
+   - Hash-based deduplication
+   - Retention policy simulation (delete old metrics)
+   - Per-agent productivity trends
+
+**E2E tests created:**
+- `e2e/performance.spec.js` (8 tests): Load time < 3s, rapid view switching, metrics spike handling, memory stability
+- `e2e/responsive.spec.js` (10 tests): Mobile (iPhone 12), tablet (iPad Pro), desktop (1366x768, 1920x1080, 2560x1440)
+- `e2e/accessibility.spec.js` (14 tests): Dark mode, keyboard navigation, semantic HTML, ARIA labels, heading hierarchy, error recovery
+
+**Load test:**
+- `scripts/load-test.js`: Simulates 100 concurrent HTTP sessions for 1 minute
+- Tracks latency (avg, p50, p95, p99) and error rate
+- Success criteria: error rate < 5%, p95 < 2s, p99 < 5s
+
+**Key learnings:**
+- Integration tests use `vi.useFakeTimers()` extensively for testing debounce/backoff timing
+- `better-sqlite3` requires temp DB in `os.tmpdir()` for test isolation
+- EventBus debouncing uses `_pendingEvents` Map with timer references
+- useSSE hook maintains separate timers: `reconnectTimerRef`, `fallbackTimerRef`, `fallbackIntervalRef`
+- Playwright's `devices` fixture provides realistic mobile/tablet viewport presets
+
+**Test organization pattern:**
+- Integration tests in `src/__tests__/integration/` (new directory)
+- E2E tests in `e2e/` (expanded existing)
+- Load test in `scripts/` (follows benchmark pattern)
+
+**Coverage maintained:** 80%+ across all modules (vitest.config.js thresholds)
+
+**Files created:**
+- `src/__tests__/integration/sse-reconnection.test.js`
+- `src/__tests__/integration/event-coalescing.test.js`
+- `src/__tests__/integration/cross-feature-pipeline.test.js`
+- `src/__tests__/integration/state-machine.test.js`
+- `src/__tests__/integration/metrics-aggregation.test.js`
+- `e2e/performance.spec.js`
+- `e2e/responsive.spec.js`
+- `e2e/accessibility.spec.js`
+- `scripts/load-test.js`
+
+**PR:** #163 (branch: squad/138-expand-integration-tests)

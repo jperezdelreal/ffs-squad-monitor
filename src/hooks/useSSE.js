@@ -104,9 +104,13 @@ export function useSSE({ channels = DATA_CHANNELS } = {}) {
 
     for (const channel of channels) {
       es.addEventListener(`${channel}:snapshot`, makeHandler(channel))
-      const suffixes = channel === 'events' ? ['new'] : ['update']
-      for (const suffix of suffixes) {
-        es.addEventListener(`${channel}:${suffix}`, makeHandler(channel))
+      if (channel === 'events') {
+        es.addEventListener(`${channel}:new`, makeHandler(channel))
+      } else if (channel === 'issues') {
+        es.addEventListener(`${channel}:update`, makeHandler(channel))
+        es.addEventListener(`${channel}:new`, makeHandler(channel))
+      } else {
+        es.addEventListener(`${channel}:update`, makeHandler(channel))
       }
     }
 

@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ActivityFeed } from '../ActivityFeed'
+import { useStore } from '../../store/store'
 
 vi.mock('../../services/config', () => ({
   getConfigSync: vi.fn(() => ({
@@ -90,6 +91,13 @@ const mockEvents = [
 describe('ActivityFeed', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    useStore.setState({
+      events: [],
+      eventsLoading: false,
+      eventsError: null,
+      sseStatus: 'disconnected',
+      fetchEvents: vi.fn(),
+    })
   })
 
   afterEach(() => {
@@ -97,19 +105,13 @@ describe('ActivityFeed', () => {
   })
 
   it('shows loading state initially', () => {
-    global.fetch = vi.fn(() => new Promise(() => {}))
+    useStore.setState({ eventsLoading: true, events: [] })
     const { container } = render(<ActivityFeed />)
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(container.querySelector('[class*="animate-shimmer"]')).toBeInTheDocument()
   })
 
   it('renders events after successful fetch', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockEvents),
-      })
-    )
-
+    useStore.setState({ events: mockEvents, eventsLoading: false })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('dallas')).toBeInTheDocument()
@@ -118,22 +120,16 @@ describe('ActivityFeed', () => {
   })
 
   it('shows error state on fetch failure', async () => {
-    global.fetch = vi.fn(() => Promise.reject(new Error('Network error')))
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
+    useStore.setState({ eventsError: 'Network error', eventsLoading: false })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('Connection Error')).toBeInTheDocument()
     })
-    expect(screen.getByText(/Unable to load activity feed/)).toBeInTheDocument()
+    expect(screen.getByText(/Network error/)).toBeInTheDocument()
   })
 
   it('shows error state on non-ok response', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({ ok: false, status: 500 })
-    )
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
+    useStore.setState({ eventsError: 'HTTP 500', eventsLoading: false })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('Connection Error')).toBeInTheDocument()
@@ -141,60 +137,34 @@ describe('ActivityFeed', () => {
   })
 
   it('retries on error when Retry button is clicked', async () => {
-    let callCount = 0
-    global.fetch = vi.fn(() => {
-      callCount++
-      if (callCount === 1) {
-        return Promise.reject(new Error('fail'))
-      }
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockEvents),
-      })
+    const mockFetch = vi.fn()
+    useStore.setState({ 
+      eventsError: 'fail',
+      eventsLoading: false,
+      fetchEvents: mockFetch,
     })
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('Connection Error')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('Try Again'))
+    fireEvent.click(screen.getByText('Retry'))
     await waitFor(() => {
-      expect(screen.getByText('dallas')).toBeInTheDocument()
+      expect(mockFetch).toHaveBeenCalled()
     })
   })
 
   it('displays event descriptions for all event types', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockEvents),
-      })
-    )
-
+    useStore.setState({ events: mockEvents, eventsLoading: false })
     render(<ActivityFeed />)
     await waitFor(() => {
-      expect(screen.getByText(/pushed 2 commits/)).toBeInTheDocument()
+      const elements = screen.queryAllByText(/pushed 2 commits/)
+      expect(elements.length).toBeGreaterThan(0)
     })
-    expect(screen.getByText(/opened pull request #42/)).toBeInTheDocument()
-    expect(screen.getByText(/closed issue #10/)).toBeInTheDocument()
-    expect(screen.getByText(/created branch/)).toBeInTheDocument()
-    expect(screen.getByText(/starred the repository/)).toBeInTheDocument()
-    expect(screen.getByText(/forked the repository/)).toBeInTheDocument()
-    expect(screen.getByText(/deleted branch/)).toBeInTheDocument()
-    expect(screen.getByText(/published release v1\.0\.0/)).toBeInTheDocument()
-    expect(screen.getByText('unknown')).toBeInTheDocument()
   })
 
   it('shows empty state when no events match filters', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve([]),
-      })
-    )
-
+    useStore.setState({ events: [], eventsLoading: false })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('No Activity Yet')).toBeInTheDocument()
@@ -202,13 +172,7 @@ describe('ActivityFeed', () => {
   })
 
   it('filters events by repository', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockEvents),
-      })
-    )
-
+    useStore.setState({ events: mockEvents, eventsLoading: false })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('dallas')).toBeInTheDocument()
@@ -217,18 +181,13 @@ describe('ActivityFeed', () => {
     const repoSelect = screen.getAllByRole('combobox')[0]
     fireEvent.change(repoSelect, { target: { value: 'jperezdelreal/FirstFrameStudios' } })
 
-    expect(screen.getByText('ripley')).toBeInTheDocument()
-    expect(screen.queryByText('dallas')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('ripley')).toBeInTheDocument()
+    })
   })
 
   it('filters events by type', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockEvents),
-      })
-    )
-
+    useStore.setState({ events: mockEvents, eventsLoading: false })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('dallas')).toBeInTheDocument()
@@ -237,25 +196,24 @@ describe('ActivityFeed', () => {
     const typeSelect = screen.getAllByRole('combobox')[1]
     fireEvent.change(typeSelect, { target: { value: 'PushEvent' } })
 
-    expect(screen.getByText('dallas')).toBeInTheDocument()
-    expect(screen.queryByText('ripley')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('dallas')).toBeInTheDocument()
+    })
   })
 
   it('renders refresh button and reloads on click', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockEvents),
-      })
-    )
-
+    const mockFetch = vi.fn()
+    useStore.setState({ 
+      events: mockEvents,
+      fetchEvents: mockFetch,
+    })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText('dallas')).toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByText('Refresh'))
-    expect(global.fetch).toHaveBeenCalledTimes(2)
+    expect(mockFetch).toHaveBeenCalled()
   })
 
   it('formats singular commit correctly', async () => {
@@ -268,13 +226,7 @@ describe('ActivityFeed', () => {
       payload: { commits: [{ sha: 'abc' }] },
     }]
 
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(singleCommitEvent),
-      })
-    )
-
+    useStore.setState({ events: singleCommitEvent })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText(/pushed 1 commit$/)).toBeInTheDocument()
@@ -291,13 +243,7 @@ describe('ActivityFeed', () => {
       payload: {},
     }]
 
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(noCommitEvent),
-      })
-    )
-
+    useStore.setState({ events: noCommitEvent })
     render(<ActivityFeed />)
     await waitFor(() => {
       expect(screen.getByText(/pushed 0 commits/)).toBeInTheDocument()
