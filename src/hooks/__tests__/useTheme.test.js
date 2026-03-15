@@ -31,11 +31,11 @@ describe('useTheme', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 
-  it('detects system light preference', () => {
+  it('defaults to dark when no stored preference', () => {
     mockMatchMedia.matches = false
     const { result } = renderHook(() => useTheme())
-    expect(result.current.theme).toBe('light')
-    expect(document.documentElement.classList.contains('light')).toBe(true)
+    expect(result.current.theme).toBe('dark')
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 
   it('reads theme from localStorage', () => {

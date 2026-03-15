@@ -14,7 +14,7 @@ function getInitialTheme() {
   } catch {
     // localStorage unavailable
   }
-  return getSystemPreference()
+  return 'dark'
 }
 
 function applyTheme(theme) {

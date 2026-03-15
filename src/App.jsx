@@ -170,7 +170,7 @@ function App() {
   return (
     <ErrorBoundary>
       <OnboardingManager />
-      <div className={`flex h-screen bg-[#0a0e14] dark:bg-[#0a0e14] light:bg-ops-light-bg overflow-hidden ${density === 'compact' ? 'text-sm' : ''}`}>
+      <div className={`flex h-screen bg-[#0a0e14] overflow-hidden ${density === 'compact' ? 'text-sm' : ''}`}>
         {/* Skip to content link for screen readers */}
         <a
           href="#main-content"
@@ -180,7 +180,7 @@ function App() {
         </a>
         
         {/* Subtle gradient background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5 dark:from-cyan-500/5 dark:to-blue-600/5 light:from-cyan-500/10 light:to-blue-600/10 pointer-events-none" />
+        <div className="fixed inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5 pointer-events-none" />
         
         {/* Mobile overlay */}
         {sidebarOpen && !focusMode && (

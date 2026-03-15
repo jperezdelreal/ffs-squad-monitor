@@ -17,30 +17,31 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
   const toggleSettingsPanel = useStore(s => s.toggleSettingsPanel);
   const showSettingsPanel = useStore(s => s.showSettingsPanel);
 
+  // On desktop (lg+), sidebar is always visible; on mobile, controlled by isOpen
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
   return (
     <motion.aside
       initial={false}
-      animate={{ x: isOpen ? 0 : '-100%' }}
+      animate={{ x: isDesktop || isOpen ? 0 : '-100%' }}
       transition={springPresets.snappy}
       className={`
         fixed lg:static inset-y-0 left-0 z-40
-        w-72 glass-lg depth-raised border-r border-white/10 dark:border-white/10 light:border-black/10 backdrop-blur-xl flex flex-col
-        ${!isOpen ? 'lg:translate-x-0' : ''}
+        w-72 glass-lg depth-raised border-r border-white/10 backdrop-blur-xl flex flex-col
       `}
-      style={{ x: '0%' }}
     >
-      <div className="p-4 sm:p-6 border-b border-white/10 dark:border-white/10 light:border-black/10">
+      <div className="p-4 sm:p-6 border-b border-white/10">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-xl">
             🎬
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-h4 font-semibold text-white dark:text-white light:text-gray-900">FFS Monitor</h2>
-            <p className="text-caption text-gray-400 dark:text-gray-400 light:text-gray-500 truncate">First Frame Studios</p>
+            <h2 className="text-h4 font-semibold text-white">FFS Monitor</h2>
+            <p className="text-caption text-gray-400 truncate">First Frame Studios</p>
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden p-2 text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+            className="lg:hidden p-2 text-gray-400 hover:text-white transition-colors"
             aria-label="Close menu"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,8 +62,8 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
               transition={springPresets.snappy}
               className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg group relative min-h-[44px] transition-all duration-200 ${
                 isActive
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white dark:text-white light:text-gray-900 border border-cyan-500/30 shadow-glow-cyan-sm depth-raised'
-                  : 'text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-black/5 border border-transparent hover:shadow-depth-surface'
+                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white border border-cyan-500/30 shadow-glow-cyan-sm depth-raised'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:shadow-depth-surface'
               }`}
             >
               {isActive && (
@@ -101,7 +102,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
           );
         })}
       </nav>
-      <div className="p-3 sm:p-4 border-t border-white/10 dark:border-white/10 light:border-black/10 space-y-2">
+      <div className="p-3 sm:p-4 border-t border-white/10 space-y-2">
         <motion.button
           onClick={toggleSettingsPanel}
           whileHover={{ scale: 1.02 }}
@@ -109,8 +110,8 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
           transition={springPresets.snappy}
           className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-lg group min-h-[44px] ${
             showSettingsPanel
-              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white dark:text-white light:text-gray-900 border border-cyan-500/30'
-              : 'text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-black/5 border border-transparent'
+              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white border border-cyan-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
           }`}
           aria-label="Settings"
         >
@@ -133,13 +134,13 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           transition={springPresets.snappy}
-          className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-lg group min-h-[44px] text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-black/5 border border-transparent"
+          className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-lg group min-h-[44px] text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
           aria-label="Help & Tour"
         >
           <span className="text-lg sm:text-xl">🎓</span>
           <span className="text-body-sm font-medium">Help & Tour</span>
         </motion.button>
-        <div className="text-xs text-gray-500 dark:text-gray-500 light:text-gray-400 text-center font-mono pt-1">
+        <div className="text-xs text-gray-500 text-center font-mono pt-1">
           v1.0.0 • Made with ❤️
         </div>
       </div>

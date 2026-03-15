@@ -280,6 +280,7 @@ export const useStore = create((set, get) => ({
       }),
     }
 
+    if (!eventType) return
     const key = `${channel}:${eventType.split(':').pop()}`
     const fullKey = eventType
     const handler = handlers[fullKey] || handlers[key]

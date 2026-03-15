@@ -25,7 +25,7 @@
         let theme = 'dark'
         try {
           const stored = localStorage.getItem(STORAGE_KEY)
-          theme = (stored === 'dark' || stored === 'light') ? stored : getSystemPreference()
+          theme = (stored === 'dark' || stored === 'light') ? stored : 'dark'
         } catch {}
         document.documentElement.classList.add(theme)
       })();

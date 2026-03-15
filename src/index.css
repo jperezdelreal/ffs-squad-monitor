@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 @layer base {
   body {
@@ -229,17 +228,6 @@
 
   .animate-spin-slow {
     animation: spin 1.5s linear infinite;
-  }
-
-  .glass {
-    background: rgba(21, 25, 32, 0.6);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .light .glass {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   /* Mobile optimization utilities */
