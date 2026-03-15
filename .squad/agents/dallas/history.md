@@ -707,3 +707,26 @@ This approach is pragmatic: ensure new code is well-tested while not blocking PR
 
 **Key Insight:** When Tailwind utilities silently fail, the UI still renders (HTML structure intact) but looks completely broken — no positioning, no backgrounds, no colors. Always verify Tailwind CSS version compatibility when upgrading.
 
+
+### P0 Fix: Remove Heartbeat UI + Fix Light Mode (2026-03-15)
+
+**Heartbeat Removal:**
+- Removed DependencyHealth ("Deps") component from Header
+- Removed heartbeatData, setHeartbeatData, fetchHeartbeat from Zustand store
+- Removed heartbeat SSE channel subscription and handlers
+- Removed heartbeat staleness slider and alert toggle from Settings
+- Removed staleness/heartbeatAgeMs from useHealthScore return
+- Kept /api/heartbeat backend endpoint untouched
+- Updated 3 test files to remove heartbeat references
+
+**Light Mode Fix — Root Cause:**
+- The `light:` Tailwind variant prefix (e.g., `light:text-gray-900`) was used extensively but NEVER defined
+- Tailwind CSS v4 with `@tailwindcss/postcss ^4.2.1` only auto-generates `dark:` from `darkMode: 'class'`
+- All `light:` utility classes produced zero CSS output — completely inert
+- Fix: Added `@custom-variant light (.light &);` to index.css
+- This single line caused the built CSS to grow from 88KB → 90KB (34 new .light rules)
+- Also fixed hardcoded `bg-[#0a0e14]` in App.jsx by adding `light:bg-[#f8fafc]`
+
+**Key Insight:** When a Tailwind variant prefix is used but not defined, classes silently produce no CSS. The UI renders structurally but colors/backgrounds are wrong. Always verify custom variants are defined in the CSS when using non-standard prefixes in Tailwind v4.
+
+**Tests:** 754 pass, 51 files, all green.
