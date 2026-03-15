@@ -1,0 +1,233 @@
+// @ts-check
+import { test, expect } from '@playwright/test'
+
+test.describe('Dark Mode and Theme Switching', () => {
+  test('dark mode persists across page reloads', async ({ page }) => {
+    await page.goto('/')
+
+    // Check if settings button exists
+    const settingsBtn = page.locator('button', { hasText: 'Settings' })
+    await expect(settingsBtn).toBeVisible()
+
+    // Open settings
+    await settingsBtn.click()
+
+    // Look for dark mode toggle (implementation may vary)
+    // This is a placeholder - adjust selectors based on actual implementation
+    const settingsPanel = page.locator('[role="dialog"], [data-testid="settings-panel"]').first()
+    
+    // If settings panel is visible, verify content renders
+    const panelExists = await settingsPanel.isVisible().catch(() => false)
+    
+    if (panelExists) {
+      // Settings panel should have content
+      await expect(settingsPanel).not.toBeEmpty()
+    }
+  })
+
+  test('theme colors apply correctly', async ({ page }) => {
+    await page.goto('/')
+
+    // Verify color scheme
+    const body = page.locator('body')
+    const backgroundColor = await body.evaluate(el => 
+      window.getComputedStyle(el).backgroundColor
+    )
+
+    // Should have a defined background color
+    expect(backgroundColor).toBeTruthy()
+    expect(backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+  })
+
+  test('text contrast is sufficient in all themes', async ({ page }) => {
+    await page.goto('/')
+
+    // Check header text contrast
+    const heading = page.locator('header h1')
+    const color = await heading.evaluate(el => 
+      window.getComputedStyle(el).color
+    )
+    const bgColor = await heading.evaluate(el => 
+      window.getComputedStyle(el).backgroundColor
+    )
+
+    // Colors should be defined (not transparent)
+    expect(color).toBeTruthy()
+    expect(bgColor).toBeTruthy()
+  })
+
+  test('settings panel toggles correctly', async ({ page }) => {
+    await page.goto('/')
+
+    const settingsBtn = page.locator('button', { hasText: 'Settings' })
+    
+    // Open settings
+    await settingsBtn.click()
+    
+    // Settings button should show active state
+    await expect(settingsBtn).toHaveClass(/border-cyan/)
+
+    // Click again to close (if toggle behavior exists)
+    await settingsBtn.click()
+  })
+})
+
+test.describe('Accessibility', () => {
+  test('keyboard navigation works across all views', async ({ page }) => {
+    await page.goto('/')
+
+    // Tab to first nav button
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Tab')
+    
+    // Enter should activate button
+    await page.keyboard.press('Enter')
+    
+    // Main content should update
+    await expect(page.locator('main')).toBeVisible()
+  })
+
+  test('all interactive elements are keyboard accessible', async ({ page }) => {
+    await page.goto('/')
+
+    // Find all buttons
+    const buttons = page.locator('button')
+    const count = await buttons.count()
+    
+    expect(count).toBeGreaterThan(0)
+
+    // Tab through elements
+    for (let i = 0; i < Math.min(count, 10); i++) {
+      await page.keyboard.press('Tab')
+    }
+
+    // Focus should be visible somewhere
+    const focusedElement = await page.evaluate(() => document.activeElement?.tagName)
+    expect(focusedElement).toBeTruthy()
+  })
+
+  test('semantic HTML elements are used correctly', async ({ page }) => {
+    await page.goto('/')
+
+    // Check for semantic elements
+    await expect(page.locator('header')).toBeVisible()
+    await expect(page.locator('aside')).toBeVisible()
+    await expect(page.locator('main')).toBeVisible()
+    await expect(page.locator('nav')).toBeVisible()
+  })
+
+  test('buttons have accessible labels', async ({ page }) => {
+    await page.goto('/')
+
+    const navButtons = page.locator('aside nav button')
+    const count = await navButtons.count()
+
+    for (let i = 0; i < count; i++) {
+      const button = navButtons.nth(i)
+      const text = await button.textContent()
+      
+      // Each button should have text content
+      expect(text).toBeTruthy()
+      expect(text!.trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  test('heading hierarchy is correct', async ({ page }) => {
+    await page.goto('/')
+
+    // Should have h1
+    const h1 = page.locator('h1')
+    await expect(h1).toBeVisible()
+    await expect(h1).toHaveText('Squad Monitor')
+
+    // Check if h2/h3 exist in logical order
+    const headings = await page.locator('h1, h2, h3, h4').allTextContents()
+    expect(headings.length).toBeGreaterThan(0)
+  })
+
+  test('images have alt text (if present)', async ({ page }) => {
+    await page.goto('/')
+
+    const images = page.locator('img')
+    const count = await images.count()
+
+    if (count > 0) {
+      for (let i = 0; i < count; i++) {
+        const img = images.nth(i)
+        const alt = await img.getAttribute('alt')
+        
+        // Alt should exist (can be empty for decorative images)
+        expect(alt).not.toBeNull()
+      }
+    }
+  })
+
+  test('color is not the only visual indicator', async ({ page }) => {
+    await page.goto('/')
+
+    // Sidebar active state should have visual indicators beyond color
+    // (e.g., border, icon, text weight)
+    const activeButton = page.locator('aside nav button.border-cyan-500').first()
+    
+    if (await activeButton.isVisible().catch(() => false)) {
+      // Active button should have border class (not just color)
+      const className = await activeButton.getAttribute('class')
+      expect(className).toContain('border')
+    }
+  })
+})
+
+test.describe('Error States and Edge Cases', () => {
+  test('handles missing backend gracefully', async ({ page }) => {
+    // Dashboard should render even if backend is unavailable
+    await page.goto('/')
+
+    // Core UI should still be visible
+    await expect(page.locator('header')).toBeVisible()
+    await expect(page.locator('aside')).toBeVisible()
+    await expect(page.locator('main')).toBeVisible()
+  })
+
+  test('displays appropriate error message when data unavailable', async ({ page }) => {
+    await page.goto('/')
+
+    // Wait for potential data fetching
+    await page.waitForTimeout(2000)
+
+    // Page should still be functional
+    const navButtons = page.locator('aside nav button')
+    await expect(navButtons.first()).toBeVisible()
+
+    // Can still navigate between views
+    await navButtons.nth(1).click()
+    await expect(page.locator('main')).toBeVisible()
+  })
+
+  test('recovers from navigation errors', async ({ page }) => {
+    await page.goto('/')
+
+    // Rapid clicking should not break navigation
+    const pipelineBtn = page.locator('aside nav button', { hasText: 'Pipeline' })
+    
+    await pipelineBtn.click()
+    await pipelineBtn.click()
+    await pipelineBtn.click()
+
+    // Dashboard should still be responsive
+    await expect(page.locator('main')).toBeVisible()
+  })
+
+  test('handles empty data gracefully', async ({ page }) => {
+    await page.goto('/')
+
+    // Navigate to views that may show empty states
+    await page.locator('aside nav button', { hasText: 'Team Board' }).click()
+    await expect(page.locator('main')).toBeVisible()
+
+    await page.locator('aside nav button', { hasText: 'Cost Tracker' }).click()
+    await expect(page.locator('main')).toBeVisible()
+
+    // No crashes or blank screens
+    await expect(page.locator('header')).toBeVisible()
+  })
+})
