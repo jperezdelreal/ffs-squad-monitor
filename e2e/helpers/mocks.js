@@ -226,6 +226,14 @@ export const mockTimeline = {
 
 // Mock API route helper for Playwright
 export async function mockAllAPIs(page) {
+  await page.route('/health', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'ok' })
+    })
+  })
+
   await page.route('/api/heartbeat', async route => {
     await route.fulfill({
       status: 200,

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springPresets } from '../lib/motion';
 
-export function WelcomeModal({ isOpen, onTakeTour, onSkip }) {
+export function WelcomeModal({ isOpen, onSkip }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -46,7 +46,7 @@ export function WelcomeModal({ isOpen, onTakeTour, onSkip }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
               >
                 <FeatureCard
                   icon="📊"
@@ -57,7 +57,7 @@ export function WelcomeModal({ isOpen, onTakeTour, onSkip }) {
                 <FeatureCard
                   icon="🎯"
                   title="Smart Filtering"
-                  description="Advanced search with fuzzy matching"
+                  description="Press ⌘K / Ctrl+K for command palette"
                   delay={0.35}
                 />
                 <FeatureCard
@@ -67,36 +67,27 @@ export function WelcomeModal({ isOpen, onTakeTour, onSkip }) {
                   delay={0.4}
                 />
                 <FeatureCard
-                  icon="🎨"
-                  title="Beautiful UI"
-                  description="Modern design with dark/light modes"
+                  icon="⌨️"
+                  title="Keyboard Shortcuts"
+                  description="Press ? to view all shortcuts"
                   delay={0.45}
                 />
               </motion.div>
 
-              {/* Action Buttons */}
+              {/* Single dismiss button */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="flex flex-col sm:flex-row gap-3"
               >
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={onTakeTour}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-base font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 min-h-[52px]"
-                >
-                  <span>🎓</span>
-                  <span>Take the Tour</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                   onClick={onSkip}
-                  className="flex-1 px-6 py-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-base font-medium border border-white/10 transition-all min-h-[52px]"
+                  data-testid="onboarding-dismiss"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-base font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all min-h-[52px]"
                 >
-                  Skip for Now
+                  Get Started
                 </motion.button>
               </motion.div>
 
@@ -107,7 +98,7 @@ export function WelcomeModal({ isOpen, onTakeTour, onSkip }) {
                 transition={{ delay: 0.6 }}
                 className="text-center text-xs text-gray-500 mt-4"
               >
-                You can restart the tour anytime from the Help menu
+                You can take a guided tour anytime from the Help menu
               </motion.p>
             </div>
           </motion.div>
