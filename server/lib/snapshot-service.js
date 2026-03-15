@@ -232,13 +232,14 @@ export function startSnapshotService() {
   })
 
   // Run initial snapshots after a short delay (let server start)
-  setTimeout(() => {
+  timers.init = setTimeout(() => {
     snapshotIssues()
     snapshotAgents()
     snapshotActions()
     snapshotAgentProductivity()
     snapshotPerformance()
     computeDailySummary()
+    delete timers.init
   }, 10_000)
 
   timers.issues = setInterval(snapshotIssues, INTERVALS.issues)
@@ -252,7 +253,11 @@ export function startSnapshotService() {
 
 export function stopSnapshotService() {
   for (const [name, timer] of Object.entries(timers)) {
-    clearInterval(timer)
+    if (name === 'init') {
+      clearTimeout(timer)
+    } else {
+      clearInterval(timer)
+    }
     delete timers[name]
   }
   log.info('Snapshot service stopped')

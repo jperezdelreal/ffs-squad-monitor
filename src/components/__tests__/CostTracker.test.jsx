@@ -27,7 +27,7 @@ describe('CostTracker', () => {
   it('shows loading state initially', () => {
     global.fetch = vi.fn(() => new Promise(() => {}))
     const { container } = render(<CostTracker />)
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(container.querySelector('[class*="animate-shimmer"]')).toBeInTheDocument()
   })
 
   it('renders usage data after successful fetch', async () => {

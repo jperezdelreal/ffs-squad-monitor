@@ -39,7 +39,7 @@ describe('TrendCharts', () => {
   it('shows loading state initially', () => {
     useStore.setState({ metricsLoading: true })
     const { container } = render(<TrendCharts />)
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(container.querySelector('[class*="animate-shimmer"]')).toBeInTheDocument()
   })
 
   it('renders charts after data loads', async () => {

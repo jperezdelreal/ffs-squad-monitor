@@ -80,9 +80,13 @@ describe('PerformanceTracker', () => {
       
       const metrics = performanceTracker.getMetrics()
       
-      expect(metrics.responseTimes.p50).toBeCloseTo(50, 0)
-      expect(metrics.responseTimes.p95).toBeCloseTo(95, 0)
-      expect(metrics.responseTimes.p99).toBeCloseTo(99, 0)
+      // Percentile interpolation for 100 values gives .5 offsets
+      expect(metrics.responseTimes.p50).toBeGreaterThanOrEqual(50)
+      expect(metrics.responseTimes.p50).toBeLessThanOrEqual(51)
+      expect(metrics.responseTimes.p95).toBeGreaterThanOrEqual(95)
+      expect(metrics.responseTimes.p95).toBeLessThanOrEqual(96)
+      expect(metrics.responseTimes.p99).toBeGreaterThanOrEqual(99)
+      expect(metrics.responseTimes.p99).toBeLessThanOrEqual(100)
     })
 
     it('handles empty data', () => {

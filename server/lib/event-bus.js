@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import { logger } from './logger.js'
+import { performanceTracker } from './performance-tracker.js'
 
 export const CHANNELS = [
   'heartbeat',

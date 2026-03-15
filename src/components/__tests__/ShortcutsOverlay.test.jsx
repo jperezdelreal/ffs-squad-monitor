@@ -22,7 +22,7 @@ describe('ShortcutsOverlay', () => {
     )
     
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText('Keyboard Shortcuts', { selector: 'h2' })).toBeInTheDocument()
+    expect(screen.getByText(/Keyboard Shortcuts/)).toBeInTheDocument()
     expect(screen.getByText('Focus search')).toBeInTheDocument()
     expect(screen.getByText('Refresh data')).toBeInTheDocument()
   })

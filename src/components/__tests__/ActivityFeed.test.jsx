@@ -107,7 +107,7 @@ describe('ActivityFeed', () => {
   it('shows loading state initially', () => {
     useStore.setState({ eventsLoading: true, events: [] })
     const { container } = render(<ActivityFeed />)
-    expect(container.querySelector('[class*="animate-pulse"]')).toBeInTheDocument()
+    expect(container.querySelector('[class*="animate-shimmer"]')).toBeInTheDocument()
   })
 
   it('renders events after successful fetch', async () => {

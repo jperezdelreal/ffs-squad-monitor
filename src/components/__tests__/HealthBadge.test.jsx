@@ -13,7 +13,8 @@ const mockBreakdown = [
 describe('HealthBadge', () => {
   it('renders score percentage', () => {
     render(<HealthBadge score={85} level={HEALTH_LEVELS.GREEN} breakdown={mockBreakdown} />)
-    expect(screen.getByText('85%')).toBeInTheDocument()
+    expect(screen.getByText('85')).toBeInTheDocument()
+    expect(screen.getByText(/%/)).toBeInTheDocument()
   })
 
   it('has accessible role and label', () => {

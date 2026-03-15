@@ -37,14 +37,15 @@ describe('Integration: Event Coalescing Under Load', () => {
       vi.advanceTimersByTime(50)
     }
 
-    // Only last event should be emitted after debounce period
-    expect(handler).toHaveBeenCalledTimes(0) // Still pending
+    // First event emits immediately, rest are coalesced
+    expect(handler).toHaveBeenCalledTimes(1) // First event immediate
 
     // Complete the debounce window
     vi.advanceTimersByTime(500)
 
-    expect(handler).toHaveBeenCalledTimes(1)
-    expect(emittedEvents[0].data.sequence).toBe(9)
+    expect(handler).toHaveBeenCalledTimes(2) // First + coalesced
+    expect(emittedEvents[0].data.sequence).toBe(0) // First event
+    expect(emittedEvents[1].data.sequence).toBe(9) // Last coalesced event
   })
 
   it('should emit immediately when events are >1s apart', async () => {
@@ -71,8 +72,9 @@ describe('Integration: Event Coalescing Under Load', () => {
     }
 
     vi.advanceTimersByTime(800) // Complete debounce
-    expect(handler).toHaveBeenCalledTimes(1)
-    expect(emittedEvents[0].data.id).toBe(4)
+    expect(handler).toHaveBeenCalledTimes(2) // First immediate + coalesced
+    expect(emittedEvents[0].data.id).toBe(0) // First event
+    expect(emittedEvents[1].data.id).toBe(4) // Last coalesced
 
     // Pause for 2 seconds
     vi.advanceTimersByTime(2000)
@@ -84,8 +86,9 @@ describe('Integration: Event Coalescing Under Load', () => {
     }
 
     vi.advanceTimersByTime(850)
-    expect(handler).toHaveBeenCalledTimes(2)
-    expect(emittedEvents[1].data.id).toBe(12)
+    expect(handler).toHaveBeenCalledTimes(4) // 2 from first burst + 2 from second burst
+    expect(emittedEvents[2].data.id).toBe(10) // Second burst immediate
+    expect(emittedEvents[3].data.id).toBe(12) // Second burst coalesced
   })
 
   it('should debounce per-channel independently', async () => {

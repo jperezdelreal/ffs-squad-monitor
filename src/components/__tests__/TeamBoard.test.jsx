@@ -86,6 +86,18 @@ describe('TeamBoard', () => {
     vi.restoreAllMocks()
     clearConfigCache()
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    // Reset store data state but keep actions
+    const { fetchIssues, fetchAgents } = useStore.getState()
+    useStore.setState({
+      agents: [],
+      agentsLoading: true,
+      agentsError: null,
+      issues: [],
+      issuesLoading: true,
+      issuesError: null,
+      fetchIssues, // Preserve actions
+      fetchAgents,
+    })
   })
 
   afterEach(() => {
@@ -96,7 +108,7 @@ describe('TeamBoard', () => {
   it('shows loading state initially', () => {
     global.fetch = vi.fn(() => new Promise(() => {}))
     const { container } = render(<TeamBoard />)
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(container.querySelector('[class*="animate-shimmer"]')).toBeInTheDocument()
   })
 
   it('renders team board with all agent names', async () => {
@@ -157,7 +169,7 @@ describe('TeamBoard', () => {
 
     render(<TeamBoard />)
     await waitFor(() => {
-      expect(screen.getByText(/Failed to fetch/)).toBeInTheDocument()
+      expect(screen.getByText(/Failed to load team data/)).toBeInTheDocument()
     })
   })
 
@@ -174,7 +186,7 @@ describe('TeamBoard', () => {
 
     render(<TeamBoard />)
     await waitFor(() => {
-      expect(screen.getByText(/Failed to fetch/)).toBeInTheDocument()
+      expect(screen.getByText(/Failed to load team data/)).toBeInTheDocument()
     })
   })
 

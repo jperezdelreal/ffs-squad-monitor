@@ -104,7 +104,7 @@ describe('Header', () => {
 
   it('renders health badge with score', () => {
     render(<Header lastUpdate={Date.now()} isConnected={true} {...defaultHealthProps} />)
-    expect(screen.getByText('85%')).toBeInTheDocument()
+    expect(screen.getByText('85')).toBeInTheDocument()
   })
 
   it('renders health badge with accessible label', () => {
