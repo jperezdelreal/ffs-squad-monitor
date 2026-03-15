@@ -360,6 +360,68 @@ When Ralph Go depletes the board (all issues closed), instead of idling, Ralph M
 
 ---
 
+### 16. User Directive: UI/UX 2026 Focus (2026-03-14)
+**By:** joperezd  
+**Date:** 2026-03-14  
+**Status:** ACTIVE  
+**Tier:** T0
+
+**Directive:** "Le pediría al lead a centrar los siguientes esfuerzos en su totalidad únicamente en que la UI y UX sea de 2026." (Focus ALL efforts exclusively on making UI/UX feel like 2026 — modern, polished, world-class.)
+
+- No backend work. No infrastructure. Frontend excellence only.
+- Dashboard must be accessible from anywhere via a link (open Azure issue to Syntax Sorcery if needed).
+- After Sprint 4, iterative UI/UX refinement is the priority.
+
+---
+
+### 17. Issue #138 Triage Decision (2026-03-15)
+**Author:** Ripley (Lead)  
+**Date:** 2026-03-15  
+**Status:** COMPLETED  
+**Decision:** Reassign Issue #138 (Expand Test Suite with Integration Tests) from Dallas to Kane.
+
+**Reasoning:** Issue is infrastructure testing work (integration/E2E tests, load tests, coverage targets) — Kane's domain, not frontend feature work.
+
+**Labels Applied:**
+- ✅ Removed: `squad:dallas`, `go:needs-research`
+- ✅ Added: `squad:kane`, `go:yes`
+
+**Rationale for `go:yes`:** Issue is well-defined with structured acceptance criteria, specific test scenarios (600+ tests, ≥30 integration, ≥20 E2E), measurable targets (80%+ coverage), and success metrics.
+
+---
+
+### 18. Sprint 4: UI/UX 2026 Transformation (2026-03-15)
+**Author:** Ripley (Lead)  
+**Date:** 2026-03-15  
+**Status:** ACTIVE  
+**Tier:** T1 (Lead authority)
+
+**Founder Directive:** ALL future effort focuses EXCLUSIVELY on making UI/UX feel like 2026 — modern, polished, world-class.
+
+**12 Issues Created (all assigned to Dallas):**
+1. #140 — Framer Motion Integration (P0)
+2. #141 — Loading States Overhaul: Skeleton Screens (P0)
+3. #142 — Chart Redesign: Interactive Animated Data (P1)
+4. #143 — Command Palette (⌘K) Implementation (P1)
+5. #144 — Micro-interactions: Hover/Click Feedback (P0)
+6. #145 — Typography and Spacing Refinement (P2)
+7. #146 — Color System and Depth Enhancement (P1)
+8. #147 — Empty and Error State Redesign (P1)
+9. #148 — Real-time Data Pulse Indicators (P1)
+10. #149 — Toast Notification System Upgrade (P2)
+11. #150 — Mobile Responsive Polish (P1)
+12. #151 — Focus Mode and Progressive Disclosure (P2)
+
+**Foundation:** React 18.3, Zustand state, Tailwind CSS 4.2, SSE streaming, 227+ tests (94%+ coverage), Express backend, dark/light mode.
+
+**UX Gaps Addressed:** Motion/animation, loading states, data visualization, keyboard navigation, micro-interactions, typography/spacing, depth/layering, empty/error states, real-time "alive" feel, notifications, mobile, progressive disclosure.
+
+**Success Metrics:** Framer Motion integrated, zero spinners, animated charts, working command palette, micro-interactions on all interactive elements, polished mobile, delightful empty/error states, "alive" real-time feel, refined design system.
+
+**Out of Scope:** Backend changes, API updates, TypeScript, Docker, multi-squad support, AI personalization.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
