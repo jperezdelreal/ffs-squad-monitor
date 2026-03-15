@@ -5,6 +5,7 @@ import { getHeartbeatResponse } from './heartbeat.js'
 import { getDbStats } from '../lib/metrics-db.js'
 import { eventBus } from '../lib/event-bus.js'
 import { logger } from '../lib/logger.js'
+import { cacheManager } from '../lib/cache-manager.js'
 
 let lastGithubCheck = null
 let lastGithubReachable = null
@@ -41,7 +42,7 @@ function checkHeartbeatFile() {
  * /api/health:
  *   get:
  *     summary: Detailed health check
- *     description: Returns comprehensive health status including GitHub API reachability, heartbeat file accessibility, rate limit info, metrics DB stats, and SSE connection count.
+ *     description: Returns comprehensive health status including GitHub API reachability, heartbeat file accessibility, rate limit info, metrics DB stats, cache stats, and SSE connection count.
  *     tags: [Health]
  *     responses:
  *       200:
@@ -56,6 +57,7 @@ export default async function healthRoute(req, res) {
   const heartbeatFile = checkHeartbeatFile()
   const heartbeat = getHeartbeatResponse()
   const githubReachable = await checkGitHubReachable()
+  const cacheStats = cacheManager.getStats()
 
   const rateLimitHealthy = rl.remaining === null || rl.remaining > 100
   const heartbeatHealthy = heartbeatFile.accessible && heartbeat.status !== 'offline'
@@ -93,6 +95,7 @@ export default async function healthRoute(req, res) {
       })(),
     },
     sse: eventBus.getConnectionInfo(),
+    cache: cacheStats,
   })
 }
 

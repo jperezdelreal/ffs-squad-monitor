@@ -1,9 +1,6 @@
 import { config, REPOS } from '../config.js'
 import { githubFetch, handleGitHubError } from '../lib/github-client.js'
-
-const ISSUE_CACHE_TTL = config.issueCacheTTL;
-let issueCache = null;
-let issueCacheTime = 0;
+import { cacheManager } from '../lib/cache-manager.js'
 
 /**
  * Fetch issues across all repos with given state.
@@ -64,6 +61,22 @@ export async function fetchIssues(stateParam = 'open') {
   allIssues.sort((a, b) => a.priority - b.priority || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   return allIssues;
 }
+          priority,
+          labels,
+          assignees,
+          prStatus,
+          createdAt: issue.created_at,
+          updatedAt: issue.updated_at,
+        });
+      }
+    } catch {
+      // Skip individual repo failures
+    }
+  }
+
+  allIssues.sort((a, b) => a.priority - b.priority || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  return allIssues;
+}
 
 /**
  * @openapi
@@ -107,18 +120,11 @@ export default async function boardRoute(req, res) {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const stateParam = url.searchParams.get('state') || 'open';
 
-    if (stateParam === 'open' && issueCache && Date.now() - issueCacheTime < ISSUE_CACHE_TTL) {
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify(issueCache));
-      return;
-    }
-
-    const allIssues = await fetchIssues(stateParam);
-
-    if (stateParam === 'open') {
-      issueCache = allIssues;
-      issueCacheTime = Date.now();
-    }
+    // Use cache manager for deduplication and tiered caching
+    const cacheKey = `issues:${stateParam}`;
+    const tier = 'warm'; // 60s TTL for issues
+    
+    const allIssues = await cacheManager.get(cacheKey, tier, () => fetchIssues(stateParam));
 
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(allIssues));

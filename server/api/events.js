@@ -1,9 +1,6 @@
 import { REPOS } from '../config.js'
 import { githubFetch, handleGitHubError } from '../lib/github-client.js'
-
-const CACHE_TTL = 30_000
-let eventsCache = null
-let eventsCacheTime = 0
+import { cacheManager } from '../lib/cache-manager.js'
 
 /**
  * Fetch and aggregate events across all repos.
@@ -46,7 +43,7 @@ export async function fetchEvents() {
  * /api/events:
  *   get:
  *     summary: Get recent GitHub events
- *     description: Aggregates recent GitHub events across all monitored repositories. Cached for 30 seconds. Returns up to 100 events sorted by most recent first.
+ *     description: Aggregates recent GitHub events across all monitored repositories. Cached for 60 seconds. Returns up to 100 events sorted by most recent first.
  *     tags: [Events]
  *     responses:
  *       200:
@@ -72,15 +69,10 @@ export async function fetchEvents() {
  */
 export default async function eventsRoute(req, res) {
   try {
-    if (eventsCache && Date.now() - eventsCacheTime < CACHE_TTL) {
-      res.json(eventsCache)
-      return
-    }
-
-    const capped = await fetchEvents()
-
-    eventsCache = capped
-    eventsCacheTime = Date.now()
+    const cacheKey = 'events'
+    const tier = 'warm' // 60s TTL
+    
+    const capped = await cacheManager.get(cacheKey, tier, fetchEvents)
 
     res.json(capped)
   } catch (err) {
