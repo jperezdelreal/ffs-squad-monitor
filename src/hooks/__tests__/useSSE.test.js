@@ -253,7 +253,7 @@ describe('useSSE', () => {
 
   it('uses default channels when none specified', () => {
     const { unmount } = renderHook(() => useSSE())
-    expect(MockEventSource.instances[0].url).toBe('/api/sse?channels=heartbeat,events,issues,usage')
+    expect(MockEventSource.instances[0].url).toBe('/api/sse?channels=heartbeat,events,issues,usage,viewers')
     unmount()
   })
 
