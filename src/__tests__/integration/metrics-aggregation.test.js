@@ -245,7 +245,10 @@ describe('Integration: Metrics Aggregation Across Multiple Sessions', () => {
   })
 
   it('should aggregate metrics by interval (hourly rollup)', () => {
-    const baseTime = Date.now()
+    // Use a time at the start of an hour to ensure all 60 minutes are in same hour
+    const baseDate = new Date()
+    baseDate.setMinutes(0, 0, 0)
+    const baseTime = baseDate.getTime()
 
     // Insert 60 minute-level snapshots (1 hour worth)
     for (let i = 0; i < 60; i++) {
@@ -310,9 +313,9 @@ describe('Integration: Metrics Aggregation Across Multiple Sessions', () => {
   it('should support deletion of old metrics (retention policy)', () => {
     const now = Date.now()
 
-    // Insert metrics: 20 old (>30 days) + 10 recent
+    // Insert metrics: 20 old (>30 days) + 10 recent (<30 days)
     for (let i = 0; i < 30; i++) {
-      const daysAgo = i + 1
+      const daysAgo = i + 20  // Days 20-49 ago (some >30)
       const timestamp = new Date(now - daysAgo * 86400000).toISOString()
       
       db.prepare(`
@@ -337,7 +340,9 @@ describe('Integration: Metrics Aggregation Across Multiple Sessions', () => {
       SELECT COUNT(*) as count FROM metrics_snapshots
     `).get()
 
+    // Should have deleted records from days 31-49 (19 records)
     expect(totalAfter.count).toBeLessThan(totalBefore.count)
+    expect(totalAfter.count).toBeGreaterThanOrEqual(10)  // At least the recent ones remain
   })
 
   it('should calculate per-agent productivity trends', () => {

@@ -59,9 +59,17 @@ describe('Integration: SSE Reconnection After Connection Failure', () => {
 
       _emit(type, data) {
         if (this._listeners[type]) {
+          // Wrap data in eventBus format: { id, type, channel, data, timestamp }
+          const wrappedData = {
+            id: String(Date.now()),
+            type,
+            channel: type.split(':')[0],
+            data,
+            timestamp: new Date().toISOString(),
+          }
           const event = {
             type,
-            data: typeof data === 'string' ? data : JSON.stringify(data),
+            data: JSON.stringify(wrappedData),
             lastEventId: '',
           }
           this._listeners[type].forEach(fn => fn(event))
@@ -69,6 +77,11 @@ describe('Integration: SSE Reconnection After Connection Failure', () => {
       }
 
       _error() {
+        // Call onerror handler if set
+        if (this.onerror) {
+          this.onerror(new Event('error'))
+        }
+        // Also call addEventListener handlers
         if (this._listeners.error) {
           this._listeners.error.forEach(fn => fn(new Event('error')))
         }
@@ -119,8 +132,8 @@ describe('Integration: SSE Reconnection After Connection Failure', () => {
   })
 
   it('should fall back to polling after 3 consecutive failures', async () => {
-    const { result } = renderHook(() => useSSE({ channels: ['heartbeat'] }))
     const refreshAllSpy = vi.spyOn(useStore.getState(), 'refreshAll')
+    const { result } = renderHook(() => useSSE({ channels: ['heartbeat'] }))
 
     // First failure
     act(() => {
@@ -260,23 +273,26 @@ describe('Integration: SSE Reconnection After Connection Failure', () => {
   it('should cap exponential backoff at 30 seconds', async () => {
     const { result } = renderHook(() => useSSE({ channels: ['heartbeat'] }))
 
-    // Simulate 10 failures
-    const delays = [1000, 2000, 4000, 8000, 16000]
+    // Simulate failures with exponential backoff
+    // After 3 failures, it will enter polling mode
+    const delays = [1000, 2000]
     
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       act(() => {
-        eventSourceInstances[i]._error()
+        if (eventSourceInstances[i]) {
+          eventSourceInstances[i]._error()
+        }
       })
       
-      if (i < 3) { // First 3 failures before polling
+      if (i < 2) { // First 2 failures: reconnect with backoff
         act(() => {
           vi.advanceTimersByTime(delays[i])
         })
-      } else {
-        break // After 3 failures, enters polling mode
+        expect(eventSourceInstances).toHaveLength(i + 2)
       }
     }
 
+    // After 3rd failure, should enter polling mode
     expect(result.current.status).toBe('polling')
   })
 

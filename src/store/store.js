@@ -204,6 +204,12 @@ export const useStore = create((set, get) => ({
         lastUpdate: Date.now(),
         error: null,
       }),
+      'heartbeat:snapshot': () => set({
+        heartbeatData: data,
+        isConnected: true,
+        lastUpdate: Date.now(),
+        error: null,
+      }),
       'events:new': () => set((state) => ({
         events: [data, ...state.events].slice(0, 500),
         eventsLoading: false,
@@ -215,14 +221,47 @@ export const useStore = create((set, get) => ({
         eventsError: null,
       }),
       'issues:update': () => {
+        // Handle single issue update
+        if (data.number) {
+          set((state) => ({
+            issues: state.issues.map(issue =>
+              issue.number === data.number ? { ...issue, ...data } : issue
+            ),
+            issuesLoading: false,
+            issuesError: null,
+          }))
+        } else {
+          // Handle full snapshot replacement
+          set({
+            issues: data.snapshot || data,
+            issuesLoading: false,
+            issuesError: null,
+          })
+        }
+        get().fetchAgents()
+      },
+      'issues:snapshot': () => {
         set({
-          issues: data.snapshot || data,
+          issues: data,
           issuesLoading: false,
           issuesError: null,
         })
         get().fetchAgents()
       },
+      'issues:new': () => {
+        set((state) => ({
+          issues: [data, ...state.issues],
+          issuesLoading: false,
+          issuesError: null,
+        }))
+        get().fetchAgents()
+      },
       'usage:update': () => set({
+        usage: data,
+        usageLoading: false,
+        usageError: null,
+      }),
+      'usage:snapshot': () => set({
         usage: data,
         usageLoading: false,
         usageError: null,

@@ -57,12 +57,31 @@ describe('Integration: Cross-Feature Pipeline', () => {
 
       _emit(type, data) {
         if (this._listeners[type]) {
+          // Wrap data in eventBus format: { id, type, channel, data, timestamp }
+          const wrappedData = {
+            id: String(Date.now()),
+            type,
+            channel: type.split(':')[0],
+            data,
+            timestamp: new Date().toISOString(),
+          }
           const event = {
             type,
-            data: typeof data === 'string' ? data : JSON.stringify(data),
+            data: JSON.stringify(wrappedData),
             lastEventId: '',
           }
           this._listeners[type].forEach(fn => fn(event))
+        }
+      }
+
+      _error() {
+        // Call onerror handler if set
+        if (this.onerror) {
+          this.onerror(new Event('error'))
+        }
+        // Also call addEventListener handlers
+        if (this._listeners.error) {
+          this._listeners.error.forEach(fn => fn(new Event('error')))
         }
       }
     }

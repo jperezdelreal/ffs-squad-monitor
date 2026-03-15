@@ -102,13 +102,17 @@ describe('Integration: Event Coalescing Under Load', () => {
       vi.advanceTimersByTime(100)
     }
 
-    vi.advanceTimersByTime(600)
-
-    // Both channels should emit once with their last value
+    // First events emitted immediately
     expect(heartbeatHandler).toHaveBeenCalledTimes(1)
     expect(eventsHandler).toHaveBeenCalledTimes(1)
-    expect(heartbeatHandler.mock.calls[0][0].data.hb).toBe(4)
-    expect(eventsHandler.mock.calls[0][0].data.ev).toBe(4)
+
+    vi.advanceTimersByTime(1000)
+
+    // Both channels should have emitted twice: immediate + coalesced
+    expect(heartbeatHandler).toHaveBeenCalledTimes(2)
+    expect(eventsHandler).toHaveBeenCalledTimes(2)
+    expect(heartbeatHandler.mock.calls[1][0].data.hb).toBe(4)  // Coalesced last value
+    expect(eventsHandler.mock.calls[1][0].data.ev).toBe(4)  // Coalesced last value
   })
 
   it('should preserve event metadata (id, timestamp, type)', async () => {
@@ -152,67 +156,78 @@ describe('Integration: Event Coalescing Under Load', () => {
   it('should handle 100 concurrent events within 1 second', async () => {
     bus.on('usage', handler)
 
-    // Simulate high load: 100 events in 1 second
-    for (let i = 0; i < 100; i++) {
+    // First event emits immediately
+    bus.publish('usage', 'update', { tokens: 0 })
+    expect(handler).toHaveBeenCalledTimes(1)
+    
+    // Simulate high load: 99 more events in <1 second
+    for (let i = 1; i < 100; i++) {
       bus.publish('usage', 'update', { tokens: i * 100 })
       vi.advanceTimersByTime(10)
     }
 
-    // Should still be pending
-    expect(handler).toHaveBeenCalledTimes(0)
-
-    // Complete debounce
-    vi.advanceTimersByTime(100)
-
-    // Only 1 emission with last value
+    // Still just the first emission
     expect(handler).toHaveBeenCalledTimes(1)
-    expect(emittedEvents[0].data.tokens).toBe(9900)
+
+    // Complete debounce (wait 1000ms from last event)
+    vi.advanceTimersByTime(1000)
+
+    // Now second emission with last value
+    expect(handler).toHaveBeenCalledTimes(2)
+    expect(emittedEvents[1].data.tokens).toBe(9900)
   })
 
   it('should reset debounce timer when new event arrives', async () => {
     bus.on('agents', handler)
 
+    // First event emits immediately
     bus.publish('agents', 'update', { seq: 1 })
+    expect(handler).toHaveBeenCalledTimes(1)
+    expect(emittedEvents[0].data.seq).toBe(1)
     
     // After 800ms, publish another event
     vi.advanceTimersByTime(800)
-    expect(handler).toHaveBeenCalledTimes(0)
+    expect(handler).toHaveBeenCalledTimes(1) // Still just the first
     
     bus.publish('agents', 'update', { seq: 2 })
     
-    // Wait another 900ms (total 1700ms from first event)
-    vi.advanceTimersByTime(900)
+    // Wait for debounce to complete
+    vi.advanceTimersByTime(1000)
     
-    // Should emit now with second event
-    expect(handler).toHaveBeenCalledTimes(1)
-    expect(emittedEvents[0].data.seq).toBe(2)
+    // Should emit second event now
+    expect(handler).toHaveBeenCalledTimes(2)
+    expect(emittedEvents[1].data.seq).toBe(2)
   })
 
   it('should handle mixed immediate and delayed emissions', async () => {
     bus.on('alerts', handler)
 
-    // Immediate (first event)
+    // First event emits immediately
     bus.publish('alerts', 'new', { id: 1 })
     expect(handler).toHaveBeenCalledTimes(1)
 
-    // Wait for debounce window to reset
+    // Wait for debounce window to reset (>1s)
     vi.advanceTimersByTime(1200)
 
-    // Burst of 5
-    for (let i = 2; i < 7; i++) {
+    // Next event also emits immediately since >1s elapsed
+    bus.publish('alerts', 'new', { id: 2 })
+    expect(handler).toHaveBeenCalledTimes(2)
+
+    // Burst of 4 more within 1s - these get coalesced
+    for (let i = 3; i < 7; i++) {
       bus.publish('alerts', 'new', { id: i })
       vi.advanceTimersByTime(100)
     }
 
-    // Still only 1 emission (immediate one)
-    expect(handler).toHaveBeenCalledTimes(1)
+    // Still only 2 emissions (the two immediate ones)
+    expect(handler).toHaveBeenCalledTimes(2)
 
     // Complete burst debounce
-    vi.advanceTimersByTime(600)
+    vi.advanceTimersByTime(1000)
 
-    // Now should have 2 emissions total
-    expect(handler).toHaveBeenCalledTimes(2)
-    expect(emittedEvents[1].data.id).toBe(6)
+    // Now should have 3 emissions total (two immediate + one coalesced)
+    expect(handler).toHaveBeenCalledTimes(3)
+    expect(emittedEvents[2].data.id).toBe(6) // Last event in burst
   })
 
   it('should not lose events during channel switching', async () => {
@@ -223,22 +238,26 @@ describe('Integration: Event Coalescing Under Load', () => {
     bus.on('events', h2)
 
     // Interleaved rapid events
-    bus.publish('heartbeat', 'update', { h: 1 })
+    bus.publish('heartbeat', 'update', { h: 1 })  // t=0, emits immediately
     vi.advanceTimersByTime(100)
-    bus.publish('events', 'new', { e: 1 })
+    bus.publish('events', 'new', { e: 1 })  // t=100, emits immediately
     vi.advanceTimersByTime(100)
-    bus.publish('heartbeat', 'update', { h: 2 })
+    bus.publish('heartbeat', 'update', { h: 2 })  // t=200, queued
     vi.advanceTimersByTime(100)
-    bus.publish('events', 'new', { e: 2 })
-    vi.advanceTimersByTime(100)
+    bus.publish('events', 'new', { e: 2 })  // t=300, queued
 
-    // Complete both debounces
-    vi.advanceTimersByTime(700)
-
+    // Both channels have emitted once (immediate)
     expect(h1).toHaveBeenCalledTimes(1)
     expect(h2).toHaveBeenCalledTimes(1)
-    expect(h1.mock.calls[0][0].data.h).toBe(2)
-    expect(h2.mock.calls[0][0].data.e).toBe(2)
+
+    // Complete both debounces
+    vi.advanceTimersByTime(1000)
+
+    // Each channel has 2 emissions: immediate + coalesced
+    expect(h1).toHaveBeenCalledTimes(2)
+    expect(h2).toHaveBeenCalledTimes(2)
+    expect(h1.mock.calls[1][0].data.h).toBe(2)  // Coalesced heartbeat
+    expect(h2.mock.calls[1][0].data.e).toBe(2)  // Coalesced events
   })
 
   it('should clear pending event when immediate emission happens', async () => {

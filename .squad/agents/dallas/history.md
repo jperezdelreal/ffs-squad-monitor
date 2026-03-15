@@ -9,6 +9,55 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Issue #138 / PR #163: Integration Test Alignment (2026-03-15)
+
+**Test Architecture Alignment:**
+- Component tests must mock Zustand store state, not global.fetch - components read from `useStore` selectors
+- Store state reset in beforeEach: `useStore.setState({ events: [], eventsLoading: false, eventsError: null, fetchEvents: vi.fn() })`
+- Tests verify component behavior based on store state, not API responses
+- Error messages rendered directly from store error strings (not hardcoded generic messages)
+- Button labels must match actual component JSX ("Retry" not "Try Again", "Refresh" not "Reload")
+
+**Code Quality Issues Found:**
+- TrendCharts.jsx had duplicate BarChart components (lines 159+160, 167+168) - removed non-existent variable references (agentsSeries, labelsSeries)
+- Tests referenced non-existent hooks/stores that Kane assumed existed but don't (useSessionStore, useMetricsStore don't exist - we use single `useStore` from Zustand)
+- Loading state tests must query DOM structure (skeleton with `animate-pulse` class) not text content
+
+**Testing Patterns for Store-Based Components:**
+```javascript
+// Mock store state
+useStore.setState({
+  events: mockData,
+  eventsLoading: false,
+  eventsError: null,
+  fetchEvents: vi.fn(),
+})
+
+// Test loading state
+useStore.setState({ eventsLoading: true, events: [] })
+const { container } = render(<Component />)
+expect(container.querySelector('[class*="animate-pulse"]')).toBeInTheDocument()
+
+// Test error state - check actual error text from store
+useStore.setState({ eventsError: 'Network error' })
+expect(screen.getByText(/Network error/)).toBeInTheDocument()
+```
+
+**Reviewer Lockout Policy Application:**
+- When PR author (Kane) is locked out after changes requested, another agent (Dallas) takes over revision
+- New agent must understand ACTUAL codebase architecture before fixing tests (don't assume structure)
+- Fix tests to match reality, don't rewrite tests from scratch - preserve test intent
+
+**File paths:**
+- src/components/TrendCharts.jsx - Fixed duplicate components
+- src/components/__tests__/TrendCharts.test.jsx - 4/5 passing (store-based mocking)
+- src/components/__tests__/ActivityFeed.test.jsx - 11/12 passing (store-based mocking)
+
+**Remaining work:**
+- ~55 more test failures across integration tests (SSE, EventBus) and other component tests
+- Integration tests need proper SSE/EventBus mocking patterns
+- Backend tests need lifecycle cleanup (timer/connection cleanup in afterEach)
+
 ### Issue #50: Expand Zustand Store for Centralized State Management (2026-03-13)
 
 **Architecture decisions:**
