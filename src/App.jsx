@@ -16,6 +16,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { ToastContainer, useToast } from './components/Toast';
 import { SkeletonChart } from './components/Skeleton';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import { OnboardingManager } from './components/OnboardingManager';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 import { useSSE } from './hooks/useSSE';

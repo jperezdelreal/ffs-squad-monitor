@@ -61,22 +61,6 @@ export async function fetchIssues(stateParam = 'open') {
   allIssues.sort((a, b) => a.priority - b.priority || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   return allIssues;
 }
-          priority,
-          labels,
-          assignees,
-          prStatus,
-          createdAt: issue.created_at,
-          updatedAt: issue.updated_at,
-        });
-      }
-    } catch {
-      // Skip individual repo failures
-    }
-  }
-
-  allIssues.sort((a, b) => a.priority - b.priority || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-  return allIssues;
-}
 
 /**
  * @openapi

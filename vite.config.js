@@ -607,7 +607,7 @@ function ffsApiPlugin() {
 }
 
 export default defineConfig({
-  base: '/ffs-squad-monitor/',
+  base: process.env.VITE_BASE || '/',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
