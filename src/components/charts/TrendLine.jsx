@@ -113,6 +113,9 @@ export function TrendLine({
     annotations,
   })
 
+  // Force chart rebuild on theme change
+  const chartKey = `${theme}-${data.length}`
+
   const handleExportPNG = () => {
     if (chartRef.current) {
       exportChartAsPNG(chartRef.current, `${chartTitle}-${timeRange}.png`)
@@ -125,18 +128,18 @@ export function TrendLine({
 
   return (
     <div className="relative h-full">
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line key={chartKey} ref={chartRef} data={chartData} options={options} />
       <div className="absolute top-0 right-0 flex gap-2 opacity-0 hover:opacity-100 transition-opacity">
         <button
           onClick={handleExportPNG}
-          className="px-2 py-1 text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded border border-white/10"
+          className="px-2 py-1 text-xs bg-white/5 dark:bg-white/5 light:bg-black/5 hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-black/10 text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 rounded border border-white/10 dark:border-white/10 light:border-black/10"
           title="Export as PNG"
         >
           📷
         </button>
         <button
           onClick={handleExportCSV}
-          className="px-2 py-1 text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded border border-white/10"
+          className="px-2 py-1 text-xs bg-white/5 dark:bg-white/5 light:bg-black/5 hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-black/10 text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 rounded border border-white/10 dark:border-white/10 light:border-black/10"
           title="Export as CSV"
         >
           📊

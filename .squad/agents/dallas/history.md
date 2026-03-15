@@ -9,6 +9,125 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Issue #166 / PR #181: Dark/Light Mode Polish (2026-03-15)
+
+**Theme Architecture:**
+- Prevent FOUC with inline `<script>` in index.html that loads theme before React renders
+- Use universal `*` CSS selector for 300ms transitions on theme properties (background, border, color, box-shadow, fill, stroke)
+- Disable transitions on initial load with `.no-transitions` class, remove after 100ms via useEffect
+- Update meta theme-color dynamically based on theme (#050810 dark, #fafbfc light) for mobile browsers
+- Observe theme changes via MutationObserver (useThemeObserver hook) to trigger chart re-renders
+
+**Color Refinement:**
+- Dark mode: Deeper backgrounds (#050810 vs #0a0e14), brighter text (#f0f6fc vs #e4e7eb) for better contrast
+- Light mode: Softer background (#fafbfc vs #f8fafc), refined border colors (#d0d7de vs #e2e8f0)
+- Added brighter accent variants (accent-cyan-bright, accent-blue-bright) for light mode highlights
+- Light-specific shadow utilities (depth-surface-light, depth-raised-light, depth-floating-light)
+
+**Animation:**
+- Replace iconSpin with key-based animation (key={theme}) that rotates and fades on theme toggle
+- Icon animation: initial={{ rotate: -90, opacity: 0 }}, animate={{ rotate: 0, opacity: 1 }}, 300ms duration
+- Smooth enough to feel premium but fast enough not to delay interaction
+
+**Chart Theme Adaptation:**
+- chartConfig.js detects theme via document.documentElement.classList.contains('light')
+- getThemedColors() returns adaptive text/grid/tooltip colors based on current theme
+- Force chart re-render on theme change by adding key={theme-${data.length}} to Line component
+- Tooltip background/text/border adapt automatically via buildGlassmorphismTooltip()
+
+**Testing Patterns:**
+- Build succeeded, existing test failures unrelated to theme changes (ActivityFeed ref issues)
+- Manual testing required to verify smooth transitions and color accuracy
+
+**File paths:**
+- index.html - FOUC prevention script + transition styles
+- src/hooks/useTheme.js - Enhanced with meta theme-color updates and transition control
+- src/hooks/useThemeObserver.js - MutationObserver for theme changes
+- tailwind.config.js - Refined color palettes + light-specific shadows
+- src/components/Header.jsx - Animated theme toggle icon
+- src/components/charts/chartConfig.js - Theme-adaptive chart colors (already done in previous commit)
+- src/components/charts/TrendLine.jsx - useThemeObserver integration (already done in previous commit)
+
+### Issue #170 / PR #182: Advanced Filtering System (2026-03-15)
+
+**Architecture:**
+- Created centralized `filterStore.js` using Zustand for all filter state management
+- Filter state includes: agent, level, type, repo, timeRange, keyword, fuzzyEnabled, booleanQuery, activeQuickFilters
+- Separate store from main app store for modularity and separation of concerns
+- LocalStorage persistence with two keys: `ffs-monitor-filter-presets` and `ffs-monitor-active-filters`
+
+**Fuzzy Search Integration:**
+- Integrated Fuse.js library for fuzzy text matching
+- Fuse instances created on-demand per dataType (logs, issues, events)
+- Configurable search options (threshold, weights, keys)
+- Toggle between fuzzy and exact search modes
+- Weighted search keys by field relevance (e.g., message:2, agent:1.5, context:0.5)
+
+**Filter Components:**
+- `FilterPanel.jsx` - Complete filter UI with multi-criteria inputs, quick chips, preset management
+- `useFiltering.js` - Hook for component integration with automatic Fuse setup and memoized filtering
+- `useFilterOptions.js` - Hook to extract unique filter values from data for dropdown population
+- `LogViewer.jsx` - New component demonstrating advanced filtering on logs
+
+**Quick Filters:**
+- Predefined filter configurations for common searches (errors, warnings, today, last-hour)
+- Visual chip UI with emoji icons
+- Toggle on/off behavior
+- Applied filters stored in `activeQuickFilters` array
+
+**Filter Presets:**
+- Save current filter configuration with custom name
+- Load/delete/rename presets
+- Persists to localStorage as array of preset objects
+- Each preset includes: id, name, filters object, createdAt timestamp
+
+**Time Range Filtering:**
+- Options: all, 1h (last hour), today, week, custom
+- Custom range with datetime-local inputs
+- `getTimeRangeFilter()` converts range to from/to timestamps
+- Filters applied to timestamp/created_at/createdAt fields
+
+**Export Functionality:**
+- Export filtered data to JSON or CSV
+- JSON: pretty-printed with 2-space indent
+- CSV: escaped quotes, comma-wrapped values
+- Timestamped filenames
+- Uses Blob + URL.createObjectURL for download
+
+**Boolean Query Support:**
+- Basic support for AND, OR, NOT operators in text search
+- `parseBooleanQuery()` function converts to logical evaluation
+- Split by OR, then check AND terms, handle NOT negation
+- Applied after other filters
+
+**Integration Pattern:**
+- Components use `useFiltering(data, dataType, fuseOptions)` hook
+- Returns: filteredData, filterCount, exportData, hasFilters
+- Custom event 'filter-export' for export button communication
+- Components handle export via `window.addEventListener('filter-export', ...)`
+
+**Testing:**
+- Unit tests in `src/store/__tests__/filterStore.test.js`
+- Tests cover: basic filters, quick filters, presets, filter application, localStorage
+- Pattern: `act(() => { store action })` then assert on `useFilterStore.getState()`
+- localStorage cleared in beforeEach
+
+**File Locations:**
+- `src/store/filterStore.js` - Zustand store
+- `src/hooks/useFiltering.js` - Integration hook
+- `src/components/FilterPanel.jsx` - Filter UI
+- `src/components/LogViewer.jsx` - Example integration
+- `src/components/ActivityFeed.jsx` - Updated with advanced filters
+
+**Dependencies:**
+- `fuse.js@7.0.0` - Fuzzy search library
+
+**Performance Considerations:**
+- Memoized filter results with useMemo
+- Fuse instances cached in store
+- LocalStorage writes batched (not on every keystroke)
+- Filter application creates new array (immutable pattern)
+
 ### Issue #138 / PR #163: Integration Test Alignment (2026-03-15)
 
 **Test Architecture Alignment:**
