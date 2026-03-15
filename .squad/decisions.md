@@ -1,85 +1,7 @@
 # Squad Decisions
 
 ## Active Decisions
-
-### 1. PR Review Patterns & Standards (Ripley Lead - P1)
-
-**Date:** 2026-03-12  
-**Status:** Established  
-**Context:** PRs #27, #29, #30 — First formal review session
-
-**Decision 1a: Error Handling Pattern (PR #27)**
-
-Pattern adopted across codebase:
-- API functions return `{error: true, message}` instead of `null` on failure
-- Components check `data?.error` and call dedicated `renderXError()` functions
-- Global retry functions exposed as `window.__retryX()` for onclick handlers
-- Connection state uses 3-tier model: operational/degraded/offline
-
-Rationale:
-- Provides error context to UI layer
-- Consistent pattern across all 7 components
-- User-facing recovery without page reload
-- Distinguishes total failure vs. partial degradation
-
-**Decision 1b: Test Coverage Standards (PR #29)**
-
-Baseline established:
-- Minimum 80% coverage enforced via vitest.config.js thresholds
-- Tests focus on edge cases (null/undefined, boundaries, cleanup)
-- Test organization: `__tests__/` subdirectories next to source files
-- CI must run tests + coverage on all PRs
-
-Rationale:
-- 80% threshold catches most regression risk without perfectionism
-- Edge case focus prevents brittle production code
-- Co-located tests improve discoverability
-- CI enforcement prevents coverage decay
-
-**Decision 1c: Content-Aware Triage Heuristic (PR #30)**
-
-Quality indicators for go:ready label:
-- Issue body ≥100 characters
-- AND contains: acceptance criteria OR checklist OR structured sections OR requirements
-
-Rationale:
-- Eliminates manual triage bottleneck for well-defined issues
-- Multiple signals reduce false positives
-- Length threshold prevents gaming with minimal content
-- Aligned with Hub's proven approach
-
-**Note:** GitHub API prevents self-approval of PRs. For solo projects where reviewer == author, post formal review comments with explicit verdicts instead of using approval API.
-
----
-
-### 5. Error Handling Architecture (Dallas - Frontend)
-
-**Date:** 2026-03-12  
-**Status:** Implemented  
-**Issue:** #23
-
-**Decision:** Implemented comprehensive error handling with 3-state connection tracking and component-level retry mechanisms.
-
-**Architecture:**
-1. **Connection States:** API layer tracks operational, degraded, offline
-2. **Error Boundaries:** Global handler catches component crashes, shows notifications
-3. **SSE Reconnection:** Exponential backoff (1s → 2s → 4s → 8s → max 30s) with 10 max retries
-4. **Component Errors:** Every component renders error state with retry button
-5. **Error Logging:** All API errors logged with endpoint, status, timestamp
-
-**Files Modified:**
-- `src/lib/api.js` - Connection state tracking
-- `src/lib/error-boundary.js` - Global error handler (new)
-- All components in `src/components/` - Error states added
-- `src/monitor.js` - Error boundary integration
-- `src/styles.css` - Error UI styles
-
-**Impact:**
-- Better UX: Users see what's broken and can retry
-- Better DX: Console logs make debugging easier
-- Resilience: Dashboard stays functional if backend is down
-- Consistency: Error handling pattern across all components
-### 2. GitHub Self-Approval Limitation (2026-03-13)
+### 1. GitHub Self-Approval Limitation (2026-03-13)
 **Author:** Ripley (Lead)  
 **Context:** PR #26, #29, #30 review — GitHub API constraints  
 **Status:** Documented
@@ -94,7 +16,7 @@ GitHub API prevents users from approving their own PRs, even when authenticated 
 
 ---
 
-### Error Handling Standards (2026-03-13)
+### 2. Error Handling Standards (2026-03-13)
 **Author:** Ripley (Lead)  
 **Context:** PR #27 review — Error handling and offline resilience  
 **Status:** Approved
@@ -109,7 +31,10 @@ Establish standard error handling patterns for all dashboard components:
 6. **Component Error UI Pattern** — Standard error state structure with icon, message, and retry button
 
 These patterns prevent memory leaks, false positives, XSS vulnerabilities, duplicate logging, and inconsistent error UX.
-### 4. Package-lock.json Merge Strategy
+
+---
+
+### 3. Package-lock.json Merge Strategy
 
 **Date:** 2026-03-13  
 **Agent:** Lambert (Backend Dev)  
@@ -134,7 +59,7 @@ git add package-lock.json
 
 ---
 
-### 5. Error Handling Architecture Review (PR #27)
+### 4. Error Handling Architecture Review (PR #27)
 
 **Date:** 2026-03-12  
 **Author:** Ripley (Lead)  
@@ -152,7 +77,7 @@ git add package-lock.json
 
 ---
 
-### 6. Testing Infrastructure for ffs-squad-monitor (PR #29)
+### 5. Testing Infrastructure for ffs-squad-monitor (PR #29)
 
 **Date:** 2026-03-12  
 **Status:** Approved  
@@ -174,21 +99,41 @@ git add package-lock.json
 - Test edge cases: null/undefined, boundaries, error paths
 
 ---
-### Error Handling Standards (2026-03-13)
+
+### 6. Phase 2 — Real-Time Intelligence Platform
+
 **Author:** Ripley (Lead)  
-**Context:** PR #27 review — Error handling and offline resilience  
-**Status:** Approved
+**Date:** 2026-03-14  
+**Status:** APPROVED  
+**Tier:** T1 (Lead authority)
 
-Establish standard error handling patterns for all dashboard components:
+**Context:** Sprint 1 closed 17 issues across 5 themes — architecture consolidation, data integrity, operational intelligence, developer experience, and production hardening. Foundation solid: single React architecture, authenticated Express backend, 227+ tests at 94%+ coverage, Zustand store, Docker deployment, CI with bundle tracking.
 
-1. **Memory-Safe Timeouts** — Always create explicit `AbortController` and clear timeouts in both success and error paths
-2. **Error Count Rate Limiting** — Use time-based reset windows to prevent false positives
-3. **Exponential Backoff** — Use `Math.min(1000 * Math.pow(2, attempts), maxDelay)`, not linear delays
-4. **XSS Prevention in Error Messages** — Always use `textContent` for user-controlled content, never `innerHTML`
-5. **Promise Rejection Handling** — Prevent duplicate logging with `preventDefault()` as first call
-6. **Component Error UI Pattern** — Standard error state structure with icon, message, and retry button
+**Decision:** Phase 2 (Sprint 2) focuses on three strategic pillars transforming the dashboard from polling-based status board into a **real-time intelligence platform**:
 
-These patterns prevent memory leaks, false positives, XSS vulnerabilities, duplicate logging, and inconsistent error UX.
+1. **Real-Time Streaming (SSE)** — Replace 30-60s polling with Server-Sent Events. Backend has SSE infrastructure for logs; extend to all channels. Live heartbeat, events, issue state.
+
+2. **Historical Analytics** — Add SQLite persistence for metrics over time. Enable trend charts (Chart.js), sprint velocity, agent productivity. New "Analytics" view.
+
+3. **Proactive Alerting** — Desktop notifications for critical events (blocked agent, stale heartbeat, build failed). Configurable thresholds, notification history panel.
+
+**Issues Created:** 18 issues (#75-#92) across 5 themes — Lambert 7, Dallas 7, Kane 4.
+
+**What We're NOT Doing:** Multi-squad support (premature), WebSockets (SSE sufficient for read-only), TypeScript migration (revisit at 5000+ LOC), plugin architecture (5 views insufficient).
+
+**Risks & Mitigations:**
+- SSE reliability in corporate proxies → built-in polling fallback
+- SQLite locking → better-sqlite3 WAL mode (concurrent reads + single writer)
+- Chart.js bundle impact → tree-shake unused, track via CI
+- E2E flakiness → 1 retry + screenshots + trace
+
+**Success Metrics:**
+- Live data updates without refresh
+- 7-day and 30-day trend charts
+- Desktop notifications for alerts
+- E2E tests catch full-page failures
+- ≥80% coverage on new modules
+- API docs at /api/docs
 
 ---
 
@@ -290,44 +235,7 @@ All GitHub data now flows through Express backend instead of direct browser call
 
 ---
 
-### 13. Phase 2 — Real-Time Intelligence Platform
-
-**Author:** Ripley (Lead)  
-**Date:** 2026-03-14  
-**Status:** APPROVED  
-**Tier:** T1 (Lead authority)
-
-**Context:** Sprint 1 closed 17 issues across 5 themes — architecture consolidation, data integrity, operational intelligence, developer experience, and production hardening. Foundation solid: single React architecture, authenticated Express backend, 227+ tests at 94%+ coverage, Zustand store, Docker deployment, CI with bundle tracking.
-
-**Decision:** Phase 2 (Sprint 2) focuses on three strategic pillars transforming the dashboard from polling-based status board into a **real-time intelligence platform**:
-
-1. **Real-Time Streaming (SSE)** — Replace 30-60s polling with Server-Sent Events. Backend has SSE infrastructure for logs; extend to all channels. Live heartbeat, events, issue state.
-
-2. **Historical Analytics** — Add SQLite persistence for metrics over time. Enable trend charts (Chart.js), sprint velocity, agent productivity. New "Analytics" view.
-
-3. **Proactive Alerting** — Desktop notifications for critical events (blocked agent, stale heartbeat, build failed). Configurable thresholds, notification history panel.
-
-**Issues Created:** 18 issues (#75-#92) across 5 themes — Lambert 7, Dallas 7, Kane 4.
-
-**What We're NOT Doing:** Multi-squad support (premature), WebSockets (SSE sufficient for read-only), TypeScript migration (revisit at 5000+ LOC), plugin architecture (5 views insufficient).
-
-**Risks & Mitigations:**
-- SSE reliability in corporate proxies → built-in polling fallback
-- SQLite locking → better-sqlite3 WAL mode (concurrent reads + single writer)
-- Chart.js bundle impact → tree-shake unused, track via CI
-- E2E flakiness → 1 retry + screenshots + trace
-
-**Success Metrics:**
-- Live data updates without refresh
-- 7-day and 30-day trend charts
-- Desktop notifications for alerts
-- E2E tests catch full-page failures
-- ≥80% coverage on new modules
-- API docs at /api/docs
-
----
-
-### 14. User Directives (2026-03-14)
+### 13. User Directives (2026-03-14)
 **By:** joperezd  
 **Date:** 2026-03-14  
 **Status:** ACTIVE  
@@ -343,7 +251,7 @@ All GitHub data now flows through Express backend instead of direct browser call
 
 ---
 
-### 15. Ralph Refueling Loop (Continuous Evolution)
+### 14. Ralph Refueling Loop (Continuous Evolution)
 **By:** joperezd  
 **Date:** 2026-03-14  
 **Status:** ACTIVE  
