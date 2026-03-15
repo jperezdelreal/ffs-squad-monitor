@@ -15,9 +15,7 @@ vi.mock('../../lib/api', () => ({
 vi.mock('../../lib/health', () => ({
   computeHealthScore: vi.fn(() => 90),
   healthLevel: vi.fn((score) => (score >= 80 ? 'healthy' : 'degraded')),
-  healthBreakdown: vi.fn(() => ({ connection: 100, heartbeat: 80, api: 100 })),
-  heartbeatStaleness: vi.fn((age) => (age > 120000 ? 'stale' : 'fresh')),
-  STALENESS_THRESHOLDS: { fresh: 60000, stale: 120000 },
+  healthBreakdown: vi.fn(() => ({ connection: 100, api: 100 })),
 }))
 
 const { useHealthScore } = await import('../useHealthScore')
@@ -43,32 +41,21 @@ describe('useHealthScore', () => {
 
     expect(result.current.score).toBe(90)
     expect(result.current.level).toBe('healthy')
-    expect(result.current.breakdown).toEqual({ connection: 100, heartbeat: 80, api: 100 })
+    expect(result.current.breakdown).toEqual({ connection: 100, api: 100 })
   })
 
-  it('should update heartbeat age every second', async () => {
+  it('should recompute on tick interval', async () => {
     const now = Date.now()
     useStore.setState({ lastUpdate: now })
 
     const { result, rerender } = renderHook(() => useHealthScore())
 
-    const initialAge = result.current.heartbeatAgeMs
-    expect(initialAge).toBeLessThan(100) // Just mounted
-
-    // Advance 1 second
+    // Advance 1 second to trigger tick
     vi.advanceTimersByTime(1000)
     rerender()
 
-    const newAge = result.current.heartbeatAgeMs
-    expect(newAge).toBeGreaterThanOrEqual(1000)
-  })
-
-  it('should return null heartbeatAgeMs when lastUpdate is null', () => {
-    useStore.setState({ lastUpdate: null })
-
-    const { result } = renderHook(() => useHealthScore())
-
-    expect(result.current.heartbeatAgeMs).toBeNull()
+    // Score should still be computed
+    expect(result.current.score).toBe(90)
   })
 
   it('should subscribe to connection state changes', () => {
@@ -102,13 +89,12 @@ describe('useHealthScore', () => {
     expect(clearIntervalSpy.mock.calls.length).toBeGreaterThan(initialCallCount)
   })
 
-  it('should accept custom thresholds', () => {
-    const customThresholds = { fresh: 30000, stale: 90000 }
-    
-    const { result } = renderHook(() => useHealthScore(customThresholds))
+  it('should return score, level, and breakdown', () => {
+    const { result } = renderHook(() => useHealthScore())
 
-    // Health functions should be called with store data
-    expect(result.current.staleness).toBeDefined()
+    expect(result.current.score).toBeDefined()
+    expect(result.current.level).toBeDefined()
+    expect(result.current.breakdown).toBeDefined()
   })
 
   it('should handle connection state updates', () => {
@@ -141,13 +127,11 @@ describe('useHealthScore', () => {
 
     const { result, rerender } = renderHook(() => useHealthScore())
 
-    const initialAge = result.current.heartbeatAgeMs
-
     // Update lastUpdate in store
     useStore.setState({ lastUpdate: now - 60000 })
     rerender()
 
-    const newAge = result.current.heartbeatAgeMs
-    expect(newAge).toBeGreaterThan(initialAge)
+    // Score should still be valid
+    expect(result.current.score).toBe(90)
   })
 })

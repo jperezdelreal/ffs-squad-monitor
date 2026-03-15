@@ -2,7 +2,6 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { HealthBadge } from './HealthBadge'
 import { ConnectionStatus } from './ConnectionStatus'
-import { DependencyHealth } from './DependencyHealth'
 import { NotificationBell } from './NotificationHistory'
 import { ExportButton } from './ExportButton'
 import { ActivityIndicator } from './ActivityIndicator'
@@ -44,9 +43,7 @@ export function Header({ lastUpdate, isConnected, healthScore, healthLevel, heal
           <div className="hidden md:block">
             <HealthBadge score={healthScore} level={healthLevel} breakdown={healthBreakdown} />
           </div>
-          <div className="hidden lg:block">
-            <DependencyHealth />
-          </div>
+
           <div className="hidden sm:flex items-center gap-2">
             <SignalBars strength={getSignalStrength()} />
             <ConnectionStatus

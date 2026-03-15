@@ -5,15 +5,13 @@ import {
   computeHealthScore,
   healthLevel,
   healthBreakdown,
-  heartbeatStaleness,
-  STALENESS_THRESHOLDS,
 } from '../lib/health'
 
 /**
  * React hook that computes real-time health score from store + API state.
- * Re-evaluates every second so heartbeat age stays current.
+ * Re-evaluates every second so age stays current.
  */
-export function useHealthScore(thresholds = STALENESS_THRESHOLDS) {
+export function useHealthScore() {
   const { lastUpdate } = useStore()
   const [connectionState, setConnectionState] = useState(getConnectionState)
   const [tick, setTick] = useState(0)
@@ -24,7 +22,7 @@ export function useHealthScore(thresholds = STALENESS_THRESHOLDS) {
     return unsubscribe
   }, [])
 
-  // Tick every second so heartbeat age recalculates
+  // Tick every second so age recalculates
   useEffect(() => {
     const interval = setInterval(() => setTick(t => t + 1), 1000)
     return () => clearInterval(interval)
@@ -46,7 +44,6 @@ export function useHealthScore(thresholds = STALENESS_THRESHOLDS) {
     apiFailedCount: 0,
     apiTotalCount: 0,
   })
-  const staleness = heartbeatStaleness(heartbeatAgeMs, thresholds)
 
-  return { score, level, breakdown, staleness, heartbeatAgeMs }
+  return { score, level, breakdown }
 }

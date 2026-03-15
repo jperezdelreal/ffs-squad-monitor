@@ -7,7 +7,6 @@ const DEFAULT_SETTINGS = {
   // Per-notification-type toggles
   alertTypes: {
     agentBlocked: true,
-    heartbeatStale: true,
     buildFailed: true,
     rateLimitWarning: true,
     issueSpike: false,
@@ -48,8 +47,7 @@ function persistSettings(settings) {
 }
 
 export const initialState = {
-  // Heartbeat
-  heartbeatData: null,
+  // Connection
   isConnected: false,
   lastUpdate: null,
   error: null,
@@ -106,19 +104,7 @@ export const initialState = {
 export const useStore = create((set, get) => ({
   ...initialState,
 
-  setHeartbeatData: (data) => set({
-    heartbeatData: data,
-    isConnected: true,
-    lastUpdate: Date.now(),
-    error: null,
-  }),
-
-  setError: (error) => set({
-    error,
-    isConnected: false,
-  }),
-
-  setLastUpdate: (timestamp) => set({ lastUpdate: timestamp }),
+  setLastUpdate: (timestamp) => set({ lastUpdate: timestamp, isConnected: true }),
 
   addNotification: (notification) => set((state) => {
     const enriched = {
@@ -198,18 +184,6 @@ export const useStore = create((set, get) => ({
 
   handleSSEEvent: (channel, eventType, data) => {
     const handlers = {
-      'heartbeat:update': () => set({
-        heartbeatData: data,
-        isConnected: true,
-        lastUpdate: Date.now(),
-        error: null,
-      }),
-      'heartbeat:snapshot': () => set({
-        heartbeatData: data,
-        isConnected: true,
-        lastUpdate: Date.now(),
-        error: null,
-      }),
       'events:new': () => set((state) => ({
         events: [data, ...state.events].slice(0, 500),
         eventsLoading: false,
@@ -285,18 +259,6 @@ export const useStore = create((set, get) => ({
     const fullKey = eventType
     const handler = handlers[fullKey] || handlers[key]
     if (handler) handler()
-  },
-
-  fetchHeartbeat: async () => {
-    try {
-      const response = await fetch('/api/heartbeat')
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const data = await response.json()
-      set({ heartbeatData: data, isConnected: true, lastUpdate: Date.now(), error: null })
-    } catch (error) {
-      console.error('Failed to fetch heartbeat:', error)
-      set({ error: error.message, isConnected: false })
-    }
   },
 
   fetchEvents: async () => {
@@ -463,9 +425,8 @@ export const useStore = create((set, get) => ({
   },
 
   refreshAll: async () => {
-    const { fetchHeartbeat, fetchEvents, fetchIssues, fetchUsage, fetchAgents } = get()
+    const { fetchEvents, fetchIssues, fetchUsage, fetchAgents } = get()
     await Promise.allSettled([
-      fetchHeartbeat(),
       fetchEvents(),
       fetchIssues(),
       fetchUsage(),

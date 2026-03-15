@@ -78,21 +78,20 @@ describe('useSSE', () => {
     unmount()
   })
 
-  it('updates store heartbeat via SSE event', () => {
-    const { unmount } = renderHook(() => useSSE({ channels: ['heartbeat'] }))
+  it('updates store events via SSE event', () => {
+    const { unmount } = renderHook(() => useSSE({ channels: ['events'] }))
     const es = MockEventSource.instances[0]
 
     act(() => {
       es._emit('connected', {})
-      es._emit('heartbeat:update', {
-        type: 'heartbeat:update',
-        data: { status: 'running', agent: 'ripley' },
+      es._emit('events:snapshot', {
+        type: 'events:snapshot',
+        data: [{ id: 'e1', type: 'PushEvent' }],
       })
     })
 
     const state = useStore.getState()
-    expect(state.heartbeatData).toEqual({ status: 'running', agent: 'ripley' })
-    expect(state.isConnected).toBe(true)
+    expect(state.events).toHaveLength(1)
     unmount()
   })
 

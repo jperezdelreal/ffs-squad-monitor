@@ -2,7 +2,7 @@
  * Integration Test: Cross-Feature Pipeline
  * 
  * Tests end-to-end flow from data source → SSE → store → notifications → UI
- * Simulates: Heartbeat update → EventBus → SSE stream → Hook → Store → Notification rules → Alert
+ * Simulates: Event update → EventBus → SSE stream → Hook → Store → Notification rules → Alert
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -21,7 +21,6 @@ describe('Integration: Cross-Feature Pipeline', () => {
     // Reset store
     useStore.setState({
       sseStatus: 'disconnected',
-      heartbeatData: null,
       isConnected: false,
       lastUpdate: null,
       events: [],
@@ -30,10 +29,8 @@ describe('Integration: Cross-Feature Pipeline', () => {
       notifications: [],
       settings: {
         alertTypes: {
-          heartbeatStale: true,
           agentBlocked: true,
         },
-        stalenessThresholdMin: 5,
       },
     })
 
@@ -95,8 +92,8 @@ describe('Integration: Cross-Feature Pipeline', () => {
     vi.restoreAllMocks()
   })
 
-  it('should propagate heartbeat update through full pipeline', async () => {
-    renderHook(() => useSSE({ channels: ['heartbeat'] }))
+  it('should propagate events update through full pipeline', async () => {
+    renderHook(() => useSSE({ channels: ['events'] }))
 
     // Step 1: SSE connects
     expect(eventSourceInstances).toHaveLength(1)
@@ -106,67 +103,41 @@ describe('Integration: Cross-Feature Pipeline', () => {
       eventSourceInstances[0]._emit('connected', {})
     })
 
-    // Step 3: Receive heartbeat snapshot
-    const heartbeatData = {
-      status: 'running',
-      round: 42,
-      pid: 1234,
-      timestamp: new Date().toISOString(),
-      mode: 'schedule',
-    }
+    // Step 3: Receive events snapshot
+    const eventsData = [
+      { id: '1', type: 'PushEvent', repo: { name: 'test/repo' }, created_at: new Date().toISOString() },
+    ]
 
     act(() => {
-      eventSourceInstances[0]._emit('heartbeat:snapshot', heartbeatData)
+      eventSourceInstances[0]._emit('events:snapshot', eventsData)
     })
 
     // Step 4: Verify store updated
     const state = useStore.getState()
-    expect(state.heartbeatData).toMatchObject({
-      status: 'running',
-      round: 42,
-    })
-    expect(state.isConnected).toBe(true)
+    expect(state.events).toHaveLength(1)
+    expect(state.eventsLoading).toBe(false)
   })
 
-  it('should trigger notification when heartbeat becomes stale', async () => {
-    renderHook(() => useSSE({ channels: ['heartbeat'] }))
+  it('should handle notification for agent blocked events', async () => {
+    renderHook(() => useSSE({ channels: ['issues'] }))
 
-    // Connect and receive initial heartbeat
+    // Connect and receive issues with blocked labels
     act(() => {
       eventSourceInstances[0]._emit('connected', {})
-      eventSourceInstances[0]._emit('heartbeat:snapshot', {
-        status: 'running',
-        round: 1,
-        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
-      })
+      eventSourceInstances[0]._emit('issues:snapshot', [
+        {
+          number: 1,
+          title: 'Blocked issue',
+          state: 'open',
+          labels: [{ name: 'blocked-by:deps' }],
+          assignees: [],
+        },
+      ])
     })
 
-    // Simulate notification check (normally done by useEffect in App.jsx)
     const state = useStore.getState()
-    const lastUpdate = new Date(state.heartbeatData.timestamp)
-    const staleDurationMin = (Date.now() - lastUpdate.getTime()) / 60000
-
-    expect(staleDurationMin).toBeGreaterThan(5)
-    
-    // Notification should be added
-    if (state.settings.alertTypes.heartbeatStale && staleDurationMin > state.settings.stalenessThresholdMin) {
-      useStore.setState({
-        notifications: [
-          ...state.notifications,
-          {
-            id: `stale-${Date.now()}`,
-            type: 'warning',
-            title: 'Stale Heartbeat',
-            message: `No heartbeat for ${Math.floor(staleDurationMin)} minutes`,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      })
-    }
-
-    const updatedState = useStore.getState()
-    expect(updatedState.notifications).toHaveLength(1)
-    expect(updatedState.notifications[0].title).toBe('Stale Heartbeat')
+    expect(state.issues).toHaveLength(1)
+    expect(state.issues[0].labels[0].name).toBe('blocked-by:deps')
   })
 
   it('should handle event stream → activity feed pipeline', async () => {
@@ -267,7 +238,7 @@ describe('Integration: Cross-Feature Pipeline', () => {
   })
 
   it('should handle multi-channel updates in sequence', async () => {
-    renderHook(() => useSSE({ channels: ['heartbeat', 'events', 'issues', 'usage'] }))
+    renderHook(() => useSSE({ channels: ['events', 'issues', 'usage'] }))
 
     // Connect
     act(() => {
@@ -276,11 +247,6 @@ describe('Integration: Cross-Feature Pipeline', () => {
 
     // Receive updates on all channels
     act(() => {
-      eventSourceInstances[0]._emit('heartbeat:snapshot', {
-        status: 'running',
-        round: 5,
-      })
-      
       eventSourceInstances[0]._emit('events:snapshot', [
         { id: 'e1', type: 'PushEvent', repo: { name: 'test' } },
       ])
@@ -296,7 +262,6 @@ describe('Integration: Cross-Feature Pipeline', () => {
 
     // Verify all channels updated
     const state = useStore.getState()
-    expect(state.heartbeatData).toBeTruthy()
     expect(state.events).toHaveLength(1)
     expect(state.issues).toHaveLength(1)
     expect(state.usage).toBeTruthy()
@@ -367,19 +332,17 @@ describe('Integration: Cross-Feature Pipeline', () => {
   })
 
   it('should recover from connection loss without data loss', async () => {
-    renderHook(() => useSSE({ channels: ['heartbeat'] }))
+    renderHook(() => useSSE({ channels: ['events'] }))
 
     // Initial connection and data
     act(() => {
       eventSourceInstances[0]._emit('connected', {})
-      eventSourceInstances[0]._emit('heartbeat:snapshot', {
-        status: 'running',
-        round: 10,
-      })
+      eventSourceInstances[0]._emit('events:snapshot', [
+        { id: 'e1', type: 'PushEvent', repo: { name: 'test' } },
+      ])
     })
 
-    const initialData = useStore.getState().heartbeatData
-    expect(initialData.round).toBe(10)
+    expect(useStore.getState().events).toHaveLength(1)
 
     // Connection lost
     act(() => {
@@ -387,20 +350,20 @@ describe('Integration: Cross-Feature Pipeline', () => {
     })
 
     // Data should still be in store
-    expect(useStore.getState().heartbeatData.round).toBe(10)
+    expect(useStore.getState().events).toHaveLength(1)
 
     // Reconnect
     act(() => {
       vi.advanceTimersByTime(1000)
       eventSourceInstances[1]._emit('connected', {})
-      eventSourceInstances[1]._emit('heartbeat:snapshot', {
-        status: 'running',
-        round: 11,
-      })
+      eventSourceInstances[1]._emit('events:snapshot', [
+        { id: 'e1', type: 'PushEvent', repo: { name: 'test' } },
+        { id: 'e2', type: 'IssueEvent', repo: { name: 'test2' } },
+      ])
     })
 
     // Verify data updated
-    expect(useStore.getState().heartbeatData.round).toBe(11)
+    expect(useStore.getState().events).toHaveLength(2)
   })
 
   it('should maintain store consistency during rapid updates', async () => {

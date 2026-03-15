@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
-import { StalenessAlert } from './components/StalenessAlert';
+
 import { ActivityFeed } from './components/ActivityFeed';
 import { PipelineVisualizer } from './components/PipelineVisualizer';
 import { TeamBoard } from './components/TeamBoard';
@@ -40,9 +40,9 @@ function App() {
   const { toasts, removeToast, success, error, info } = useToast();
   
   const { lastUpdate, isConnected } = usePolling();
-  const { score, level, breakdown, staleness, heartbeatAgeMs } = useHealthScore();
+  const { score, level, breakdown } = useHealthScore();
   const { status: sseStatus, reconnect: sseReconnect } = useSSE({
-    channels: ['heartbeat', 'events', 'issues', 'usage'],
+    channels: ['events', 'issues', 'usage'],
   });
   useNotifications();
 
@@ -170,7 +170,7 @@ function App() {
   return (
     <ErrorBoundary>
       <OnboardingManager />
-      <div className={`flex h-screen bg-[#0a0e14] overflow-hidden ${density === 'compact' ? 'text-sm' : ''}`}>
+      <div className={`flex h-screen bg-[#0a0e14] light:bg-[#f8fafc] overflow-hidden ${density === 'compact' ? 'text-sm' : ''}`}>
         {/* Skip to content link for screen readers */}
         <a
           href="#main-content"
@@ -212,7 +212,7 @@ function App() {
               exportButtonRef={exportButtonRef}
             />
           )}
-          {!focusMode && <StalenessAlert staleness={staleness} heartbeatAgeMs={heartbeatAgeMs} />}
+
           
           {/* Focus mode toggle button */}
           <motion.button

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+@custom-variant light (.light &);
+
 @layer base {
   body {
     margin: 0;

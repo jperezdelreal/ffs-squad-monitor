@@ -5,7 +5,6 @@ import { slideInRight, springPresets, toggleSwitch, toggleBackground } from '../
 
 const ALERT_TYPE_LABELS = {
   agentBlocked: 'Agent blocked',
-  heartbeatStale: 'Heartbeat stale',
   buildFailed: 'Build failed',
   rateLimitWarning: 'Rate limit warning',
   issueSpike: 'Issue spike',
@@ -182,14 +181,6 @@ export function Settings() {
 
           {/* Threshold Configuration */}
           <SectionHeader>Threshold Configuration</SectionHeader>
-          <SliderInput
-            label="Heartbeat staleness"
-            value={settings.stalenessThresholdMin}
-            onChange={(val) => updateSettings({ stalenessThresholdMin: val })}
-            min={1}
-            max={30}
-            unit=" min"
-          />
           <SliderInput
             label="Rate limit warning"
             value={settings.rateLimitThreshold}
