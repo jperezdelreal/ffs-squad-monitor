@@ -15,6 +15,7 @@ import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { ToastContainer, useToast } from './components/Toast';
 import { SkeletonChart } from './components/Skeleton';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 import { useSSE } from './hooks/useSSE';
@@ -167,6 +168,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <OnboardingManager />
       <div className={`flex h-screen bg-[#0a0e14] dark:bg-[#0a0e14] light:bg-ops-light-bg overflow-hidden ${density === 'compact' ? 'text-sm' : ''}`}>
         {/* Skip to content link for screen readers */}
         <a
@@ -269,6 +271,7 @@ function App() {
           </Suspense>
         )}
         <ToastContainer toasts={toasts} onDismiss={removeToast} maxVisible={3} />
+        <PWAInstallPrompt />
       </div>
     </ErrorBoundary>
   );

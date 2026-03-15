@@ -101,7 +101,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
           );
         })}
       </nav>
-      <div className="p-3 sm:p-4 border-t border-white/10 dark:border-white/10 light:border-black/10 space-y-3">
+      <div className="p-3 sm:p-4 border-t border-white/10 dark:border-white/10 light:border-black/10 space-y-2">
         <motion.button
           onClick={toggleSettingsPanel}
           whileHover={{ scale: 1.02 }}
@@ -123,7 +123,23 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
           </motion.span>
           <span className="text-body-sm font-medium">Settings</span>
         </motion.button>
-        <div className="text-xs text-gray-500 dark:text-gray-500 light:text-gray-400 text-center font-mono">
+        <motion.button
+          onClick={() => {
+            if (window.restartProductTour) {
+              window.restartProductTour();
+              onClose();
+            }
+          }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          transition={springPresets.snappy}
+          className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-lg group min-h-[44px] text-gray-400 dark:text-gray-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-black/5 border border-transparent"
+          aria-label="Help & Tour"
+        >
+          <span className="text-lg sm:text-xl">🎓</span>
+          <span className="text-body-sm font-medium">Help & Tour</span>
+        </motion.button>
+        <div className="text-xs text-gray-500 dark:text-gray-500 light:text-gray-400 text-center font-mono pt-1">
           v1.0.0 • Made with ❤️
         </div>
       </div>
