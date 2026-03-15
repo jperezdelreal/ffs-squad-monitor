@@ -4,6 +4,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Header } from '../Header'
 import { HEALTH_LEVELS } from '../../lib/health'
 
+// Mock ViewerCount and ActivityIndicator to avoid SSE/EventSource in tests
+vi.mock('../ViewerCount', () => ({
+  ViewerCount: () => null,
+}))
+vi.mock('../ActivityIndicator', () => ({
+  ActivityIndicator: () => null,
+}))
+
 const defaultHealthProps = {
   healthScore: 85,
   healthLevel: HEALTH_LEVELS.GREEN,
