@@ -9,6 +9,58 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Issue #168 / PR #183: Onboarding - First-Time User Experience (2026-03-15)
+
+**Onboarding Architecture:**
+- Created flow: Welcome Modal → Setup Checklist → Product Tour → Dashboard
+- LocalStorage persistence with key `ffs-monitor-onboarding` tracks completion flags
+- Three-state system: hasSeenWelcome, hasCompletedSetup, hasCompletedTour
+- Exposed `window.restartProductTour()` for manual tour restart from sidebar
+
+**Component Structure:**
+- **WelcomeModal.jsx** - First-run welcome with 2x2 features grid and dual CTAs
+- **ProductTour.jsx** - Interactive spotlight tour with 5 steps, keyboard navigation (←/→/Esc)
+- **SetupChecklist.jsx** - Health checks for /health, /api/config, /api/events, /api/issues
+- **OnboardingManager.jsx** - State orchestration with localStorage save/load
+
+**Tour Implementation:**
+- Spotlight effect using radial-gradient overlay with transparent center
+- Spotlight ring with cyan-blue gradient border and glow effect
+- Tooltip with progress dots, keyboard hints, Previous/Next buttons
+- Responsive positioning (top/bottom/left/right/center) based on step config
+- Window resize listener updates spotlight position dynamically
+
+**Integration Points:**
+- Added OnboardingManager as first child of ErrorBoundary in App.jsx
+- Added "Help & Tour" button (🎓 icon) to Sidebar.jsx footer
+- Tour button calls window.restartProductTour() and closes sidebar
+
+**Health Check Pattern:**
+- Sequential checks with 300ms visual delays between steps
+- Status states: checking (spinning icon) / success (green) / error (red) / pending (gray)
+- Retry button on failure with error guidance
+- Auto-completes to tour if all checks pass
+
+**UX Details:**
+- Modal backdrop dismissable (click to skip)
+- Framer Motion springPresets.bouncy for entrance animations
+- Staggered feature card animations (0.3-0.45s delays)
+- Min 44px touch targets for mobile accessibility
+- Keyboard navigation: arrows to navigate, Esc to skip, Enter to advance
+
+**Testing:**
+- All 755 tests pass (onboarding components don't have tests yet)
+- Build: 681.55 KiB total, onboarding adds ~10 KiB
+- Manual testing required to verify full onboarding flow
+
+**File paths:**
+- src/components/WelcomeModal.jsx
+- src/components/ProductTour.jsx
+- src/components/SetupChecklist.jsx
+- src/components/OnboardingManager.jsx
+- src/App.jsx (added OnboardingManager)
+- src/components/Sidebar.jsx (added Help & Tour button)
+
 ### Issue #166 / PR #181: Dark/Light Mode Polish (2026-03-15)
 
 **Theme Architecture:**
