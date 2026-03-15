@@ -1,8 +1,10 @@
 import { config } from '../config.js'
 import { logger } from './logger.js'
+import { eventBus } from './event-bus.js'
 
 const GITHUB_API = 'https://api.github.com'
 const RATE_LIMIT_WARNING_THRESHOLD = 100
+const RATE_LIMIT_CRITICAL_THRESHOLD = 10
 
 // Track rate limit state across requests
 const rateLimit = {
@@ -10,6 +12,8 @@ const rateLimit = {
   limit: null,
   reset: null,
   lastChecked: null,
+  callsThisWindow: 0,
+  windowStartTime: Date.now(),
 }
 
 export function getRateLimitStatus() {
@@ -21,18 +25,44 @@ function parseRateLimitHeaders(headers) {
   const limit = headers.get('x-ratelimit-limit')
   const reset = headers.get('x-ratelimit-reset')
 
+  const prevRemaining = rateLimit.remaining
+
   if (remaining !== null) rateLimit.remaining = parseInt(remaining, 10)
   if (limit !== null) rateLimit.limit = parseInt(limit, 10)
   if (reset !== null) rateLimit.reset = parseInt(reset, 10)
   rateLimit.lastChecked = new Date().toISOString()
 
-  if (rateLimit.remaining !== null && rateLimit.remaining < RATE_LIMIT_WARNING_THRESHOLD) {
+  // Track calls per minute for metrics
+  rateLimit.callsThisWindow++
+  const now = Date.now()
+  if (now - rateLimit.windowStartTime > 60_000) {
+    rateLimit.callsThisWindow = 1
+    rateLimit.windowStartTime = now
+  }
+
+  // Enhanced warning thresholds
+  if (rateLimit.remaining !== null) {
     const resetDate = rateLimit.reset ? new Date(rateLimit.reset * 1000).toISOString() : 'unknown'
-    logger.warn('GitHub API rate limit low', {
-      remaining: rateLimit.remaining,
-      limit: rateLimit.limit,
-      resetsAt: resetDate,
-    })
+    
+    if (rateLimit.remaining <= RATE_LIMIT_CRITICAL_THRESHOLD && prevRemaining > RATE_LIMIT_CRITICAL_THRESHOLD) {
+      logger.error('GitHub API rate limit critically low', {
+        remaining: rateLimit.remaining,
+        limit: rateLimit.limit,
+        resetsAt: resetDate,
+      })
+      // Publish alert event
+      eventBus.publish('alerts', {
+        type: 'rate-limit-critical',
+        remaining: rateLimit.remaining,
+        resetsAt: resetDate,
+      })
+    } else if (rateLimit.remaining < RATE_LIMIT_WARNING_THRESHOLD && prevRemaining >= RATE_LIMIT_WARNING_THRESHOLD) {
+      logger.warn('GitHub API rate limit low', {
+        remaining: rateLimit.remaining,
+        limit: rateLimit.limit,
+        resetsAt: resetDate,
+      })
+    }
   }
 }
 

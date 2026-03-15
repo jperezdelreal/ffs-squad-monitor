@@ -3,6 +3,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { REPOS } from '../config.js';
 import { githubFetch, handleGitHubError } from '../lib/github-client.js';
+import { cacheManager } from '../lib/cache-manager.js';
 
 function readNowMd(repoDir) {
   const p = path.join(repoDir, '.squad', 'identity', 'now.md');
@@ -46,12 +47,33 @@ function getLastCommit(repoDir) {
   } catch { return null; }
 }
 
+async function fetchReposData() {
+  const results = [];
+  for (const repo of REPOS) {
+    const hasSquad = fs.existsSync(path.join(repo.dir, '.squad'));
+    const focus = readNowMd(repo.dir);
+    const openIssues = await getOpenIssueCount(repo.github);
+    const lastCommit = getLastCommit(repo.dir);
+    results.push({
+      id: repo.id,
+      emoji: repo.emoji,
+      label: repo.label,
+      github: repo.github,
+      hasSquad,
+      focus,
+      openIssues,
+      lastCommit,
+    });
+  }
+  return results;
+}
+
 /**
  * @openapi
  * /api/repos:
  *   get:
  *     summary: Get monitored repositories
- *     description: Returns status info for each monitored repo including squad presence, current focus from now.md, open issue count, and latest commit.
+ *     description: Returns status info for each monitored repo including squad presence, current focus from now.md, open issue count, and latest commit. Cached for 5 minutes.
  *     tags: [Repos]
  *     responses:
  *       200:
@@ -71,23 +93,11 @@ function getLastCommit(repoDir) {
  */
 export default async function reposRoute(req, res) {
   try {
-    const results = [];
-    for (const repo of REPOS) {
-      const hasSquad = fs.existsSync(path.join(repo.dir, '.squad'));
-      const focus = readNowMd(repo.dir);
-      const openIssues = await getOpenIssueCount(repo.github);
-      const lastCommit = getLastCommit(repo.dir);
-      results.push({
-        id: repo.id,
-        emoji: repo.emoji,
-        label: repo.label,
-        github: repo.github,
-        hasSquad,
-        focus,
-        openIssues,
-        lastCommit,
-      });
-    }
+    const cacheKey = 'repos'
+    const tier = 'cold' // 5 min TTL for rarely changing data
+    
+    const results = await cacheManager.get(cacheKey, tier, fetchReposData)
+
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(results));
   } catch (err) {
