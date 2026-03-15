@@ -66,12 +66,25 @@ const mockBlockedIssues = [
   },
 ]
 
+const mockAgentsResponse = [
+  { id: 'ripley', emoji: '👩‍🚀', role: 'Lead', status: 'idle', lastActivity: null, currentWork: null },
+  { id: 'dallas', emoji: '🧑‍✈️', role: 'Frontend Dev', status: 'idle', lastActivity: null, currentWork: null },
+  { id: 'lambert', emoji: '👩‍🔬', role: 'Backend Dev', status: 'idle', lastActivity: null, currentWork: null },
+  { id: 'kane', emoji: '🧑‍🔧', role: 'Tester', status: 'idle', lastActivity: null, currentWork: null },
+]
+
 function mockFetchSuccess() {
   global.fetch = vi.fn((url) => {
     if (typeof url === 'string' && url.includes('/api/config')) {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockConfig),
+      })
+    }
+    if (typeof url === 'string' && url.includes('/api/agents')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockAgentsResponse),
       })
     }
     return Promise.resolve({
@@ -210,10 +223,10 @@ describe('TeamBoard', () => {
     })
 
     fireEvent.click(screen.getByText('Refresh'))
-    // Initial mount: 1 fetch (issues) + 1 fetch (config)
-    // Refresh: 1 fetch (issues) + 1 fetch (config, from cache)
+    // Initial mount: 1 fetch (issues) + 1 fetch (config) + 1 fetch (agents) = 3
+    // Refresh: 1 fetch (issues) + 1 fetch (config, from cache) + 1 fetch (agents) = 2
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(3)
+      expect(global.fetch).toHaveBeenCalledTimes(5)
     })
   })
 

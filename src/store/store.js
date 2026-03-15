@@ -344,16 +344,37 @@ export const useStore = create((set, get) => ({
       const config = await fetchConfig()
       const { issues } = get()
 
-      const agentEntries = Object.entries(config.agents).map(([id, meta]) => ({
-        id,
-        name: id.charAt(0).toUpperCase() + id.slice(1),
-        emoji: meta.emoji,
-        role: meta.role,
-        status: 'idle',
-        currentTask: null,
-        taskCount: 0,
-      }))
+      // Fetch real agent status from backend
+      let backendAgents = []
+      try {
+        const agentsResponse = await fetch('/api/agents')
+        if (agentsResponse.ok) {
+          backendAgents = await agentsResponse.json()
+        }
+      } catch { /* fallback to config-only */ }
 
+      const backendMap = new Map()
+      backendAgents.forEach(a => backendMap.set(a.id, a))
+
+      // Build base entries using backend status data merged with config
+      const agentEntries = Object.entries(config.agents).map(([id, meta]) => {
+        const backend = backendMap.get(id)
+        const backendStatus = backend?.status === 'working' ? 'active'
+          : backend?.status === 'blocked' ? 'blocked'
+          : 'idle'
+        return {
+          id,
+          name: id.charAt(0).toUpperCase() + id.slice(1),
+          emoji: meta.emoji,
+          role: meta.role,
+          status: backendStatus,
+          currentTask: backend?.currentWork || null,
+          lastActivity: backend?.lastActivity || null,
+          taskCount: backend?.currentWork ? 1 : 0,
+        }
+      })
+
+      // Enrich with squad:label issues as additional activity signal
       const agentMap = new Map()
       issues.forEach(issue => {
         if (issue.state === 'open') {
@@ -373,13 +394,16 @@ export const useStore = create((set, get) => ({
         }
       })
 
+      // Merge both signals: backend status + squad label activity
       const agents = agentEntries.map(agent => {
         const tasks = agentMap.get(agent.id) || []
+        const hasBackendActivity = agent.status === 'active' || agent.status === 'blocked'
+        const hasSquadTasks = tasks.length > 0
         return {
           ...agent,
-          status: tasks.length > 0 ? 'active' : 'idle',
-          currentTask: tasks.length > 0 ? tasks[0] : null,
-          taskCount: tasks.length,
+          status: hasBackendActivity ? agent.status : (hasSquadTasks ? 'active' : agent.status),
+          currentTask: hasSquadTasks ? tasks[0] : agent.currentTask,
+          taskCount: hasSquadTasks ? tasks.length : agent.taskCount,
         }
       })
 
