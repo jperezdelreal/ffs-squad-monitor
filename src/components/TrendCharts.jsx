@@ -156,7 +156,6 @@ export function TrendCharts() {
         <div className="glass rounded-xl p-6 border border-white/10">
           <h3 className="text-sm font-semibold text-gray-300 mb-4">👥 Tasks by Agent</h3>
           <div className="h-56 sm:h-64 md:h-72">
-            <BarChart series={agentsSeries} label="Active Tasks" />
             <BarChart series={agentBarData} label="Active Tasks" />
           </div>
         </div>
@@ -164,7 +163,6 @@ export function TrendCharts() {
         <div className="glass rounded-xl p-6 border border-white/10">
           <h3 className="text-sm font-semibold text-gray-300 mb-4">🏷️ Tasks by Label</h3>
           <div className="h-56 sm:h-64 md:h-72">
-            <BarChart series={labelsSeries} label="Task Count" />
             <BarChart series={labelsData} label="Task Count" />
           </div>
         </div>
