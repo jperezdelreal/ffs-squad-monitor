@@ -170,3 +170,6 @@ export function TrendCharts() {
     </div>
   )
 }
+
+
+export default TrendCharts

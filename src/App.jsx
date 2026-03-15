@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
@@ -8,15 +8,13 @@ import { ActivityFeed } from './components/ActivityFeed';
 import { PipelineVisualizer } from './components/PipelineVisualizer';
 import { TeamBoard } from './components/TeamBoard';
 import { CostTracker } from './components/CostTracker';
-import { TrendCharts } from './components/TrendCharts';
-import { Analytics } from './components/Analytics';
 import { TimelineSwimlane } from './components/TimelineSwimlane';
 import { Settings } from './components/Settings';
 import { NotificationHistory } from './components/NotificationHistory';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
-import { CommandPalette } from './components/CommandPalette';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { ToastContainer, useToast } from './components/Toast';
+import { SkeletonChart } from './components/Skeleton';
 import { usePolling } from './hooks/usePolling';
 import { useHealthScore } from './hooks/useHealthScore';
 import { useSSE } from './hooks/useSSE';
@@ -25,6 +23,11 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useSwipeGesture } from './hooks/useSwipeGesture';
 import { useStore } from './store/store';
 import { fadeIn, springPresets } from './lib/motion';
+
+// Lazy load heavy components with Chart.js
+const Analytics = lazy(() => import('./components/Analytics'));
+const TrendCharts = lazy(() => import('./components/TrendCharts'));
+const CommandPalette = lazy(() => import('./components/CommandPalette'));
 
 function App() {
   const [activeView, setActiveView] = useState('activity');
@@ -144,11 +147,19 @@ function App() {
       case 'timeline':
         return <TimelineSwimlane />;
       case 'charts':
-        return <TrendCharts />;
+        return (
+          <Suspense fallback={<SkeletonChart count={3} />}>
+            <TrendCharts />
+          </Suspense>
+        );
       case 'cost':
         return <CostTracker />;
       case 'analytics':
-        return <Analytics />;
+        return (
+          <Suspense fallback={<SkeletonChart count={4} />}>
+            <Analytics />
+          </Suspense>
+        );
       default:
         return <ActivityFeed />;
     }
@@ -239,20 +250,24 @@ function App() {
           onClose={toggleShortcutsPanel}
           shortcuts={shortcuts}
         />
-        <CommandPalette
-          isOpen={commandPaletteOpen}
-          onClose={() => setCommandPaletteOpen(false)}
-          onViewChange={handleViewChange}
-          onRefresh={handleRefresh}
-          onToggleTheme={handleToggleTheme}
-          onOpenSettings={toggleSettingsPanel}
-          onOpenShortcuts={toggleShortcutsPanel}
-          onOpenExport={() => {
-            if (exportButtonRef.current) {
-              exportButtonRef.current.click()
-            }
-          }}
-        />
+        {commandPaletteOpen && (
+          <Suspense fallback={null}>
+            <CommandPalette
+              isOpen={commandPaletteOpen}
+              onClose={() => setCommandPaletteOpen(false)}
+              onViewChange={handleViewChange}
+              onRefresh={handleRefresh}
+              onToggleTheme={handleToggleTheme}
+              onOpenSettings={toggleSettingsPanel}
+              onOpenShortcuts={toggleShortcutsPanel}
+              onOpenExport={() => {
+                if (exportButtonRef.current) {
+                  exportButtonRef.current.click()
+                }
+              }}
+            />
+          </Suspense>
+        )}
         <ToastContainer toasts={toasts} onDismiss={removeToast} maxVisible={3} />
       </div>
     </ErrorBoundary>
