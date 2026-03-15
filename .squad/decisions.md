@@ -330,6 +330,76 @@ When Ralph Go depletes the board (all issues closed), instead of idling, Ralph M
 
 ---
 
+### 20. Test Architecture Must Match Actual Code Architecture (2026-03-15)
+**Date:** 2026-03-15  
+**Author:** Dallas  
+**Context:** PR #163 Test Failures (Issue #138)  
+
+## Problem
+
+Kane authored integration tests that assumed a different frontend architecture than what actually exists:
+- Tests mocked `global.fetch` but components use Zustand store
+- Tests referenced non-existent hooks (`useSessionStore`, `useMetricsStore`) 
+- TrendCharts.jsx had duplicate component rendering bugs
+
+This caused 60 test failures that blocked PR merge.
+
+## Decision
+
+**Component tests MUST use store-based mocking, not global.fetch mocking.**
+
+### Rationale
+
+1. **Architecture Reality:** Components consume data from `useStore` (Zustand), not directly from fetch
+2. **Test Fidelity:** Tests should verify component behavior given store state, not API layer behavior
+3. **Maintainability:** Store mocking is simpler and doesn't require URL-aware fetch mock routing
+
+### Implementation Pattern
+
+```javascript
+import { useStore } from '../../store/store'
+
+beforeEach(() => {
+  useStore.setState({
+    dataKey: [],
+    dataKeyLoading: false,
+    dataKeyError: null,
+    fetchDataKey: vi.fn(),
+  })
+})
+
+it('shows loading state', () => {
+  useStore.setState({ dataKeyLoading: true })
+  render(<Component />)
+  // assert skeleton/loading UI
+})
+
+it('shows data after load', () => {
+  useStore.setState({ dataKey: mockData })
+  render(<Component />)
+  // assert data renders
+})
+```
+
+## Consequences
+
+### Positive
+- Tests are simpler (no URL routing in mocks)
+- Tests match actual component dependencies
+- Faster test execution (no fetch simulation overhead)
+
+### Negative
+- Existing tests using `global.fetch` must be updated
+- Team must understand Zustand store architecture to write tests
+
+## Follow-Up Actions
+
+1. Document store-based testing pattern in `docs/testing.md`
+2. Update remaining ~55 failing tests with same pattern
+3. Add pre-commit hook to catch `global.fetch` in component tests
+
+---
+
 ### 19. Integration Test Organization (2026-03-15)
 **Author:** Kane (Tester)  
 **Date:** 2026-03-15  
