@@ -673,3 +673,37 @@ This approach is pragmatic: ensure new code is well-tested while not blocking PR
 - Reduces server load (cached assets, 5min API cache)
 - Improves perceived performance (instant shell load from cache)
 
+### Issue #185: Fix Broken Visual Rendering Across Dashboard (2026-03-15)
+
+**Root Cause — Tailwind CSS v4 Migration Gap:**
+- Project had Tailwind CSS v4.2.1 installed with `@tailwindcss/postcss` plugin
+- But `src/index.css` still used v3 syntax (`@tailwind base/components/utilities`)
+- v4 requires `@import "tailwindcss"` — v3 directives silently failed
+- Result: Most utility classes (inset-0, bg-black/80, bg-white/5) never compiled
+- Fix: Replace `@tailwind` directives with `@import "tailwindcss"` + `@config` reference
+
+**Theme Default:**
+- Both `index.html` FOUC script and `useTheme.js` hook fell back to `getSystemPreference()`
+- Playwright headless (and many systems) default to light mode
+- Dark mode is the designed default — changed both fallbacks to `'dark'`
+
+**Sidebar Framer Motion Conflict:**
+- Sidebar had `animate={{ x: isOpen ? 0 : '-100%' }}` via Framer Motion
+- On desktop (lg+), sidebar should always be visible
+- But Framer Motion inline transforms override Tailwind's `lg:translate-x-0`
+- Fix: Check `window.innerWidth >= 1024` and always show on desktop
+
+**SSE Handler Crash:**
+- `store.js` `handleSSEEvent()` called `eventType.split(':')` without null check
+- When SSE sent events with undefined eventType, it threw TypeError
+- Crash propagated through React's ErrorBoundary, killing entire app
+- Charts and Cost views appeared broken because ErrorBoundary replaced the whole UI
+- Fix: Early return when `eventType` is undefined
+
+**Invalid Tailwind Modifiers:**
+- Components used `light:` prefix (e.g., `light:bg-ops-light-bg`) — not a valid Tailwind modifier
+- Only `dark:` is valid with `darkMode: 'class'` strategy
+- Cleaned up invalid modifiers in App.jsx and Sidebar.jsx
+
+**Key Insight:** When Tailwind utilities silently fail, the UI still renders (HTML structure intact) but looks completely broken — no positioning, no backgrounds, no colors. Always verify Tailwind CSS version compatibility when upgrading.
+
