@@ -31,7 +31,8 @@ describe('CHANNELS', () => {
     expect(CHANNELS).toContain('usage')
     expect(CHANNELS).toContain('agents')
     expect(CHANNELS).toContain('alerts')
-    expect(CHANNELS).toHaveLength(6)
+    expect(CHANNELS).toContain('viewers')
+    expect(CHANNELS).toHaveLength(7)
   })
 })
 

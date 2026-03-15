@@ -4,7 +4,7 @@ import { useStore } from '../store/store'
 const MAX_BACKOFF_MS = 30_000
 const FALLBACK_THRESHOLD = 3
 const FALLBACK_RETRY_MS = 60_000
-const DATA_CHANNELS = ['heartbeat', 'events', 'issues', 'usage']
+const DATA_CHANNELS = ['heartbeat', 'events', 'issues', 'usage', 'viewers']
 
 /**
  * Custom hook that connects to the SSE endpoint and pushes real-time
