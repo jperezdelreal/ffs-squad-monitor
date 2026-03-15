@@ -179,8 +179,31 @@ Implemented backend infrastructure for real-time performance monitoring with met
    - Updated `event-bus.test.js` and `snapshot-service.test.js` with performance-tracker mocks
 
 **Pattern:** For performance instrumentation, use middleware + singleton tracker with rolling window. Keep metrics in-memory with periodic snapshots for historical trends. Event-bus alerts enable proactive monitoring.
-
+
 **Frontend:** Dallas will implement the UI component to visualize these metrics in a dashboard.
+
+### 2026-03-15 — Issue #167 Real-Time Collaboration Features (Backend Complete)
+
+Implemented backend infrastructure for live viewer count and activity tracking. Frontend components to be implemented by Dallas.
+
+**Backend Implementation:**
+1. **SSE Connection Tracking** — Enhanced event-bus.js with 'viewers' channel. Added `_broadcastViewerCount()` method that publishes viewer-count events when connections change (addConnection/removeConnection). Viewer count includes total connections and breakdown by channel.
+
+2. **Fallback API Endpoint** — Created `/api/metrics/viewers` route (server/api/viewers.js) with OpenAPI documentation. Returns current viewer count, channel breakdown, and connection quality metrics (p50/p95 latency, status: healthy/degraded/poor). Serves as fallback for clients without SSE support.
+
+3. **Connection Quality** — Integrated with performance-tracker to provide latency metrics alongside viewer count. Status determination: healthy (<500ms p95), degraded (500-1000ms), poor (>1000ms).
+
+**Test Updates:**
+- Updated event-bus.test.js to expect 7 channels (added 'viewers')
+- Updated useSSE.test.js default channels assertion to include 'viewers'
+- Mocked ViewerCount and ActivityIndicator components in Header.test.jsx to avoid SSE/network calls in test environment
+
+**Frontend Components (Dallas to implement):**
+- ViewerCount.jsx — Header badge showing live viewer count with SSE subscription + polling fallback
+- ActivityIndicator.jsx — "Updated Xs ago" indicator with pulse animation on data refresh
+
+**Key Pattern:** SSE viewers channel broadcasts connection count to all clients in realtime. Fallback polling endpoint (/api/metrics/viewers) ensures graceful degradation when SSE unavailable. Event-bus owns connection state and broadcasts changes automatically.
+
 
 ### 2026-03-14 — Issue #172 Enhanced API Rate Limiting & Caching (PR #175)
 
