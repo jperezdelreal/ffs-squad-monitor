@@ -309,3 +309,38 @@ expect(screen.getByText(/Network error/)).toBeInTheDocument()
 - 599 tests passing (no new test failures)
 - Manual testing recommended on mobile device or Chrome DevTools emulator
 
+### Issue #138 / PR #163: Integration Test Fixes Round 2 (2026-03-15)
+
+**Test Architecture Fixes:**
+- SSE mock EventSource must call both `onerror` handler AND `addEventListener('error')` handlers
+- SSE event data must wrap in eventBus format: `{ id, type, channel, data, timestamp }`
+- Store needs snapshot event handlers for all channels (heartbeat:snapshot, issues:snapshot, usage:snapshot)
+- Store needs incremental update handlers (issues:new for additions, issues:update for single-issue updates)
+- EventBus debouncing: first event on a channel emits immediately, subsequent within 1s are coalesced
+- Zustand store spy setup: create spy BEFORE rendering hook (spy must exist in closure)
+
+**Event Coalescing Behavior:**
+- First publish on a channel: elapsed >= 1000ms (no previous event), emits immediately
+- Subsequent publishes within 1s: queued and coalesced, emit after debounce window
+- Tests must expect 2 emissions per rapid burst: immediate + coalesced (not just 1)
+- Each channel has independent debounce state (per-channel coalescing)
+
+**Metrics Aggregation Fixes:**
+- SQL hourly rollup: use `baseDate.setMinutes(0,0,0)` to ensure timestamps stay within hour boundary
+- Retention policy tests: insert records spanning >30 days to actually test deletion logic
+- SQLite date arithmetic: `timestamp < cutoff` won't delete records at exact cutoff timestamp
+
+**Progress:**
+- Reduced test failures from 52 → 21 (60% reduction)
+- Integration tests: 47/50 passing (3 remaining failures)
+- Store handlers now support SSE snapshot and incremental update patterns
+
+**File paths:**
+- `src/__tests__/integration/state-machine.test.js` - Fixed onerror mock
+- `src/__tests__/integration/sse-reconnection.test.js` - Fixed onerror mock, spy timing
+- `src/__tests__/integration/cross-feature-pipeline.test.js` - Fixed onerror mock, data format
+- `src/__tests__/integration/event-coalescing.test.js` - Corrected debounce expectations
+- `src/__tests__/integration/metrics-aggregation.test.js` - Fixed hourly rollup, retention tests
+- `src/store/store.js` - Added snapshot handlers, issues:new handler, incremental update logic
+
+
