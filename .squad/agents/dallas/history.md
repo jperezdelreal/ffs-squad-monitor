@@ -560,3 +560,64 @@ This approach is pragmatic: ensure new code is well-tested while not blocking PR
 - PR #163 ready for review with complete test coverage
 - Established robust test patterns for future additions
 
+### Issue #173 / PR #184: PWA with Offline Support (2026-03-15)
+
+**PWA Architecture:**
+- Use `vite-plugin-pwa` for automatic manifest generation and service worker setup
+- Configure `registerType: 'autoUpdate'` for seamless updates without user prompts
+- Service worker auto-generated with Workbox precaching all static assets
+- Virtual module `virtual:pwa-register` provides `registerSW()` for runtime registration
+
+**Caching Strategy:**
+- API calls: NetworkFirst with 10s timeout, 5min cache, 50 entry limit (fresh data priority, offline fallback)
+- Google Fonts: CacheFirst with 1yr cache (static resources, rarely change)
+- Static assets: Precached during build (immediate offline support for shell)
+
+**Install Prompt Pattern:**
+- Listen for `beforeinstallprompt` event, prevent default, store deferred prompt
+- Check `window.matchMedia('(display-mode: standalone)')` to detect already installed
+- Dismiss logic: localStorage flag with 7-day expiry via setTimeout (not persistent across sessions)
+- Custom UI component (not native banner) for better UX control
+
+**PWA Meta Tags:**
+- `apple-touch-icon` for iOS home screen icon
+- `apple-mobile-web-app-capable` + `apple-mobile-web-app-status-bar-style` for iOS standalone mode
+- `mobile-web-app-capable` for Android add-to-home-screen
+- `theme-color` for mobile browser chrome (must match manifest)
+- Description meta tag for app stores/search
+
+**Icon Generation:**
+- SVG source icon with grid + pulse indicators (squad monitor theme)
+- Generate 192x192 and 512x512 PNG placeholders via Node.js Buffer (minimal valid PNGs)
+- Production icons should use proper SVG→PNG converter (sharp, canvas, etc.)
+- Icons must be in `public/` directory to be served at root path
+
+**Manifest Configuration:**
+- `display: standalone` for full-screen app experience (no browser chrome)
+- `start_url: '/'` ensures app opens at root regardless of install context
+- `scope: '/'` allows navigation within entire origin
+- `purpose: 'any maskable'` ensures icons adapt to platform requirements (Android adaptive icons)
+
+**Testing Patterns:**
+- Build output confirms service worker generation (`dist/sw.js`, `dist/workbox-*.js`)
+- Manifest file generated at `dist/manifest.webmanifest`
+- All 755 tests must pass (no regressions from PWA integration)
+- Manual testing: DevTools > Application > Manifest/Service Workers to verify registration
+
+**File paths:**
+- vite.config.js - VitePWA plugin configuration
+- src/main.jsx - registerSW() call with lifecycle callbacks
+- src/App.jsx - PWAInstallPrompt component integration
+- src/components/PWAInstallPrompt.jsx - Install prompt with dismissal logic
+- src/components/OfflinePage.jsx - Offline fallback UI (not used yet, ready for future)
+- index.html - PWA meta tags (apple-touch-icon, theme-color, etc.)
+- public/pwa-*.png - App icons (192x192, 512x512)
+- scripts/generate-icons.js - Icon generation script
+
+**Impact:**
+- Dashboard now installable on mobile/desktop
+- Works offline for cached resources (full UI shell + API fallback)
+- Native app-like experience with standalone mode
+- Reduces server load (cached assets, 5min API cache)
+- Improves perceived performance (instant shell load from cache)
+
