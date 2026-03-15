@@ -307,3 +307,41 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 - `scripts/load-test.js`
 
 **PR:** #163 (branch: squad/138-expand-integration-tests)
+
+### 2026-03-15: E2E Tests — Proper Playwright webServer + Dashboard Coverage
+
+**What was done:**
+- Rewrote `e2e/dashboard.spec.js` with 20 comprehensive E2E tests across 7 test groups
+- Updated `playwright.config.js` with dual webServer config (Express + Vite auto-start)
+- Generated screenshot regression baselines (dashboard + team board)
+
+**Test coverage (20 tests):**
+1. Layout & loading (5): title, sidebar/header/main layout, 7 nav items, active indicator, version info
+2. Agent data displays (3): Team Board agent cards, Activity Feed content, header elements
+3. Health endpoint (3): heartbeat API called, config API structure, issues API called
+4. Navigation (3): all 7 view switches with active state, single-active enforcement, settings toggle
+5. Dark mode (2): theme toggle dark↔light, localStorage persistence
+6. API data flows (2): all endpoints return valid JSON, cross-view component rendering
+7. Screenshot regression (2): dashboard baseline, team board baseline
+
+**Key insight: Framer Motion + Playwright click incompatibility:**
+- Sidebar uses `motion.aside` with `animate={{ x: isOpen ? 0 : '-100%' }}` and `sidebarOpen` starts `false`
+- On desktop, `lg:static` + `lg:translate-x-0` CSS classes should make sidebar visible
+- But Framer Motion's inline `transform: translateX(-100%)` takes CSS specificity precedence
+- Elements are in the DOM (pass `toBeAttached`) but visually off-screen (fail `click()`)
+- **Fix:** Use `element.evaluate(el => el.click())` for all Framer Motion elements
+- This dispatches a real DOM click bypassing Playwright's coordinate-based actionability checks
+- Same pattern needed for `motion.button` (theme toggle, Settings button)
+
+**Other patterns established:**
+- `page.unroute()` before `page.route()` to override specific routes from `mockAllAPIs()`
+- `getByRole('button', { name: '...', exact: true })` to avoid matching "Close settings" button
+- Viewport `1920x1080` ensures desktop layout (lg breakpoint at 1024px)
+
+**Files modified:**
+- `e2e/dashboard.spec.js` — rewritten with 20 tests
+- `playwright.config.js` — webServer array config (already committed)
+
+**Files created:**
+- `e2e/screenshots/dashboard-baseline.png`
+- `e2e/screenshots/team-board-baseline.png`
