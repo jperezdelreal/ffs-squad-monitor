@@ -244,3 +244,22 @@ Implemented centralized caching system to reduce GitHub API calls and prevent ra
 - Cache metrics essential for observability — track hit rate, dedupe count, stale-served count
 
 **Expected Impact:** 50%+ reduction in GitHub API calls, >70% cache hit rate, no rate limit exhaustion, <200ms response times for cache hits.
+
+### 2026-03-15 — Fix Agent Status Display (Hardcoded Idle Bug)
+
+Fixed critical bug where ALL agents showed "Idle" in the Team Board regardless of actual activity.
+
+**Root Cause:** `src/store/store.js` `fetchAgents` function hardcoded `status: 'idle'` and `currentTask: null` for every agent, completely ignoring the `/api/agents` backend endpoint which already computes real status from orchestration logs and JSONL logs.
+
+**Fix (2 files):**
+
+1. **`src/store/store.js`** — Rewrote `fetchAgents` to:
+   - Fetch real agent data from `/api/agents` (status, currentWork, lastActivity)
+   - Map backend status (`working` → `active`, `blocked` → `blocked`, else `idle`)
+   - Merge with config data for emoji/role display
+   - Keep squad:label issue enrichment as **additional** signal (if agent has open squad issues, mark active even if backend says idle)
+   - Backend activity takes priority; squad labels supplement
+
+2. **`src/components/__tests__/TeamBoard.test.jsx`** — Updated test mock to handle `/api/agents` endpoint and adjusted fetch count assertion (3 → 5 calls due to new `/api/agents` fetch on initial load + refresh).
+
+**Key Pattern:** When frontend and backend have overlapping data sources, MERGE signals rather than letting one override the other. Backend provides real-time activity detection; squad labels provide issue-level assignment. Both are valid "active" indicators.
