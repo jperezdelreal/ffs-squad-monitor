@@ -9,6 +9,86 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Issue #170 / PR #182: Advanced Filtering System (2026-03-15)
+
+**Architecture:**
+- Created centralized `filterStore.js` using Zustand for all filter state management
+- Filter state includes: agent, level, type, repo, timeRange, keyword, fuzzyEnabled, booleanQuery, activeQuickFilters
+- Separate store from main app store for modularity and separation of concerns
+- LocalStorage persistence with two keys: `ffs-monitor-filter-presets` and `ffs-monitor-active-filters`
+
+**Fuzzy Search Integration:**
+- Integrated Fuse.js library for fuzzy text matching
+- Fuse instances created on-demand per dataType (logs, issues, events)
+- Configurable search options (threshold, weights, keys)
+- Toggle between fuzzy and exact search modes
+- Weighted search keys by field relevance (e.g., message:2, agent:1.5, context:0.5)
+
+**Filter Components:**
+- `FilterPanel.jsx` - Complete filter UI with multi-criteria inputs, quick chips, preset management
+- `useFiltering.js` - Hook for component integration with automatic Fuse setup and memoized filtering
+- `useFilterOptions.js` - Hook to extract unique filter values from data for dropdown population
+- `LogViewer.jsx` - New component demonstrating advanced filtering on logs
+
+**Quick Filters:**
+- Predefined filter configurations for common searches (errors, warnings, today, last-hour)
+- Visual chip UI with emoji icons
+- Toggle on/off behavior
+- Applied filters stored in `activeQuickFilters` array
+
+**Filter Presets:**
+- Save current filter configuration with custom name
+- Load/delete/rename presets
+- Persists to localStorage as array of preset objects
+- Each preset includes: id, name, filters object, createdAt timestamp
+
+**Time Range Filtering:**
+- Options: all, 1h (last hour), today, week, custom
+- Custom range with datetime-local inputs
+- `getTimeRangeFilter()` converts range to from/to timestamps
+- Filters applied to timestamp/created_at/createdAt fields
+
+**Export Functionality:**
+- Export filtered data to JSON or CSV
+- JSON: pretty-printed with 2-space indent
+- CSV: escaped quotes, comma-wrapped values
+- Timestamped filenames
+- Uses Blob + URL.createObjectURL for download
+
+**Boolean Query Support:**
+- Basic support for AND, OR, NOT operators in text search
+- `parseBooleanQuery()` function converts to logical evaluation
+- Split by OR, then check AND terms, handle NOT negation
+- Applied after other filters
+
+**Integration Pattern:**
+- Components use `useFiltering(data, dataType, fuseOptions)` hook
+- Returns: filteredData, filterCount, exportData, hasFilters
+- Custom event 'filter-export' for export button communication
+- Components handle export via `window.addEventListener('filter-export', ...)`
+
+**Testing:**
+- Unit tests in `src/store/__tests__/filterStore.test.js`
+- Tests cover: basic filters, quick filters, presets, filter application, localStorage
+- Pattern: `act(() => { store action })` then assert on `useFilterStore.getState()`
+- localStorage cleared in beforeEach
+
+**File Locations:**
+- `src/store/filterStore.js` - Zustand store
+- `src/hooks/useFiltering.js` - Integration hook
+- `src/components/FilterPanel.jsx` - Filter UI
+- `src/components/LogViewer.jsx` - Example integration
+- `src/components/ActivityFeed.jsx` - Updated with advanced filters
+
+**Dependencies:**
+- `fuse.js@7.0.0` - Fuzzy search library
+
+**Performance Considerations:**
+- Memoized filter results with useMemo
+- Fuse instances cached in store
+- LocalStorage writes batched (not on every keystroke)
+- Filter application creates new array (immutable pattern)
+
 ### Issue #138 / PR #163: Integration Test Alignment (2026-03-15)
 
 **Test Architecture Alignment:**

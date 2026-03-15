@@ -26,11 +26,24 @@ function applyTheme(theme) {
     root.classList.add('light')
     root.classList.remove('dark')
   }
+  
+  // Update meta theme-color for mobile browsers
+  const metaTheme = document.querySelector('meta[name="theme-color"]')
+  if (metaTheme) {
+    metaTheme.content = theme === 'dark' ? '#050810' : '#fafbfc'
+  }
 }
 
 export function useTheme() {
   const [theme, setThemeState] = useState(getInitialTheme)
   const userExplicitlySet = useRef(false)
+
+  useEffect(() => {
+    // Enable transitions after initial load
+    setTimeout(() => {
+      document.documentElement.classList.remove('no-transitions')
+    }, 100)
+  }, [])
 
   useEffect(() => {
     applyTheme(theme)

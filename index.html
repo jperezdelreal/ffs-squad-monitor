@@ -13,6 +13,37 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
     <title>FFS Squad Monitor</title>
+    <script>
+      // Prevent FOUC: Load theme immediately before first render
+      (function() {
+        const STORAGE_KEY = 'ffs-squad-monitor-theme'
+        function getSystemPreference() {
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        let theme = 'dark'
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY)
+          theme = (stored === 'dark' || stored === 'light') ? stored : getSystemPreference()
+        } catch {}
+        document.documentElement.classList.add(theme)
+      })();
+    </script>
+    <style>
+      /* Smooth theme transitions */
+      * {
+        transition: background-color 300ms ease, 
+                    border-color 300ms ease, 
+                    color 300ms ease,
+                    box-shadow 300ms ease,
+                    fill 300ms ease,
+                    stroke 300ms ease;
+      }
+      
+      /* Disable transitions during initial load */
+      .no-transitions * {
+        transition: none !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
