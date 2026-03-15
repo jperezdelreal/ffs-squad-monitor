@@ -91,13 +91,13 @@ export function buildBaseOptions(overrides = {}) {
         type: 'number',
         easing: 'easeInOutQuart',
         duration: 800,
-        from: (ctx) => ctx.chart.scales.x.getPixelForValue(0),
+        from: (ctx) => ctx.chart.scales.x?.getPixelForValue(0) || 0,
       },
       y: {
         type: 'number',
         easing: 'easeOutElastic',
         duration: 1200,
-        from: (ctx) => ctx.chart.scales.y.getPixelForValue(0),
+        from: (ctx) => ctx.chart.scales.y?.getPixelForValue(0) || 0,
       },
     },
     // Smooth data transition animations
@@ -145,6 +145,39 @@ export function buildBaseOptions(overrides = {}) {
         onLeave: (event) => {
           event.native.target.style.cursor = 'default'
         },
+        onClick: (event, legendItem, legend) => {
+          const index = legendItem.datasetIndex
+          const chart = legend.chart
+          const meta = chart.getDatasetMeta(index)
+          
+          // Toggle visibility
+          meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null
+          chart.update()
+        },
+      },
+      zoom: overrides.enableZoom !== false ? {
+        pan: {
+          enabled: true,
+          mode: 'x',
+          modifierKey: 'shift',
+        },
+        zoom: {
+          wheel: {
+            enabled: true,
+            speed: 0.05,
+          },
+          pinch: {
+            enabled: true,
+          },
+          mode: 'x',
+        },
+        limits: {
+          x: { min: 'original', max: 'original' },
+          y: { min: 'original', max: 'original' },
+        },
+      } : undefined,
+      annotation: {
+        annotations: overrides.annotations || {},
       },
     },
     scales: {
@@ -178,6 +211,7 @@ export function buildBaseOptions(overrides = {}) {
         ...overrides.yScale,
       },
     },
+    onClick: overrides.onClick,
     ...overrides.root,
   }
 }

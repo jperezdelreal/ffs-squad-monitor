@@ -1,10 +1,21 @@
-import React from 'react'
+import React, { useRef, useMemo } from 'react'
 import { Line } from 'react-chartjs-2'
 import './chartConfig.js'
 import { buildBaseOptions, CHART_COLORS } from './chartConfig.js'
+import { detectAnomalies, createAnomalyAnnotations, exportChartAsPNG, exportChartAsCSV } from './chartEnhancements.js'
 import { EmptyState, EmptyStateIllustrations } from '../EmptyState'
 
-export function TrendLine({ data = [], label = 'Value', color = CHART_COLORS.emerald, timeRange = '7d' }) {
+export function TrendLine({ 
+  data = [], 
+  label = 'Value', 
+  color = CHART_COLORS.emerald, 
+  timeRange = '7d',
+  onDataPointClick = null,
+  showAnomalies = false,
+  chartTitle = 'chart',
+}) {
+  const chartRef = useRef(null)
+
   if (!data.length) {
     return (
       <div className="flex items-center justify-center h-full" data-testid="trendline-empty">
@@ -17,6 +28,11 @@ export function TrendLine({ data = [], label = 'Value', color = CHART_COLORS.eme
       </div>
     )
   }
+
+  const anomalyIndices = useMemo(() => 
+    showAnomalies ? detectAnomalies(data) : [], 
+    [data, showAnomalies]
+  )
 
   const chartData = {
     labels: data.map(d => d.timestamp),
@@ -39,11 +55,32 @@ export function TrendLine({ data = [], label = 'Value', color = CHART_COLORS.eme
         },
         fill: true,
         tension: 0.4,
-        pointRadius: data.length > 50 ? 0 : 4,
+        pointRadius: (context) => {
+          // Larger points for anomalies
+          if (showAnomalies && anomalyIndices.includes(context.dataIndex)) {
+            return 6
+          }
+          return data.length > 50 ? 0 : 4
+        },
+        pointBackgroundColor: (context) => {
+          if (showAnomalies && anomalyIndices.includes(context.dataIndex)) {
+            return CHART_COLORS.rose
+          }
+          return color
+        },
+        pointBorderColor: (context) => {
+          if (showAnomalies && anomalyIndices.includes(context.dataIndex)) {
+            return '#fff'
+          }
+          return '#fff'
+        },
         pointHoverRadius: 7,
-        pointBackgroundColor: color,
-        pointBorderColor: '#fff',
-        pointBorderWidth: 0,
+        pointBorderWidth: (context) => {
+          if (showAnomalies && anomalyIndices.includes(context.dataIndex)) {
+            return 2
+          }
+          return 0
+        },
         pointHoverBackgroundColor: color,
         pointHoverBorderColor: '#fff',
         pointHoverBorderWidth: 3,
@@ -53,14 +90,60 @@ export function TrendLine({ data = [], label = 'Value', color = CHART_COLORS.eme
     ],
   }
 
+  const handleClick = (event, elements) => {
+    if (elements.length > 0 && onDataPointClick) {
+      const dataIndex = elements[0].index
+      const dataPoint = data[dataIndex]
+      onDataPointClick(dataPoint, dataIndex)
+    }
+  }
+
+  const annotations = useMemo(() => {
+    if (!showAnomalies || !anomalyIndices.length) return {}
+    const values = data.map(d => d.value)
+    return createAnomalyAnnotations(anomalyIndices, chartData.labels, values)
+  }, [showAnomalies, anomalyIndices, data])
+
   const options = buildBaseOptions({
     xScale: {
       type: 'time',
       time: { unit: timeRangeToUnit(timeRange) },
     },
+    onClick: handleClick,
+    annotations,
   })
 
-  return <Line data={chartData} options={options} />
+  const handleExportPNG = () => {
+    if (chartRef.current) {
+      exportChartAsPNG(chartRef.current, `${chartTitle}-${timeRange}.png`)
+    }
+  }
+
+  const handleExportCSV = () => {
+    exportChartAsCSV(data, `${chartTitle}-${timeRange}.csv`)
+  }
+
+  return (
+    <div className="relative h-full">
+      <Line ref={chartRef} data={chartData} options={options} />
+      <div className="absolute top-0 right-0 flex gap-2 opacity-0 hover:opacity-100 transition-opacity">
+        <button
+          onClick={handleExportPNG}
+          className="px-2 py-1 text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded border border-white/10"
+          title="Export as PNG"
+        >
+          📷
+        </button>
+        <button
+          onClick={handleExportCSV}
+          className="px-2 py-1 text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded border border-white/10"
+          title="Export as CSV"
+        >
+          📊
+        </button>
+      </div>
+    </div>
+  )
 }
 
 function timeRangeToUnit(range) {
