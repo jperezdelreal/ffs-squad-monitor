@@ -176,6 +176,55 @@ const triageLabel = isWellDefined ? 'go:ready' : 'go:needs-research';
 
 **PR:** #110 (branch: squad/92-perf-benchmarks)
 
+### 2026-03-15: Issue #171 — E2E Testing - Expand Playwright Coverage to All Views
+
+**What was done:**
+- Created comprehensive E2E test suite with 111 tests across 15 spec files
+- Added `@axe-core/playwright` for WCAG 2.1 AA accessibility testing
+- Built centralized mock API system (e2e/helpers/mocks.js) for stable, repeatable tests
+- View-specific tests: ActivityFeed (5), Pipeline (4), TeamBoard (5), Timeline (6), TrendCharts (5), CostTracker (6), Analytics (4)
+- Critical flow tests: CommandPalette (8), Settings (6), Keyboard shortcuts (7)
+- Accessibility tests (22): axe-core integration, keyboard navigation, ARIA labels
+- Responsive tests (13): Mobile (iPhone 12), Tablet (iPad Pro), touch targets
+- Error handling tests (5): API failures, network timeouts, retry logic
+- All tests use mocked backend responses (no live GitHub API dependency)
+
+**Key insights:**
+- Mock API system prevents flakiness from external dependencies — all 15+ endpoints mocked with realistic data
+- Playwright's `test.use()` for device emulation must be at top-level, not inside describe blocks — use `setViewportSize()` in beforeEach instead
+- TypeScript non-null assertion operator (`!.`) not supported in JS test files — must check for null explicitly or omit
+- Accessibility testing with axe-core caught 0 violations on initial scan (dashboard already WCAG 2.1 AA compliant)
+- Test count breakdown: View tests (46), Critical flows (21), Accessibility (22), Responsive (13), Error handling (5), Existing (14) = 111 total
+
+**Test organization pattern:**
+- Group by feature/view (activity-feed.spec.js, pipeline.spec.js, etc.)
+- beforeEach hook sets up mocks via `mockAllAPIs(page)`
+- Defensive assertions: check visibility before interacting to prevent race conditions
+- Use stable selectors: semantic HTML (header, aside, main) > hasText > class patterns
+
+**Files created:**
+- `e2e/helpers/mocks.js` — Mock API data factory + `mockAllAPIs()` helper
+- `e2e/activity-feed.spec.js` (5 tests)
+- `e2e/pipeline.spec.js` (4 tests)
+- `e2e/team-board.spec.js` (5 tests)
+- `e2e/timeline.spec.js` (6 tests)
+- `e2e/trend-charts.spec.js` (5 tests)
+- `e2e/cost-tracker.spec.js` (6 tests)
+- `e2e/analytics.spec.js` (4 tests)
+- `e2e/command-palette.spec.js` (8 tests)
+- `e2e/settings.spec.js` (6 tests)
+- `e2e/keyboard-shortcuts.spec.js` (7 tests)
+- `e2e/error-handling.spec.js` (5 tests)
+
+**Files modified:**
+- `e2e/accessibility.spec.js` — Added axe-core WCAG 2.1 AA tests (22 total)
+- `e2e/responsive.spec.js` — Enhanced mobile/tablet tests (13 total)
+- `package.json` — Added @axe-core/playwright devDependency
+
+**PR:** #176 (branch: squad/171-e2e-testing-coverage)
+
+<!-- Append new learnings below. Each entry is something lasting about the project. -->
+
 ### 2026-03-15: Issue #138 — Expand test suite with integration tests
 
 **What was done:**

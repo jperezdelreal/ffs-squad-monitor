@@ -610,9 +610,20 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'animation': ['framer-motion'],
+          'charts': ['chart.js', 'react-chartjs-2', 'chartjs-adapter-date-fns'],
+          'store': ['zustand'],
+        }
+      }
+    }
   },
   plugins: [
     react(),
+    ffsApiPlugin(),
     process.env.ANALYZE && visualizer({
       filename: 'dist/bundle-stats.html',
       open: false,

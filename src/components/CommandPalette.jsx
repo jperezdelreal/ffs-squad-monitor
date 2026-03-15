@@ -379,3 +379,6 @@ export function CommandPalette({ isOpen, onClose, onViewChange, onRefresh, onTog
     </AnimatePresence>
   )
 }
+
+
+export default CommandPalette

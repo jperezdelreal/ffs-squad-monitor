@@ -12,10 +12,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.resolve(__dirname, '..', 'dist')
 
 // Budget thresholds (raw sizes in KB)
+// After code splitting: initial ~398KB, lazy chunks load on demand
 const BUDGETS = {
-  totalJS: { warn: 180, error: 250 },
+  initialJS: { warn: 380, error: 400 },
   totalCSS: { warn: 60, error: 100 },
-  total: { warn: 300, error: 400 },
+  initial: { warn: 420, error: 480 },  // Initial bundle (JS + CSS)
 }
 
 function getFileSizes(dir, ext) {

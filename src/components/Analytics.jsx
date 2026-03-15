@@ -346,3 +346,6 @@ function KpiCard({ icon, label, value, subtitle, color = 'cyan' }) {
     </div>
   )
 }
+
+
+export default Analytics
