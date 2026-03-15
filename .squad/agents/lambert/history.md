@@ -181,3 +181,43 @@ Implemented backend infrastructure for real-time performance monitoring with met
 **Pattern:** For performance instrumentation, use middleware + singleton tracker with rolling window. Keep metrics in-memory with periodic snapshots for historical trends. Event-bus alerts enable proactive monitoring.
 
 **Frontend:** Dallas will implement the UI component to visualize these metrics in a dashboard.
+
+### 2026-03-14 — Issue #172 Enhanced API Rate Limiting & Caching (PR #175)
+
+Implemented centralized caching system to reduce GitHub API calls and prevent rate limit exhaustion:
+
+1. **Tiered Caching** (`server/lib/cache-manager.js`) — Three-tier strategy with configurable TTLs:
+   - Hot (10s): heartbeat, pulse — frequently changing data
+   - Warm (60s): issues, PRs, events — moderate changes
+   - Cold (5min): repos, agents — rarely changing data
+
+2. **Request Deduplication** — Collapses concurrent identical requests using pending promise map. If same key requested while fetching, returns the pending promise instead of firing duplicate API call. Tracks deduplicated count in metrics.
+
+3. **Graceful Degradation** — Serves stale cache when fetcher fails (rate limited or network error). Marks entries as stale for transparency. Logs warnings with context. Falls back gracefully without crashing.
+
+4. **Enhanced Rate Limit Tracking** — Updated `github-client.js` with:
+   - Critical threshold (<=10 remaining) publishes alert events to event-bus
+   - Warning threshold (<100 remaining) logs warnings
+   - Tracks API calls per minute window for monitoring
+   - Rate limit status exposed on health endpoint
+
+5. **SSE Event Integration** — Cache manager listens to event-bus `data-update` events and invalidates relevant keys (heartbeat, pulse, issues, events). Keeps cache fresh when backend detects changes.
+
+6. **Cache Stats on Health Endpoint** — Added `cache` field to `/api/health` response with hit/miss counts, hit rate %, size, pending requests, and per-entry details (key, tier, age, stale status).
+
+7. **Route Migration** — Migrated all GitHub API routes to use cache-manager:
+   - `/api/issues` (board.js) — warm tier
+   - `/api/events` (events.js) — warm tier
+   - `/api/pulse` (pulse.js) — hot tier
+   - `/api/repos` (repos.js) — cold tier
+
+8. **Full Test Coverage** — 16 passing tests covering: cache hit/miss, TTL expiration for all tiers, request deduplication, stale serving on errors, cache invalidation, SSE integration, and stats calculation.
+
+**Key Patterns:**
+- Centralized cache manager with tiered TTLs > per-route caching (easier to reason about, consistent behavior)
+- Request deduplication via pending promises map prevents thundering herd problem
+- Stale-while-error pattern (serve stale on failure) better than fail-fast for API resilience
+- Event-based cache invalidation keeps data fresh without polling
+- Cache metrics essential for observability — track hit rate, dedupe count, stale-served count
+
+**Expected Impact:** 50%+ reduction in GitHub API calls, >70% cache hit rate, no rate limit exhaustion, <200ms response times for cache hits.
